@@ -98,15 +98,6 @@ html, body {
   color: var(--text-secondary);
   letter-spacing: .3px;
 }
-.header-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-faint);
-  padding: 4px;
-  transition: color .2s;
-}
-.header-btn:hover { color: var(--text-muted); }
 
 /* ---- AYAH VIEWER ---- */
 .ayah-container {

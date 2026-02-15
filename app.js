@@ -368,7 +368,8 @@
       $("about-overlay").classList.add("hidden");
     });
 
-    $("settings-btn").addEventListener("click", function () {
+    $("settings-btn").addEventListener("click", function (e) {
+      e.preventDefault();
       render();
       $("settings-overlay").classList.remove("hidden");
     });
