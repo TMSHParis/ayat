@@ -139,7 +139,7 @@
   }
 
   // ---- ONESIGNAL NOTIFICATIONS ----
-  var ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID"; // Replace after OneSignal setup
+  var ONESIGNAL_APP_ID = "b1374251-9424-431b-8d66-6921b1fa7185";
 
   function initOneSignal() {
     if (typeof OneSignalDeferred === "undefined") return;
@@ -148,13 +148,14 @@
       OneSignal.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerParam: { scope: "/ayat/" },
+        serviceWorkerPath: "/ayat/OneSignalSDKWorker.js",
       });
     });
   }
 
   function updateReminderUI() {
-    if (typeof OneSignalDeferred === "undefined" || ONESIGNAL_APP_ID === "YOUR_ONESIGNAL_APP_ID") {
-      // OneSignal not configured yet
+    if (typeof OneSignalDeferred === "undefined") {
       $("reminder-toggle-btn").textContent = "Activer les notifications";
       $("reminder-toggle-btn").classList.remove("hidden");
       $("reminder-status").classList.add("hidden");
