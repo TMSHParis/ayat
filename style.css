@@ -340,6 +340,46 @@ html, body {
   color: var(--text-secondary);
 }
 
+/* ---- SURAH LIST ---- */
+.ayah-ref-clickable {
+  cursor: pointer;
+  transition: color .2s;
+}
+.ayah-ref-clickable:hover {
+  color: var(--text-muted);
+}
+.surah-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.surah-item:last-child {
+  border-bottom: none;
+}
+.surah-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.surah-num {
+  font-size: 11px;
+  color: var(--text-faint);
+  min-width: 24px;
+  text-align: right;
+}
+.surah-name-fr {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.surah-name-ar {
+  font-size: 14px;
+  color: var(--text-faint);
+  font-family: "Amiri", serif;
+  direction: rtl;
+}
+
 /* ---- LOADING ---- */
 .loading {
   display: flex;

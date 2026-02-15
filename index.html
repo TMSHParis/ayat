@@ -38,7 +38,7 @@
 
   <!-- Ayah viewer -->
   <div class="ayah-container" id="ayah-container">
-    <p class="ayah-ref" id="ayah-ref"></p>
+    <p class="ayah-ref ayah-ref-clickable" id="ayah-ref" title="Voir les sourates"></p>
     <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
     <button class="next-btn" id="next-btn" aria-label="Verset suivant">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -139,6 +139,19 @@
       <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les données sont stockées localement sur votre appareil uniquement.</p>
     </div>
   </div>
+</div>
+
+<!-- ====== SURAH LIST OVERLAY ====== -->
+<div id="surah-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Sourates</h2>
+    <button class="close-btn" id="surah-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body" id="surah-list"></div>
 </div>
 
 <script src="app.js"></script>

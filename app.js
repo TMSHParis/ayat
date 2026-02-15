@@ -293,7 +293,8 @@
   function onKeyDown(e) {
     if (
       !$("settings-overlay").classList.contains("hidden") ||
-      !$("about-overlay").classList.contains("hidden")
+      !$("about-overlay").classList.contains("hidden") ||
+      !$("surah-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -407,6 +408,43 @@
         render();
         $("settings-overlay").classList.add("hidden");
       }
+    });
+
+    // ---- SURAH LIST ----
+    // Build the list (display-only, no navigation)
+    var surahListEl = $("surah-list");
+    surahs.forEach(function (s) {
+      var item = document.createElement("div");
+      item.className = "surah-item";
+
+      var left = document.createElement("div");
+      left.className = "surah-item-left";
+
+      var num = document.createElement("span");
+      num.className = "surah-num";
+      num.textContent = s.surahNumber;
+
+      var nameFr = document.createElement("span");
+      nameFr.className = "surah-name-fr";
+      nameFr.textContent = SURAH_NAMES_FR[s.surahNumber] || "Sourate " + s.surahNumber;
+
+      left.appendChild(num);
+      left.appendChild(nameFr);
+
+      var nameAr = document.createElement("span");
+      nameAr.className = "surah-name-ar";
+      nameAr.textContent = s.surahNameAr;
+
+      item.appendChild(left);
+      item.appendChild(nameAr);
+      surahListEl.appendChild(item);
+    });
+
+    $("ayah-ref").addEventListener("click", function () {
+      $("surah-overlay").classList.remove("hidden");
+    });
+    $("surah-close").addEventListener("click", function () {
+      $("surah-overlay").classList.add("hidden");
     });
 
     if ("serviceWorker" in navigator) {
