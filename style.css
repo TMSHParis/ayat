@@ -21,6 +21,35 @@
   font-display: swap;
 }
 
+/* ---- THEME VARIABLES ---- */
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --text-secondary: #222222;
+  --text-muted: #888888;
+  --text-faint: #bbbbbb;
+  --border: #f0f0f0;
+  --track: #f0f0f0;
+  --overlay-bg: #ffffff;
+  --btn-border: #e0e0e0;
+  --btn-active-border: #222222;
+  --btn-active-text: #222222;
+}
+
+body.dark {
+  --bg: #111111;
+  --text: #e8e8e8;
+  --text-secondary: #dddddd;
+  --text-muted: #888888;
+  --text-faint: #555555;
+  --border: #222222;
+  --track: #252525;
+  --overlay-bg: #111111;
+  --btn-border: #333333;
+  --btn-active-border: #e0e0e0;
+  --btn-active-text: #e0e0e0;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -33,10 +62,11 @@ html, body {
   height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
-  background: #fff;
-  color: #000;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background .3s ease, color .3s ease;
 }
 
 /* ---- LAYOUT ---- */
@@ -57,26 +87,26 @@ html, body {
 }
 .header-link {
   font-size: 11px;
-  color: #bbb;
+  color: var(--text-faint);
   text-decoration: none;
   transition: color .2s;
 }
-.header-link:hover { color: #888; }
+.header-link:hover { color: var(--text-muted); }
 .header-title {
   font-size: 12px;
   font-weight: 500;
-  color: #222;
+  color: var(--text-secondary);
   letter-spacing: .3px;
 }
 .header-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #bbb;
+  color: var(--text-faint);
   padding: 4px;
   transition: color .2s;
 }
-.header-btn:hover { color: #666; }
+.header-btn:hover { color: var(--text-muted); }
 
 /* ---- AYAH VIEWER ---- */
 .ayah-container {
@@ -92,14 +122,14 @@ html, body {
 }
 .ayah-ref {
   font-size: 12px;
-  color: #bbb;
+  color: var(--text-faint);
   margin-bottom: 20px;
   font-family: system-ui, sans-serif;
   text-align: center;
 }
 .ayah-text {
   font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
-  color: #000;
+  color: var(--text);
   text-align: center;
   max-width: 700px;
   direction: rtl;
@@ -122,11 +152,11 @@ html, body {
   background: none;
   border: none;
   cursor: pointer;
-  color: #aaa;
+  color: var(--text-faint);
   padding: 20px;
   transition: color .2s;
 }
-.next-btn:hover { color: #555; }
+.next-btn:hover { color: var(--text-muted); }
 .next-btn svg {
   width: 36px;
   height: 36px;
@@ -142,21 +172,21 @@ html, body {
 }
 .goal-reached p {
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
 }
 .goal-reached button {
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   background: none;
-  border: 1px solid #ddd;
+  border: 1px solid var(--btn-border);
   border-radius: 50px;
   padding: 7px 20px;
   cursor: pointer;
   transition: all .2s;
 }
 .goal-reached button:hover {
-  color: #555;
-  border-color: #bbb;
+  color: var(--text-secondary);
+  border-color: var(--text-faint);
 }
 
 /* ---- PROGRESS BARS ---- */
@@ -177,13 +207,13 @@ html, body {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 .progress-track {
   width: 100%;
   height: 6px;
-  background: #f0f0f0;
+  background: var(--track);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -204,7 +234,7 @@ html, body {
 .overlay {
   position: fixed;
   inset: 0;
-  background: #fff;
+  background: var(--overlay-bg);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -214,22 +244,22 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
 .overlay-header h2 {
   font-size: 14px;
   font-weight: 500;
-  color: #222;
+  color: var(--text-secondary);
 }
 .close-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #bbb;
+  color: var(--text-faint);
   padding: 4px;
   transition: color .2s;
 }
-.close-btn:hover { color: #666; }
+.close-btn:hover { color: var(--text-muted); }
 .overlay-body {
   flex: 1;
   overflow-y: auto;
@@ -240,12 +270,12 @@ html, body {
 }
 .setting-label {
   font-size: 11px;
-  color: #aaa;
+  color: var(--text-muted);
   margin-bottom: 10px;
 }
 .setting-value {
   font-size: 18px;
-  color: #222;
+  color: var(--text-secondary);
 }
 .setting-buttons {
   display: flex;
@@ -256,28 +286,28 @@ html, body {
   font-size: 12px;
   padding: 8px 16px;
   border-radius: 50px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--btn-border);
   background: none;
-  color: #aaa;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all .2s;
 }
 .setting-btn:hover {
-  border-color: #bbb;
-  color: #666;
+  border-color: var(--text-faint);
+  color: var(--text-secondary);
 }
 .setting-btn.active {
-  border-color: #222;
-  color: #222;
+  border-color: var(--btn-active-border);
+  color: var(--btn-active-text);
 }
 .reset-btn {
   font-size: 12px;
-  color: #bbb;
+  color: var(--text-faint);
   background: none;
   border: none;
   cursor: pointer;
   padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
   transition: color .2s;
 }
 .reset-btn:hover { color: #e53e3e; }
@@ -285,29 +315,29 @@ html, body {
 /* ---- ABOUT PAGE ---- */
 .about-page {
   min-height: 100dvh;
-  background: #fff;
+  background: var(--overlay-bg);
   padding: 48px 24px;
   max-width: 480px;
   margin: 0 auto;
 }
 .about-page p {
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
   line-height: 1.8;
   margin-bottom: 16px;
 }
 .about-page .divider {
   border: none;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
   margin: 20px 0;
 }
 .about-page .sub-label {
   font-size: 10px;
-  color: #bbb;
+  color: var(--text-faint);
   margin-bottom: 8px;
 }
 .about-page .highlight {
-  color: #555;
+  color: var(--text-secondary);
 }
 
 /* ---- LOADING ---- */
@@ -320,8 +350,8 @@ html, body {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #e0e0e0;
-  border-top-color: #666;
+  border: 2px solid var(--border);
+  border-top-color: var(--text-muted);
   border-radius: 50%;
   animation: spin .6s linear infinite;
 }

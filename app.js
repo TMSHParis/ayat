@@ -75,6 +75,7 @@
       todayReadCount: 0,
       khatmaGoal: 1,
       textSize: "M",
+      theme: "light",
     };
   }
 
@@ -119,6 +120,17 @@
       targets.push(i < remainder ? base + 1 : base);
     }
     return targets;
+  }
+
+  // ---- THEME ----
+  function applyTheme() {
+    if (state.theme === "dark") {
+      document.body.classList.add("dark");
+      document.querySelector('meta[name="theme-color"]').content = "#111111";
+    } else {
+      document.body.classList.remove("dark");
+      document.querySelector('meta[name="theme-color"]').content = "#ffffff";
+    }
   }
 
   // ---- QURAN ACCESS ----
@@ -220,6 +232,10 @@
     document.querySelectorAll("#size-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.size === state.textSize);
     });
+    document.querySelectorAll("#theme-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.theme === state.theme);
+    });
+    applyTheme();
   }
 
   // ---- NAVIGATION ----
@@ -323,6 +339,7 @@
     }
 
     state = loadState();
+    applyTheme(); // apply theme before showing UI to avoid flash
 
     $("loading").classList.add("hidden");
     $("app").classList.remove("hidden");
@@ -369,6 +386,14 @@
     document.querySelectorAll("#size-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         state.textSize = btn.dataset.size;
+        saveState();
+        render();
+      });
+    });
+
+    document.querySelectorAll("#theme-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.theme = btn.dataset.theme;
         saveState();
         render();
       });
