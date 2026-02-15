@@ -1,15 +1,15 @@
 {
-  "name": "Ayat",
-  "short_name": "Ayat",
-  "description": "قراءة القرآن الكريم في ٣٠ يوم",
+  "name": "Verset",
+  "short_name": "Verset",
+  "description": "Lecture du Coran en 30 jours",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "orientation": "portrait",
-  "dir": "rtl",
-  "lang": "ar",
+  "dir": "ltr",
+  "lang": "fr",
   "icons": [
     {
       "src": "icons/icon-192.png",

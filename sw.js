@@ -1,4 +1,4 @@
-const CACHE_NAME = "ayat-v1";
+const CACHE_NAME = "verset-v2";
 
 const PRECACHE = [
   "./",

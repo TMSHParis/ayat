@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="fr" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ayat</title>
-  <meta name="description" content="قراءة القرآن الكريم في ٣٠ يوم">
+  <title>Verset</title>
+  <meta name="description" content="Lecture du Coran en 30 jours">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Ayat">
+  <meta name="apple-mobile-web-app-title" content="Verset">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" href="icons/icon-192.png">
@@ -26,9 +26,9 @@
 
   <!-- Header -->
   <header class="header">
-    <a href="#about" class="header-link" id="about-link">حول</a>
-    <span class="header-title" id="header-title" dir="ltr">— Ayat</span>
-    <button class="header-btn" id="settings-btn" aria-label="إعدادات">
+    <a href="#about" class="header-link" id="about-link">À propos</a>
+    <span class="header-title" id="header-title">Aujourd'hui : 208 versets</span>
+    <button class="header-btn" id="settings-btn" aria-label="Réglages">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -39,9 +39,9 @@
   <!-- Ayah viewer -->
   <div class="ayah-container" id="ayah-container">
     <p class="ayah-ref" id="ayah-ref"></p>
-    <div class="ayah-text size-M" id="ayah-text"></div>
-    <button class="next-btn" id="next-btn" aria-label="الآية التالية">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
+    <button class="next-btn" id="next-btn" aria-label="Verset suivant">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="6 9 12 15 18 9"/>
       </svg>
     </button>
@@ -49,16 +49,16 @@
 
   <!-- Goal reached -->
   <div class="goal-reached hidden" id="goal-reached">
-    <p>هدف اليوم تحقق ✓</p>
-    <button id="continue-btn">متابعة القراءة</button>
+    <p>Objectif du jour atteint ✓</p>
+    <button id="continue-btn">Continuer la lecture</button>
   </div>
 
   <!-- Progress bars -->
   <div class="progress-section">
     <div class="progress-row">
       <div class="progress-labels">
-        <span>اليوم</span>
-        <span id="today-label" dir="ltr">0/0</span>
+        <span>Versets du jour</span>
+        <span id="today-label">0/0</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill-today" id="today-fill" style="width:0%"></div>
@@ -66,8 +66,8 @@
     </div>
     <div class="progress-row">
       <div class="progress-labels">
-        <span>الختمة</span>
-        <span id="khatma-label" dir="ltr">0%</span>
+        <span>Lecture complète</span>
+        <span id="khatma-label">0%</span>
       </div>
       <div class="progress-track">
         <div class="progress-fill-khatma" id="khatma-fill" style="width:0%"></div>
@@ -79,8 +79,8 @@
 <!-- ====== SETTINGS OVERLAY ====== -->
 <div id="settings-overlay" class="overlay hidden">
   <div class="overlay-header">
-    <h2>إعدادات</h2>
-    <button class="close-btn" id="settings-close" aria-label="إغلاق">
+    <h2>Réglages</h2>
+    <button class="close-btn" id="settings-close" aria-label="Fermer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
@@ -88,48 +88,48 @@
   </div>
   <div class="overlay-body">
     <div class="setting-group">
-      <div class="setting-label">عدد الختمات</div>
+      <div class="setting-label">Lectures complètes</div>
       <div class="setting-value" id="cycle-count">0</div>
     </div>
     <div class="setting-group">
-      <div class="setting-label">الهدف</div>
+      <div class="setting-label">Objectif</div>
       <div class="setting-buttons" id="goal-buttons">
-        <button class="setting-btn active" data-goal="1">ختمة واحدة / ٣٠ يوم</button>
-        <button class="setting-btn" data-goal="2">ختمتان / ٣٠ يوم</button>
+        <button class="setting-btn active" data-goal="1">1 lecture / 30 jours</button>
+        <button class="setting-btn" data-goal="2">2 lectures / 30 jours</button>
       </div>
     </div>
     <div class="setting-group">
-      <div class="setting-label">حجم الخط</div>
+      <div class="setting-label">Taille du texte</div>
       <div class="setting-buttons" id="size-buttons">
-        <button class="setting-btn" data-size="S">صغير</button>
-        <button class="setting-btn active" data-size="M">وسط</button>
-        <button class="setting-btn" data-size="L">كبير</button>
+        <button class="setting-btn" data-size="S">Petit</button>
+        <button class="setting-btn active" data-size="M">Moyen</button>
+        <button class="setting-btn" data-size="L">Grand</button>
       </div>
     </div>
-    <button class="reset-btn" id="reset-btn">إعادة تعيين</button>
+    <button class="reset-btn" id="reset-btn">Tout réinitialiser</button>
   </div>
 </div>
 
 <!-- ====== ABOUT OVERLAY ====== -->
 <div id="about-overlay" class="overlay hidden">
   <div class="overlay-header">
-    <h2>حول</h2>
-    <button class="close-btn" id="about-close" aria-label="إغلاق">
+    <h2>À propos</h2>
+    <button class="close-btn" id="about-close" aria-label="Fermer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
   </div>
   <div class="overlay-body">
-    <div class="about-page" style="padding:0;min-height:auto;">
-      <p>تطبيق بسيط لقراءة القرآن الكريم في ٣٠ يومًا. آية بآية، بدون تشتيت.</p>
+    <div class="about-page" style="padding:0;min-height:auto;direction:ltr;">
+      <p>Application simple pour lire le Coran en 30 jours. Verset par verset, sans distraction.</p>
       <hr class="divider">
-      <p class="sub-label">مصدر النص</p>
-      <p>نص القرآن الكريم برواية حفص (الرسم العثماني) مصدره مشروع <span class="highlight">Tanzil.net</span> عبر واجهة <span class="highlight">alquran.cloud</span>.</p>
-      <p>الخط المستخدم: <span class="highlight">Amiri</span> — خط حر مفتوح المصدر (رخصة OFL).</p>
+      <p class="sub-label">Source du texte</p>
+      <p>Texte du Coran (écriture Uthmani) provenant du projet <span class="highlight">Tanzil.net</span> via l'API <span class="highlight">alquran.cloud</span>.</p>
+      <p>Police utilisée : <span class="highlight">Amiri</span> — police libre (licence OFL).</p>
       <hr class="divider">
-      <p class="sub-label">الخصوصية</p>
-      <p>لا تتبع. لا تحليلات. لا حسابات. كل البيانات محفوظة محليًا على جهازك فقط.</p>
+      <p class="sub-label">Vie privée</p>
+      <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les données sont stockées localement sur votre appareil uniquement.</p>
     </div>
   </div>
 </div>

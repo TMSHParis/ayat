@@ -1,26 +1,60 @@
 /* ============================================
-   AYAT — app.js
+   VERSET — app.js
    Pure vanilla JS, zero dependencies
    ============================================ */
 
 (function () {
   "use strict";
 
+  // ---- SURAH NAMES IN FRENCH ----
+  var SURAH_NAMES_FR = [
+    "", // index 0 unused
+    "L'Ouverture", "La Vache", "La Famille d'Imran", "Les Femmes",
+    "La Table Servie", "Les Bestiaux", "Al-A'raf", "Le Butin",
+    "Le Repentir", "Jonas", "Houd", "Joseph",
+    "Le Tonnerre", "Abraham", "Al-Hijr", "Les Abeilles",
+    "Le Voyage Nocturne", "La Caverne", "Marie", "Ta-Ha",
+    "Les Prophètes", "Le Pèlerinage", "Les Croyants", "La Lumière",
+    "Le Critère", "Les Poètes", "Les Fourmis", "Le Récit",
+    "L'Araignée", "Les Romains", "Louqman", "La Prosternation",
+    "Les Coalisés", "Saba", "Le Créateur", "Ya-Sin",
+    "Les Rangés", "Sad", "Les Groupes", "Le Pardonneur",
+    "Les Versets Détaillés", "La Consultation", "L'Ornement", "La Fumée",
+    "L'Agenouillée", "Al-Ahqaf", "Mouhammad", "La Victoire Éclatante",
+    "Les Appartements", "Qaf", "Les Vents", "Le Mont",
+    "L'Étoile", "La Lune", "Le Tout Miséricordieux", "L'Événement",
+    "Le Fer", "La Discussion", "L'Exode", "L'Éprouvée",
+    "Le Rang", "Le Vendredi", "Les Hypocrites", "La Grande Perte",
+    "Le Divorce", "L'Interdiction", "La Royauté", "La Plume",
+    "Celle qui Montre la Vérité", "Les Voies d'Ascension", "Noé", "Les Djinns",
+    "L'Enveloppé", "Le Revêtu d'un Manteau", "La Résurrection", "L'Homme",
+    "Les Envoyés", "La Nouvelle", "Les Anges qui Arrachent", "Il S'est Renfrogné",
+    "L'Obscurcissement", "La Rupture", "Les Fraudeurs", "La Déchirure",
+    "Les Constellations", "L'Astre Nocturne", "Le Très-Haut", "L'Enveloppante",
+    "L'Aube", "La Cité", "Le Soleil", "La Nuit",
+    "Le Jour Montant", "L'Ouverture de la Poitrine", "Le Figuier", "L'Adhérence",
+    "La Destinée", "La Preuve", "Le Tremblement de Terre", "Les Coursiers",
+    "Le Fracas", "La Course aux Richesses", "Le Temps", "Le Calomniateur",
+    "L'Éléphant", "Quraych", "L'Ustensile", "L'Abondance",
+    "Les Infidèles", "Le Secours", "Les Fibres", "Le Monothéisme Pur",
+    "L'Aube Naissante", "Les Hommes"
+  ];
+
   // ---- DATA ----
-  let surahs = [];
-  let totalAyat = 0;
+  var surahs = [];
+  var totalAyat = 0;
 
   // ---- STATE ----
-  const STORAGE_KEY = "ayat-app-state";
-  let state = null;
-  let goalDismissed = false;
+  var STORAGE_KEY = "verset-app-state";
+  var state = null;
+  var goalDismissed = false;
 
   // ---- DOM refs ----
-  const $ = (id) => document.getElementById(id);
+  var $ = function (id) { return document.getElementById(id); };
 
   // ---- UTILS ----
   function getLocalDateStr() {
-    const d = new Date();
+    var d = new Date();
     return (
       d.getFullYear() +
       "-" +
@@ -31,7 +65,7 @@
   }
 
   function defaultState() {
-    const today = getLocalDateStr();
+    var today = getLocalDateStr();
     return {
       startDate: today,
       globalIndex: 0,
@@ -45,11 +79,11 @@
 
   function loadState() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultState();
-      const parsed = JSON.parse(raw);
-      const s = Object.assign(defaultState(), parsed);
-      const today = getLocalDateStr();
+      var parsed = JSON.parse(raw);
+      var s = Object.assign(defaultState(), parsed);
+      var today = getLocalDateStr();
       if (s.lastReadDate !== today) {
         s.todayReadCount = 0;
         s.lastReadDate = today;
@@ -65,22 +99,22 @@
   }
 
   function getDayIndex(startDate) {
-    const start = new Date(startDate + "T00:00:00");
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const diffMs = today.getTime() - start.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const dayIndex = diffDays + 1;
+    var start = new Date(startDate + "T00:00:00");
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var diffMs = today.getTime() - start.getTime();
+    var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    var dayIndex = diffDays + 1;
     if (dayIndex < 1) return 1;
     if (dayIndex > 30) return ((dayIndex - 1) % 30) + 1;
     return dayIndex;
   }
 
   function computeDayTargets(totalToRead) {
-    const base = Math.floor(totalToRead / 30);
-    const remainder = totalToRead % 30;
-    const targets = [];
-    for (let i = 0; i < 30; i++) {
+    var base = Math.floor(totalToRead / 30);
+    var remainder = totalToRead % 30;
+    var targets = [];
+    for (var i = 0; i < 30; i++) {
       targets.push(i < remainder ? base + 1 : base);
     }
     return targets;
@@ -88,14 +122,16 @@
 
   // ---- QURAN ACCESS ----
   function getAyahByGlobalIndex(globalIndex) {
-    const idx = ((globalIndex % totalAyat) + totalAyat) % totalAyat;
-    let count = 0;
-    for (const surah of surahs) {
+    var idx = ((globalIndex % totalAyat) + totalAyat) % totalAyat;
+    var count = 0;
+    for (var i = 0; i < surahs.length; i++) {
+      var surah = surahs[i];
       if (idx < count + surah.ayahs.length) {
-        const ayahIdx = idx - count;
+        var ayahIdx = idx - count;
         return {
           surahNumber: surah.surahNumber,
           surahNameAr: surah.surahNameAr,
+          surahNameFr: SURAH_NAMES_FR[surah.surahNumber] || "Sourate " + surah.surahNumber,
           ayahNumber: ayahIdx + 1,
           text: surah.ayahs[ayahIdx],
         };
@@ -105,6 +141,7 @@
     return {
       surahNumber: 1,
       surahNameAr: surahs[0].surahNameAr,
+      surahNameFr: SURAH_NAMES_FR[1],
       ayahNumber: 1,
       text: surahs[0].ayahs[0],
     };
@@ -112,44 +149,41 @@
 
   // ---- RENDER ----
   function render() {
-    const totalToRead = totalAyat * state.khatmaGoal;
-    const dayTargets = computeDayTargets(totalToRead);
-    const dayIndex = getDayIndex(state.startDate);
-    const todayTarget = dayTargets[dayIndex - 1];
-    const ayah = getAyahByGlobalIndex(state.globalIndex);
+    var totalToRead = totalAyat * state.khatmaGoal;
+    var dayTargets = computeDayTargets(totalToRead);
+    var dayIndex = getDayIndex(state.startDate);
+    var todayTarget = dayTargets[dayIndex - 1];
+    var ayah = getAyahByGlobalIndex(state.globalIndex);
 
     // Header title
-    $("header-title").textContent = todayTarget + " Ayat";
+    $("header-title").textContent = "Aujourd\u2019hui : " + todayTarget + " versets";
 
-    // Ayah reference
+    // Ayah reference — in French
     $("ayah-ref").textContent =
-      ayah.surahNameAr + " — آية " + ayah.ayahNumber;
+      "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
 
-    // Ayah text
-    const ayahEl = $("ayah-text");
+    // Ayah text (Arabic only)
+    var ayahEl = $("ayah-text");
     ayahEl.textContent = ayah.text;
-    ayahEl.className =
-      "ayah-text size-" + state.textSize;
+    ayahEl.className = "ayah-text size-" + state.textSize;
 
     // Progress: today
-    const todayPct = Math.min(
+    var todayPct = Math.min(
       (state.todayReadCount / Math.max(todayTarget, 1)) * 100,
       100
     );
     $("today-fill").style.width = todayPct + "%";
-    $("today-label").textContent =
-      state.todayReadCount + "/" + todayTarget;
+    $("today-label").textContent = state.todayReadCount + "/" + todayTarget;
 
     // Progress: khatma
-    const cycleBase =
-      state.khatmaGoal === 1 ? totalAyat : totalToRead;
-    const currentCycleIndex = state.globalIndex % cycleBase;
-    const khatmaPct = Math.min((currentCycleIndex / cycleBase) * 100, 100);
+    var cycleBase = state.khatmaGoal === 1 ? totalAyat : totalToRead;
+    var currentCycleIndex = state.globalIndex % cycleBase;
+    var khatmaPct = Math.min((currentCycleIndex / cycleBase) * 100, 100);
     $("khatma-fill").style.width = khatmaPct + "%";
     $("khatma-label").textContent = Math.round(khatmaPct) + "%";
 
     // Goal reached
-    const goalReached = state.todayReadCount >= todayTarget;
+    var goalReached = state.todayReadCount >= todayTarget;
     if (goalReached && !goalDismissed) {
       $("goal-reached").classList.remove("hidden");
     } else {
@@ -158,20 +192,17 @@
 
     // Settings sync
     $("cycle-count").textContent = state.cycleCount;
-    document.querySelectorAll("#goal-buttons .setting-btn").forEach((btn) => {
-      btn.classList.toggle(
-        "active",
-        Number(btn.dataset.goal) === state.khatmaGoal
-      );
+    document.querySelectorAll("#goal-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", Number(btn.dataset.goal) === state.khatmaGoal);
     });
-    document.querySelectorAll("#size-buttons .setting-btn").forEach((btn) => {
+    document.querySelectorAll("#size-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.size === state.textSize);
     });
   }
 
   // ---- NAVIGATION ----
   function goNext() {
-    const newIndex = state.globalIndex + 1;
+    var newIndex = state.globalIndex + 1;
     if (newIndex > 0 && newIndex % totalAyat === 0) {
       state.cycleCount++;
     }
@@ -191,17 +222,17 @@
   }
 
   function fadeAndRender() {
-    const el = $("ayah-text");
+    var el = $("ayah-text");
     el.classList.add("fade-out");
-    setTimeout(() => {
+    setTimeout(function () {
       render();
       el.classList.remove("fade-out");
     }, 150);
   }
 
   // ---- SWIPE ----
-  let touchStartX = null;
-  let touchStartY = null;
+  var touchStartX = null;
+  var touchStartY = null;
 
   function onTouchStart(e) {
     touchStartX = e.touches[0].clientX;
@@ -210,12 +241,11 @@
 
   function onTouchEnd(e) {
     if (touchStartX === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
     touchStartX = null;
     touchStartY = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      // RTL: swipe left = next, swipe right = prev
       if (dx < 0) goNext();
       else goPrev();
     }
@@ -224,15 +254,10 @@
   // ---- KEYBOARD ----
   function onKeyDown(e) {
     if (
-      $("settings-overlay").classList.contains("hidden") === false ||
-      $("about-overlay").classList.contains("hidden") === false
-    )
-      return;
-    if (
-      e.key === "ArrowLeft" ||
-      e.key === "ArrowDown" ||
-      e.key === " "
-    ) {
+      !$("settings-overlay").classList.contains("hidden") ||
+      !$("about-overlay").classList.contains("hidden")
+    ) return;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
       goNext();
     } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
@@ -243,86 +268,70 @@
 
   // ---- INIT ----
   async function init() {
-    // Load Quran data
     try {
-      const res = await fetch("quran.json");
+      var res = await fetch("quran.json");
       surahs = await res.json();
-      totalAyat = surahs.reduce((sum, s) => sum + s.ayahs.length, 0);
+      totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
     } catch (err) {
       document.body.innerHTML =
-        '<div style="display:flex;align-items:center;justify-content:center;height:100dvh;font-size:14px;color:#999;direction:rtl;">تعذّر تحميل بيانات القرآن</div>';
+        '<div style="display:flex;align-items:center;justify-content:center;height:100dvh;font-size:14px;color:#999;">Impossible de charger les donn\u00e9es du Coran</div>';
       return;
     }
 
-    // Load state
     state = loadState();
 
-    // Show app
     $("loading").classList.add("hidden");
     $("app").classList.remove("hidden");
 
-    // Initial render
     render();
 
     // ---- EVENT LISTENERS ----
-
-    // Next / prev
     $("next-btn").addEventListener("click", goNext);
 
-    // Swipe
-    $("ayah-container").addEventListener("touchstart", onTouchStart, {
-      passive: true,
-    });
+    $("ayah-container").addEventListener("touchstart", onTouchStart, { passive: true });
     $("ayah-container").addEventListener("touchend", onTouchEnd);
 
-    // Keyboard
     document.addEventListener("keydown", onKeyDown);
 
-    // Goal continue
-    $("continue-btn").addEventListener("click", () => {
+    $("continue-btn").addEventListener("click", function () {
       goalDismissed = true;
       $("goal-reached").classList.add("hidden");
     });
 
-    // About
-    $("about-link").addEventListener("click", (e) => {
+    $("about-link").addEventListener("click", function (e) {
       e.preventDefault();
       $("about-overlay").classList.remove("hidden");
     });
-    $("about-close").addEventListener("click", () => {
+    $("about-close").addEventListener("click", function () {
       $("about-overlay").classList.add("hidden");
     });
 
-    // Settings
-    $("settings-btn").addEventListener("click", () => {
-      render(); // sync
+    $("settings-btn").addEventListener("click", function () {
+      render();
       $("settings-overlay").classList.remove("hidden");
     });
-    $("settings-close").addEventListener("click", () => {
+    $("settings-close").addEventListener("click", function () {
       $("settings-overlay").classList.add("hidden");
     });
 
-    // Goal buttons
-    document.querySelectorAll("#goal-buttons .setting-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
+    document.querySelectorAll("#goal-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
         state.khatmaGoal = Number(btn.dataset.goal);
         saveState();
         render();
       });
     });
 
-    // Size buttons
-    document.querySelectorAll("#size-buttons .setting-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
+    document.querySelectorAll("#size-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
         state.textSize = btn.dataset.size;
         saveState();
         render();
       });
     });
 
-    // Reset
-    $("reset-btn").addEventListener("click", () => {
-      if (confirm("إعادة تعيين كل شيء؟")) {
+    $("reset-btn").addEventListener("click", function () {
+      if (confirm("Tout réinitialiser ? Cette action est irréversible.")) {
         state = defaultState();
         goalDismissed = false;
         saveState();
@@ -331,12 +340,10 @@
       }
     });
 
-    // Register service worker
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker.register("sw.js").catch(function () {});
     }
   }
 
-  // Go
   init();
 })();
