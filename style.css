@@ -110,13 +110,25 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   overflow: hidden;
+  min-height: 0;
 }
 .ayah-ref {
   font-size: 12px;
   color: var(--text-faint);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-family: system-ui, sans-serif;
   text-align: center;
+  flex-shrink: 0;
+}
+.ayah-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
 }
 .ayah-text {
   font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
@@ -126,6 +138,7 @@ html, body {
   direction: rtl;
   transition: opacity 150ms ease;
   word-spacing: 4px;
+  padding: 8px 0;
 }
 .ayah-text.size-S { font-size: 24px; line-height: 1.8; }
 .ayah-text.size-M { font-size: 30px; line-height: 2.0; }
@@ -138,19 +151,28 @@ html, body {
 
 .ayah-text.fade-out { opacity: 0; }
 
-.next-btn {
-  margin-top: 32px;
+/* ---- NAVIGATION ARROWS ---- */
+.nav-arrows {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 12px 0;
+  flex-shrink: 0;
+}
+.nav-btn {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-faint);
-  padding: 20px;
+  padding: 12px;
   transition: color .2s;
 }
-.next-btn:hover { color: var(--text-muted); }
-.next-btn svg {
-  width: 36px;
-  height: 36px;
+.nav-btn:hover { color: var(--text-muted); }
+.nav-btn:active { color: var(--text-secondary); }
+.nav-btn svg {
+  width: 28px;
+  height: 28px;
 }
 
 /* ---- GOAL REACHED ---- */

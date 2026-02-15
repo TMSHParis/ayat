@@ -317,6 +317,7 @@
     setTimeout(function () {
       renderFreeReading();
       el.classList.remove("fade-out");
+      $("ayah-scroll").scrollTop = 0;
     }, 150);
   }
 
@@ -454,6 +455,7 @@
     setTimeout(function () {
       render();
       el.classList.remove("fade-out");
+      $("ayah-scroll").scrollTop = 0;
     }, 150);
   }
 
@@ -538,6 +540,7 @@
 
     // ---- EVENT LISTENERS ----
     $("next-btn").addEventListener("click", goNext);
+    $("prev-btn").addEventListener("click", goPrev);
 
     $("ayah-container").addEventListener("touchstart", onTouchStart, { passive: true });
     $("ayah-container").addEventListener("touchend", onTouchEnd);

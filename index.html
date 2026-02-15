@@ -34,12 +34,21 @@
   <!-- Ayah viewer -->
   <div class="ayah-container" id="ayah-container">
     <p class="ayah-ref ayah-ref-clickable" id="ayah-ref" title="Voir les sourates"></p>
-    <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
-    <button class="next-btn" id="next-btn" aria-label="Verset suivant">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>
-    </button>
+    <div class="ayah-scroll" id="ayah-scroll">
+      <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
+    </div>
+    <div class="nav-arrows">
+      <button class="nav-btn" id="prev-btn" aria-label="Verset précédent">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="next-btn" aria-label="Verset suivant">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 6 15 12 9 18"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Goal reached -->
