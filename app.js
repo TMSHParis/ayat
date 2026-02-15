@@ -43,6 +43,7 @@
   // ---- DATA ----
   var surahs = [];
   var totalAyat = 0;
+  var BASMALA = ""; // extracted from surah 1, verse 1
 
   // ---- STATE ----
   var STORAGE_KEY = "verset-app-state";
@@ -128,11 +129,27 @@
       var surah = surahs[i];
       if (idx < count + surah.ayahs.length) {
         var ayahIdx = idx - count;
+        var isBasmala = false;
+        var displayNumber = ayahIdx + 1;
+
+        // For surahs where we split the Basmala (all except 1 and 9):
+        // ayahIdx 0 = Basmala (display as "Basmala")
+        // ayahIdx 1+ = real verses (numbered from 1)
+        if (surah.surahNumber !== 1 && surah.surahNumber !== 9) {
+          if (ayahIdx === 0) {
+            isBasmala = true;
+            displayNumber = 0;
+          } else {
+            displayNumber = ayahIdx; // ayahIdx 1 = verse 1, ayahIdx 2 = verse 2, etc.
+          }
+        }
+
         return {
           surahNumber: surah.surahNumber,
           surahNameAr: surah.surahNameAr,
           surahNameFr: SURAH_NAMES_FR[surah.surahNumber] || "Sourate " + surah.surahNumber,
-          ayahNumber: ayahIdx + 1,
+          ayahNumber: displayNumber,
+          isBasmala: isBasmala,
           text: surah.ayahs[ayahIdx],
         };
       }
@@ -143,6 +160,7 @@
       surahNameAr: surahs[0].surahNameAr,
       surahNameFr: SURAH_NAMES_FR[1],
       ayahNumber: 1,
+      isBasmala: false,
       text: surahs[0].ayahs[0],
     };
   }
@@ -159,8 +177,12 @@
     $("header-title").textContent = "Aujourd\u2019hui : " + todayTarget + " versets";
 
     // Ayah reference — in French
-    $("ayah-ref").textContent =
-      "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+    if (ayah.isBasmala) {
+      $("ayah-ref").textContent = "Sourate " + ayah.surahNameFr + " \u2014 Basmala";
+    } else {
+      $("ayah-ref").textContent =
+        "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+    }
 
     // Ayah text (Arabic only)
     var ayahEl = $("ayah-text");
@@ -270,7 +292,29 @@
   async function init() {
     try {
       var res = await fetch("quran.json");
-      surahs = await res.json();
+      var rawSurahs = await res.json();
+
+      // Extract the Basmala from surah 1 verse 1 (remove BOM if present)
+      BASMALA = rawSurahs[0].ayahs[0].replace(/^\uFEFF/, "");
+
+      // For every surah except 1 (Al-Fatiha) and 9 (At-Tawba):
+      // Split the Basmala out of verse 1 into its own separate verse.
+      // This keeps the total ayah count accurate to the mushaf numbering
+      // while displaying the Basmala on its own line.
+      surahs = rawSurahs.map(function (s) {
+        if (s.surahNumber === 1 || s.surahNumber === 9) return s;
+        var v1 = s.ayahs[0];
+        if (v1.startsWith(BASMALA)) {
+          var rest = v1.substring(BASMALA.length).trim();
+          return {
+            surahNumber: s.surahNumber,
+            surahNameAr: s.surahNameAr,
+            ayahs: [BASMALA].concat(rest ? [rest] : []).concat(s.ayahs.slice(1)),
+          };
+        }
+        return s;
+      });
+
       totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
     } catch (err) {
       document.body.innerHTML =
