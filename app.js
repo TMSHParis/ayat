@@ -81,7 +81,6 @@
       khatmaGoal: 1,
       textSize: "M",
       theme: "light",
-      reminders: [],
     };
   }
 
@@ -139,96 +138,55 @@
     }
   }
 
-  // ---- REMINDERS ----
-  var reminderTimers = [];
+  // ---- ONESIGNAL NOTIFICATIONS ----
+  var ONESIGNAL_APP_ID = "YOUR_ONESIGNAL_APP_ID"; // Replace after OneSignal setup
 
-  function requestNotificationPermission(callback) {
-    if (!("Notification" in window)) {
-      callback(false);
-      return;
-    }
-    if (Notification.permission === "granted") {
-      callback(true);
-      return;
-    }
-    if (Notification.permission === "denied") {
-      callback(false);
-      return;
-    }
-    Notification.requestPermission().then(function (perm) {
-      callback(perm === "granted");
-    });
-  }
-
-  function scheduleReminders() {
-    reminderTimers.forEach(function (t) { clearTimeout(t); });
-    reminderTimers = [];
-
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
-    if (!state.reminders || !state.reminders.length) return;
-
-    var now = new Date();
-
-    state.reminders.forEach(function (timeStr) {
-      var parts = timeStr.split(":");
-      var target = new Date();
-      target.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
-
-      var delay = target.getTime() - now.getTime();
-      if (delay <= 0) return;
-
-      var timer = setTimeout(function () {
-        showReminderNotification();
-      }, delay);
-      reminderTimers.push(timer);
-    });
-  }
-
-  function showReminderNotification() {
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
-    new Notification("Verset", {
-      body: "C\u2019est l\u2019heure de votre lecture du Coran",
-      icon: "icons/icon-192.png",
-      tag: "verset-reminder",
-    });
-  }
-
-  function renderReminders() {
-    var listEl = $("reminder-list");
-    listEl.innerHTML = "";
-
-    (state.reminders || []).forEach(function (time, index) {
-      var row = document.createElement("div");
-      row.className = "reminder-row";
-
-      var timeInput = document.createElement("input");
-      timeInput.type = "time";
-      timeInput.className = "reminder-time-input";
-      timeInput.value = time;
-      timeInput.addEventListener("change", function () {
-        state.reminders[index] = timeInput.value;
-        saveState();
-        scheduleReminders();
+  function initOneSignal() {
+    if (typeof OneSignalDeferred === "undefined") return;
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
       });
-
-      var deleteBtn = document.createElement("button");
-      deleteBtn.className = "reminder-delete-btn";
-      deleteBtn.innerHTML = "\u00d7";
-      deleteBtn.setAttribute("aria-label", "Supprimer ce rappel");
-      deleteBtn.addEventListener("click", function () {
-        state.reminders.splice(index, 1);
-        saveState();
-        renderReminders();
-        scheduleReminders();
-      });
-
-      row.appendChild(timeInput);
-      row.appendChild(deleteBtn);
-      listEl.appendChild(row);
     });
+  }
 
-    var addBtn = $("add-reminder-btn");
-    addBtn.style.display = (state.reminders || []).length < 5 ? "" : "none";
+  function updateReminderUI() {
+    if (typeof OneSignalDeferred === "undefined" || ONESIGNAL_APP_ID === "YOUR_ONESIGNAL_APP_ID") {
+      // OneSignal not configured yet
+      $("reminder-toggle-btn").textContent = "Activer les notifications";
+      $("reminder-toggle-btn").classList.remove("hidden");
+      $("reminder-status").classList.add("hidden");
+      return;
+    }
+
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.Notifications.isPushSupported().then(function (supported) {
+        if (!supported) {
+          $("reminder-toggle-btn").textContent = "Non disponible sur cet appareil";
+          $("reminder-toggle-btn").disabled = true;
+          return;
+        }
+      });
+      var permission = OneSignal.Notifications.permission;
+      if (permission) {
+        $("reminder-toggle-btn").classList.add("hidden");
+        $("reminder-status").classList.remove("hidden");
+      } else {
+        $("reminder-toggle-btn").classList.remove("hidden");
+        $("reminder-status").classList.add("hidden");
+      }
+    });
+  }
+
+  function requestOneSignalPermission() {
+    if (typeof OneSignalDeferred === "undefined") return;
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.Notifications.requestPermission().then(function () {
+        updateReminderUI();
+      });
+    });
   }
 
   // ---- FREE READING FUNCTIONS ----
@@ -302,6 +260,7 @@
     freeReadSurahIdx = surahArrayIndex;
     freeReadAyahIdx = 0;
     $("surah-overlay").classList.add("hidden");
+    $("browse-link").classList.add("hidden");
     renderFreeReading();
   }
 
@@ -319,6 +278,9 @@
       .textContent = "Versets du jour";
     document.querySelector(".progress-row:last-child .progress-labels span:first-child")
       .textContent = "Lecture compl\u00e8te";
+
+    // Restore browse link
+    $("browse-link").classList.remove("hidden");
 
     render();
   }
@@ -601,7 +563,7 @@
     $("settings-btn").addEventListener("click", function (e) {
       e.preventDefault();
       render();
-      renderReminders();
+      updateReminderUI();
       $("settings-overlay").classList.remove("hidden");
     });
     $("settings-close").addEventListener("click", function () {
@@ -642,23 +604,12 @@
       }
     });
 
-    // ---- REMINDERS ----
-    $("add-reminder-btn").addEventListener("click", function () {
-      if ((state.reminders || []).length >= 5) return;
-      requestNotificationPermission(function (granted) {
-        if (!granted) {
-          alert("Veuillez autoriser les notifications pour activer les rappels.");
-          return;
-        }
-        if (!state.reminders) state.reminders = [];
-        state.reminders.push("12:00");
-        saveState();
-        renderReminders();
-        scheduleReminders();
-      });
+    // ---- NOTIFICATIONS (OneSignal) ----
+    $("reminder-toggle-btn").addEventListener("click", function () {
+      requestOneSignalPermission();
     });
 
-    scheduleReminders();
+    initOneSignal();
 
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden) {
@@ -670,7 +621,6 @@
           saveState();
           if (!freeReadMode) render();
         }
-        scheduleReminders();
       }
     });
 
@@ -710,6 +660,10 @@
     });
 
     $("ayah-ref").addEventListener("click", function () {
+      $("surah-overlay").classList.remove("hidden");
+    });
+    $("browse-link").addEventListener("click", function (e) {
+      e.preventDefault();
       $("surah-overlay").classList.remove("hidden");
     });
     $("surah-close").addEventListener("click", function () {

@@ -68,6 +68,7 @@
         <div class="progress-fill-khatma" id="khatma-fill" style="width:0%"></div>
       </div>
     </div>
+    <a href="#sourates" class="browse-link" id="browse-link">Parcourir les sourates</a>
   </div>
 </div>
 
@@ -109,10 +110,10 @@
       </div>
     </div>
     <div class="setting-group">
-      <div class="setting-label">Rappels quotidiens</div>
-      <div class="reminder-note">Les rappels fonctionnent quand l'application est ouverte</div>
-      <div id="reminder-list" class="reminder-list"></div>
-      <button class="add-reminder-btn" id="add-reminder-btn">+ Ajouter un rappel</button>
+      <div class="setting-label">Rappel quotidien</div>
+      <div class="reminder-note">Recevez une notification chaque jour pour vous rappeler de lire</div>
+      <button class="reminder-toggle-btn" id="reminder-toggle-btn">Activer les notifications</button>
+      <div class="reminder-status hidden" id="reminder-status">Notifications actives</div>
     </div>
     <button class="reset-btn" id="reset-btn">Tout réinitialiser</button>
   </div>
@@ -152,9 +153,11 @@
       </svg>
     </button>
   </div>
+  <p class="surah-overlay-note">Choisissez une sourate pour la lire librement, sans impact sur votre progression.</p>
   <div class="overlay-body" id="surah-list"></div>
 </div>
 
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script src="app.js"></script>
 </body>
 </html>
