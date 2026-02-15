@@ -50,6 +50,11 @@
   var state = null;
   var goalDismissed = false;
 
+  // ---- FREE READING (ephemeral, not persisted) ----
+  var freeReadMode = false;
+  var freeReadSurahIdx = 0;
+  var freeReadAyahIdx = 0;
+
   // ---- DOM refs ----
   var $ = function (id) { return document.getElementById(id); };
 
@@ -76,6 +81,7 @@
       khatmaGoal: 1,
       textSize: "M",
       theme: "light",
+      reminders: [],
     };
   }
 
@@ -131,6 +137,224 @@
       document.body.classList.remove("dark");
       document.querySelector('meta[name="theme-color"]').content = "#ffffff";
     }
+  }
+
+  // ---- REMINDERS ----
+  var reminderTimers = [];
+
+  function requestNotificationPermission(callback) {
+    if (!("Notification" in window)) {
+      callback(false);
+      return;
+    }
+    if (Notification.permission === "granted") {
+      callback(true);
+      return;
+    }
+    if (Notification.permission === "denied") {
+      callback(false);
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      callback(perm === "granted");
+    });
+  }
+
+  function scheduleReminders() {
+    reminderTimers.forEach(function (t) { clearTimeout(t); });
+    reminderTimers = [];
+
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    if (!state.reminders || !state.reminders.length) return;
+
+    var now = new Date();
+
+    state.reminders.forEach(function (timeStr) {
+      var parts = timeStr.split(":");
+      var target = new Date();
+      target.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+
+      var delay = target.getTime() - now.getTime();
+      if (delay <= 0) return;
+
+      var timer = setTimeout(function () {
+        showReminderNotification();
+      }, delay);
+      reminderTimers.push(timer);
+    });
+  }
+
+  function showReminderNotification() {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    new Notification("Verset", {
+      body: "C\u2019est l\u2019heure de votre lecture du Coran",
+      icon: "icons/icon-192.png",
+      tag: "verset-reminder",
+    });
+  }
+
+  function renderReminders() {
+    var listEl = $("reminder-list");
+    listEl.innerHTML = "";
+
+    (state.reminders || []).forEach(function (time, index) {
+      var row = document.createElement("div");
+      row.className = "reminder-row";
+
+      var timeInput = document.createElement("input");
+      timeInput.type = "time";
+      timeInput.className = "reminder-time-input";
+      timeInput.value = time;
+      timeInput.addEventListener("change", function () {
+        state.reminders[index] = timeInput.value;
+        saveState();
+        scheduleReminders();
+      });
+
+      var deleteBtn = document.createElement("button");
+      deleteBtn.className = "reminder-delete-btn";
+      deleteBtn.innerHTML = "\u00d7";
+      deleteBtn.setAttribute("aria-label", "Supprimer ce rappel");
+      deleteBtn.addEventListener("click", function () {
+        state.reminders.splice(index, 1);
+        saveState();
+        renderReminders();
+        scheduleReminders();
+      });
+
+      row.appendChild(timeInput);
+      row.appendChild(deleteBtn);
+      listEl.appendChild(row);
+    });
+
+    var addBtn = $("add-reminder-btn");
+    addBtn.style.display = (state.reminders || []).length < 5 ? "" : "none";
+  }
+
+  // ---- FREE READING FUNCTIONS ----
+  function getFreeReadAyah() {
+    var surah = surahs[freeReadSurahIdx];
+    var ayahIdx = freeReadAyahIdx;
+    var isBasmala = false;
+    var displayNumber = ayahIdx + 1;
+
+    if (surah.surahNumber !== 1 && surah.surahNumber !== 9) {
+      if (ayahIdx === 0) {
+        isBasmala = true;
+        displayNumber = 0;
+      } else {
+        displayNumber = ayahIdx;
+      }
+    }
+
+    return {
+      surahNumber: surah.surahNumber,
+      surahNameAr: surah.surahNameAr,
+      surahNameFr: SURAH_NAMES_FR[surah.surahNumber] || "Sourate " + surah.surahNumber,
+      ayahNumber: displayNumber,
+      isBasmala: isBasmala,
+      text: surah.ayahs[ayahIdx],
+    };
+  }
+
+  function renderFreeReading() {
+    var surah = surahs[freeReadSurahIdx];
+    var ayahData = getFreeReadAyah();
+
+    // Header
+    $("header-title").textContent = "Lecture libre";
+    $("about-link").textContent = "\u2190 Retour";
+
+    // Ayah reference
+    if (ayahData.isBasmala) {
+      $("ayah-ref").textContent =
+        "Sourate " + ayahData.surahNameFr + " \u2014 Basmala";
+    } else {
+      $("ayah-ref").textContent =
+        "Sourate " + ayahData.surahNameFr + " \u2014 Verset " + ayahData.ayahNumber;
+    }
+
+    // Ayah text
+    var ayahEl = $("ayah-text");
+    ayahEl.textContent = ayahData.text;
+    ayahEl.className = "ayah-text size-" + state.textSize;
+
+    // Progress: surah progress (green bar)
+    var surahPct = ((freeReadAyahIdx + 1) / surah.ayahs.length) * 100;
+    $("today-fill").style.width = surahPct + "%";
+    $("today-fill").className = "progress-fill-free";
+    $("today-label").textContent = (freeReadAyahIdx + 1) + "/" + surah.ayahs.length;
+    document.querySelector(".progress-row:first-child .progress-labels span:first-child")
+      .textContent = "Versets de la sourate";
+
+    // Hide khatma bar
+    $("khatma-fill").style.width = "0%";
+    $("khatma-label").textContent = "";
+    document.querySelector(".progress-row:last-child .progress-labels span:first-child")
+      .textContent = "";
+
+    // Always hide goal-reached in free reading
+    $("goal-reached").classList.add("hidden");
+  }
+
+  function enterFreeReading(surahArrayIndex) {
+    freeReadMode = true;
+    freeReadSurahIdx = surahArrayIndex;
+    freeReadAyahIdx = 0;
+    $("surah-overlay").classList.add("hidden");
+    renderFreeReading();
+  }
+
+  function exitFreeReading() {
+    freeReadMode = false;
+    freeReadSurahIdx = 0;
+    freeReadAyahIdx = 0;
+
+    // Restore header
+    $("about-link").textContent = "\u00C0 propos";
+
+    // Restore progress bar classes and labels
+    $("today-fill").className = "progress-fill-today";
+    document.querySelector(".progress-row:first-child .progress-labels span:first-child")
+      .textContent = "Versets du jour";
+    document.querySelector(".progress-row:last-child .progress-labels span:first-child")
+      .textContent = "Lecture compl\u00e8te";
+
+    render();
+  }
+
+  function goNextFreeRead() {
+    var surah = surahs[freeReadSurahIdx];
+    if (freeReadAyahIdx < surah.ayahs.length - 1) {
+      freeReadAyahIdx++;
+    } else if (freeReadSurahIdx < surahs.length - 1) {
+      freeReadSurahIdx++;
+      freeReadAyahIdx = 0;
+    } else {
+      return;
+    }
+    fadeAndRenderFreeRead();
+  }
+
+  function goPrevFreeRead() {
+    if (freeReadAyahIdx > 0) {
+      freeReadAyahIdx--;
+    } else if (freeReadSurahIdx > 0) {
+      freeReadSurahIdx--;
+      freeReadAyahIdx = surahs[freeReadSurahIdx].ayahs.length - 1;
+    } else {
+      return;
+    }
+    fadeAndRenderFreeRead();
+  }
+
+  function fadeAndRenderFreeRead() {
+    var el = $("ayah-text");
+    el.classList.add("fade-out");
+    setTimeout(function () {
+      renderFreeReading();
+      el.classList.remove("fade-out");
+    }, 150);
   }
 
   // ---- QURAN ACCESS ----
@@ -240,6 +464,7 @@
 
   // ---- NAVIGATION ----
   function goNext() {
+    if (freeReadMode) { goNextFreeRead(); return; }
     var newIndex = state.globalIndex + 1;
     if (newIndex > 0 && newIndex % totalAyat === 0) {
       state.cycleCount++;
@@ -252,6 +477,7 @@
   }
 
   function goPrev() {
+    if (freeReadMode) { goPrevFreeRead(); return; }
     if (state.globalIndex <= 0) return;
     state.globalIndex--;
     state.todayReadCount = Math.max(0, state.todayReadCount - 1);
@@ -362,7 +588,11 @@
 
     $("about-link").addEventListener("click", function (e) {
       e.preventDefault();
-      $("about-overlay").classList.remove("hidden");
+      if (freeReadMode) {
+        exitFreeReading();
+      } else {
+        $("about-overlay").classList.remove("hidden");
+      }
     });
     $("about-close").addEventListener("click", function () {
       $("about-overlay").classList.add("hidden");
@@ -371,6 +601,7 @@
     $("settings-btn").addEventListener("click", function (e) {
       e.preventDefault();
       render();
+      renderReminders();
       $("settings-overlay").classList.remove("hidden");
     });
     $("settings-close").addEventListener("click", function () {
@@ -411,10 +642,42 @@
       }
     });
 
+    // ---- REMINDERS ----
+    $("add-reminder-btn").addEventListener("click", function () {
+      if ((state.reminders || []).length >= 5) return;
+      requestNotificationPermission(function (granted) {
+        if (!granted) {
+          alert("Veuillez autoriser les notifications pour activer les rappels.");
+          return;
+        }
+        if (!state.reminders) state.reminders = [];
+        state.reminders.push("12:00");
+        saveState();
+        renderReminders();
+        scheduleReminders();
+      });
+    });
+
+    scheduleReminders();
+
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) {
+        var today = getLocalDateStr();
+        if (state.lastReadDate !== today) {
+          state.todayReadCount = 0;
+          state.lastReadDate = today;
+          goalDismissed = false;
+          saveState();
+          if (!freeReadMode) render();
+        }
+        scheduleReminders();
+      }
+    });
+
     // ---- SURAH LIST ----
-    // Build the list (display-only, no navigation)
+    // Build the list (clickable for free reading)
     var surahListEl = $("surah-list");
-    surahs.forEach(function (s) {
+    surahs.forEach(function (s, surahArrayIndex) {
       var item = document.createElement("div");
       item.className = "surah-item";
 
@@ -438,6 +701,11 @@
 
       item.appendChild(left);
       item.appendChild(nameAr);
+
+      item.addEventListener("click", function () {
+        enterFreeReading(surahArrayIndex);
+      });
+
       surahListEl.appendChild(item);
     });
 
