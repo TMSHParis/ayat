@@ -36,6 +36,20 @@
   --btn-active-text: #222222;
 }
 
+body.sepia {
+  --bg: #fdf9f4;
+  --text: #2c2416;
+  --text-secondary: #3d3425;
+  --text-muted: #8a7e6e;
+  --text-faint: #b8ad9e;
+  --border: #ede6db;
+  --track: #ede6db;
+  --overlay-bg: #fdf9f4;
+  --btn-border: #d6cdbf;
+  --btn-active-border: #3d3425;
+  --btn-active-text: #3d3425;
+}
+
 body.dark {
   --bg: #111111;
   --text: #e8e8e8;

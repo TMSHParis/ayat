@@ -129,12 +129,16 @@
 
   // ---- THEME ----
   function applyTheme() {
+    document.body.classList.remove("dark", "sepia");
+    var meta = document.querySelector('meta[name="theme-color"]');
     if (state.theme === "dark") {
       document.body.classList.add("dark");
-      document.querySelector('meta[name="theme-color"]').content = "#111111";
+      meta.content = "#111111";
+    } else if (state.theme === "sepia") {
+      document.body.classList.add("sepia");
+      meta.content = "#fdf9f4";
     } else {
-      document.body.classList.remove("dark");
-      document.querySelector('meta[name="theme-color"]').content = "#ffffff";
+      meta.content = "#ffffff";
     }
   }
 
