@@ -260,13 +260,14 @@
     $("goal-reached").classList.add("hidden");
   }
 
-  function enterFreeReading(surahArrayIndex) {
+  function enterFreeReading(surahArrayIndex, ayahIdx) {
     freeReadMode = true;
     freeReadSurahIdx = surahArrayIndex;
-    freeReadAyahIdx = 0;
+    freeReadAyahIdx = ayahIdx || 0;
     $("surah-overlay").classList.add("hidden");
     $("browse-link").classList.add("hidden");
     renderFreeReading();
+    $("ayah-scroll").scrollTop = 0;
   }
 
   function exitFreeReading() {
@@ -633,9 +634,12 @@
     });
 
     // ---- SURAH LIST ----
-    // Build the list (clickable for free reading)
     var surahListEl = $("surah-list");
+    var activeVersePicker = null; // track which picker is open
+
     surahs.forEach(function (s, surahArrayIndex) {
+      var wrapper = document.createElement("div");
+
       var item = document.createElement("div");
       item.className = "surah-item";
 
@@ -660,11 +664,77 @@
       item.appendChild(left);
       item.appendChild(nameAr);
 
-      item.addEventListener("click", function () {
-        enterFreeReading(surahArrayIndex);
+      // Verse count (excluding Basmala for display)
+      var realVerseCount = s.ayahs.length;
+      if (s.surahNumber !== 1 && s.surahNumber !== 9) {
+        realVerseCount = s.ayahs.length - 1; // minus Basmala
+      }
+
+      // Verse picker (hidden by default)
+      var picker = document.createElement("div");
+      picker.className = "verse-picker hidden";
+
+      var pickerLabel = document.createElement("span");
+      pickerLabel.className = "verse-picker-label";
+      pickerLabel.textContent = "Verset (1\u2013" + realVerseCount + ")";
+
+      var pickerInput = document.createElement("input");
+      pickerInput.type = "number";
+      pickerInput.className = "verse-picker-input";
+      pickerInput.min = 1;
+      pickerInput.max = realVerseCount;
+      pickerInput.value = 1;
+      pickerInput.placeholder = "1";
+
+      var pickerBtn = document.createElement("button");
+      pickerBtn.className = "verse-picker-btn";
+      pickerBtn.textContent = "Lire";
+
+      picker.appendChild(pickerLabel);
+      picker.appendChild(pickerInput);
+      picker.appendChild(pickerBtn);
+
+      wrapper.appendChild(item);
+      wrapper.appendChild(picker);
+
+      item.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (activeVersePicker && activeVersePicker !== picker) {
+          activeVersePicker.classList.add("hidden");
+        }
+        picker.classList.toggle("hidden");
+        activeVersePicker = picker.classList.contains("hidden") ? null : picker;
+        if (!picker.classList.contains("hidden")) {
+          pickerInput.value = 1;
+          pickerInput.focus();
+        }
       });
 
-      surahListEl.appendChild(item);
+      pickerBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var verseNum = parseInt(pickerInput.value, 10);
+        if (isNaN(verseNum) || verseNum < 1) verseNum = 1;
+        if (verseNum > realVerseCount) verseNum = realVerseCount;
+
+        // Convert verse number to ayah index in the processed array
+        var ayahIdx;
+        if (s.surahNumber === 1 || s.surahNumber === 9) {
+          ayahIdx = verseNum - 1;
+        } else {
+          ayahIdx = verseNum; // index 0 = Basmala, index 1 = verse 1, etc.
+        }
+        enterFreeReading(surahArrayIndex, ayahIdx);
+      });
+
+      // Allow pressing Enter in the input
+      pickerInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          pickerBtn.click();
+        }
+      });
+
+      surahListEl.appendChild(wrapper);
     });
 
     $("ayah-ref").addEventListener("click", function () {

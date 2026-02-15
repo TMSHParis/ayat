@@ -138,21 +138,25 @@ html, body {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  min-height: 0;
+}
+.ayah-scroll-inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 0;
+  min-height: 100%;
+  padding: 8px 0;
 }
 .ayah-text {
   font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;
   color: var(--text);
   text-align: center;
   max-width: 700px;
+  width: 100%;
   direction: rtl;
   transition: opacity 150ms ease;
   word-spacing: 4px;
-  padding: 8px 0;
 }
 .ayah-text.size-S { font-size: 24px; line-height: 1.8; }
 .ayah-text.size-M { font-size: 30px; line-height: 2.0; }
@@ -468,6 +472,50 @@ html, body {
   color: var(--text-faint);
   font-family: "Amiri", serif;
   direction: rtl;
+}
+
+/* ---- VERSE PICKER ---- */
+.verse-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 14px;
+}
+.verse-picker-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.verse-picker-input {
+  width: 60px;
+  font-size: 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--btn-border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+.verse-picker-input::-webkit-inner-spin-button,
+.verse-picker-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.verse-picker-btn {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--btn-border);
+  border-radius: 50px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.verse-picker-btn:hover {
+  border-color: var(--text-faint);
+  color: var(--text-secondary);
 }
 
 /* ---- LOADING ---- */

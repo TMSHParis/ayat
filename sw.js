@@ -1,4 +1,4 @@
-const CACHE_NAME = "verset-v10";
+const CACHE_NAME = "verset-v11";
 
 const PRECACHE = [
   "./",
