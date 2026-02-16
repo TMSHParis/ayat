@@ -89,6 +89,7 @@ html, body {
   flex-direction: column;
   height: 100%;
   height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ---- HEADER ---- */
@@ -96,7 +97,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 14px 18px;
   flex-shrink: 0;
 }
 .header-link {
@@ -289,6 +290,7 @@ html, body {
   z-index: 100;
   display: flex;
   flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .overlay-header {
   display: flex;
