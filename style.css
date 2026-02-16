@@ -408,6 +408,12 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   border-radius: 50%;
   display: inline-block;
 }
+.reminder-confirm {
+  font-size: 11px;
+  color: #10b981;
+  margin-top: 10px;
+  line-height: 1.5;
+}
 
 .reset-btn {
   font-size: 12px;

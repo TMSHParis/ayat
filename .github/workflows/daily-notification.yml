@@ -4,8 +4,6 @@ on:
   schedule:
     # Every day at 6:00 AM UTC (7:00 AM Paris winter / 8:00 AM Paris summer)
     - cron: '0 6 * * *'
-    # Every day at 12:00 PM UTC (1:00 PM / 2:00 PM Paris)
-    - cron: '0 12 * * *'
     # Every day at 8:00 PM UTC (9:00 PM / 10:00 PM Paris)
     - cron: '0 20 * * *'
   workflow_dispatch:
@@ -18,9 +16,7 @@ jobs:
         run: |
           HOUR=$(date -u +%H)
           if [ "$HOUR" = "06" ]; then
-            MSG="Bonjour ! N'oubliez pas votre lecture du Coran aujourd'hui."
-          elif [ "$HOUR" = "12" ]; then
-            MSG="C'est le moment idéal pour lire quelques versets du Coran."
+            MSG="Bonjour ! C'est le moment de lire vos versets du jour."
           else
             MSG="Avez-vous lu vos versets aujourd'hui ? Il est encore temps."
           fi

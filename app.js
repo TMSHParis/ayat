@@ -167,10 +167,12 @@
   }
 
   function updateReminderUI() {
+    var confirmEl = $("reminder-confirm");
     if (typeof OneSignalDeferred === "undefined") {
       $("reminder-toggle-btn").textContent = "Activer les notifications";
       $("reminder-toggle-btn").classList.remove("hidden");
       $("reminder-status").classList.add("hidden");
+      if (confirmEl) confirmEl.classList.add("hidden");
       return;
     }
 
@@ -186,9 +188,11 @@
       if (permission) {
         $("reminder-toggle-btn").classList.add("hidden");
         $("reminder-status").classList.remove("hidden");
+        if (confirmEl) confirmEl.classList.add("hidden");
       } else {
         $("reminder-toggle-btn").classList.remove("hidden");
         $("reminder-status").classList.add("hidden");
+        if (confirmEl) confirmEl.classList.add("hidden");
       }
     });
   }
@@ -196,8 +200,16 @@
   function requestOneSignalPermission() {
     if (typeof OneSignalDeferred === "undefined") return;
     OneSignalDeferred.push(function (OneSignal) {
-      OneSignal.Notifications.requestPermission().then(function () {
-        updateReminderUI();
+      OneSignal.Notifications.requestPermission().then(function (accepted) {
+        if (accepted) {
+          var confirmEl = $("reminder-confirm");
+          if (confirmEl) confirmEl.classList.remove("hidden");
+          setTimeout(function () {
+            updateReminderUI();
+          }, 2500);
+        } else {
+          updateReminderUI();
+        }
       });
     });
   }
