@@ -265,7 +265,6 @@
     freeReadSurahIdx = surahArrayIndex;
     freeReadAyahIdx = ayahIdx || 0;
     $("surah-overlay").classList.add("hidden");
-    $("browse-link").classList.add("hidden");
     renderFreeReading();
     $("ayah-scroll").scrollTop = 0;
   }
@@ -284,9 +283,6 @@
       .textContent = "Versets du jour";
     document.querySelector(".progress-row:last-child .progress-labels span:first-child")
       .textContent = "Lecture compl\u00e8te";
-
-    // Restore browse link
-    $("browse-link").classList.remove("hidden");
 
     render();
   }
