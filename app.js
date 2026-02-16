@@ -1,5 +1,5 @@
 /* ============================================
-   VERSET — app.js
+   QURANI — app.js
    Pure vanilla JS, zero dependencies
    ============================================ */
 
@@ -46,7 +46,15 @@
   var BASMALA = ""; // extracted from surah 1, verse 1
 
   // ---- STATE ----
-  var STORAGE_KEY = "verset-app-state";
+  var STORAGE_KEY = "qurani-app-state";
+  // Migrate from old storage key (Verset → Qurani)
+  (function migrateStorage() {
+    var OLD_KEY = "verset-app-state";
+    if (!localStorage.getItem(STORAGE_KEY) && localStorage.getItem(OLD_KEY)) {
+      localStorage.setItem(STORAGE_KEY, localStorage.getItem(OLD_KEY));
+      localStorage.removeItem(OLD_KEY);
+    }
+  })();
   var state = null;
   var goalDismissed = false;
 

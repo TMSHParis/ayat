@@ -1,6 +1,6 @@
 {
-  "name": "Verset",
-  "short_name": "Verset",
+  "name": "Qurani",
+  "short_name": "Qurani",
   "description": "Lecture du Coran en 30 jours",
   "start_url": "./",
   "scope": "./",

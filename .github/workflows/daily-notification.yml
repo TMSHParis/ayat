@@ -32,6 +32,6 @@ jobs:
               \"app_id\": \"${{ secrets.ONESIGNAL_APP_ID }}\",
               \"included_segments\": [\"Subscribed Users\"],
               \"contents\": {\"fr\": \"$MSG\", \"en\": \"$MSG\"},
-              \"headings\": {\"fr\": \"Verset\", \"en\": \"Verset\"},
+              \"headings\": {\"fr\": \"Qurani\", \"en\": \"Qurani\"},
               \"url\": \"https://tmshparis.github.io/ayat/\"
             }"
