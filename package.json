@@ -1,0 +1,21 @@
+{
+  "name": "qurani",
+  "version": "1.0.0",
+  "description": "Qurani — Lecture du Coran en 30 jours",
+  "scripts": {
+    "build": "rm -rf www && mkdir -p www/fonts www/icons && cp index.html style.css app.js quran.json manifest.json OneSignalSDKWorker.js sw.js www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TMSHParis/ayat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0"
+  }
+}
