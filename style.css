@@ -126,7 +126,7 @@ html, body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   z-index: 1;
 }
 .action-btn {
