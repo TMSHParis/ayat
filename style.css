@@ -95,25 +95,11 @@ html, body {
 /* ---- HEADER ---- */
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 6px 18px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 8px 18px;
   flex-shrink: 0;
   position: relative;
-}
-.header-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  z-index: 1;
-}
-.header-col-right {
-  align-items: flex-end;
-}
-.header-actions {
-  display: flex;
-  gap: 6px;
 }
 .header-link {
   font-size: 11px;
@@ -121,6 +107,7 @@ html, body {
   text-decoration: none;
   transition: color .2s;
   white-space: nowrap;
+  z-index: 1;
 }
 .header-link:hover { color: var(--text-muted); }
 .header-title {
@@ -154,7 +141,7 @@ html, body {
 .ayah-ref {
   font-size: 12px;
   color: var(--text-faint);
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   font-family: system-ui, sans-serif;
   text-align: center;
   flex-shrink: 0;
@@ -315,18 +302,24 @@ html, body {
   background: linear-gradient(90deg, #10b981, #059669);
 }
 
-/* ---- BROWSE LINK ---- */
-.browse-link {
-  display: block;
-  text-align: center;
-  font-size: 12px;
+/* ---- BOTTOM BAR ---- */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 18px 4px;
+}
+.bottom-link {
+  font-size: 11px;
   color: var(--text-faint);
   text-decoration: none;
-  padding: 12px 0 4px;
   transition: color .2s;
+  white-space: nowrap;
 }
-.browse-link:hover {
-  color: var(--text-muted);
+.bottom-link:hover { color: var(--text-muted); }
+.bottom-actions {
+  display: flex;
+  gap: 14px;
 }
 
 /* ---- OVERLAY (settings, about) ---- */
@@ -627,9 +620,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* (header-right removed — now using header-col) */
-
-/* ---- ACTION BUTTONS (share + bookmark in header) ---- */
+/* ---- ACTION BUTTONS (search, share, bookmark in bottom bar) ---- */
 .action-btn {
   background: none;
   border: none;
@@ -804,17 +795,6 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   font-size: 11px;
   color: var(--text-faint);
   padding: 8px 24px 0;
-}
-
-/* ---- BOTTOM LINKS ---- */
-.bottom-links {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px 0 4px;
-}
-.bottom-links .browse-link {
-  padding: 0;
 }
 
 /* ---- TOAST ---- */

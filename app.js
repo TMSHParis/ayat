@@ -820,7 +820,7 @@
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
     if (tag === "button" || tag === "a" || tag === "input" || tag === "svg" || tag === "polyline" || tag === "line" || tag === "path") return;
-    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".nav-arrows") || e.target.closest(".header-actions")) return;
+    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".nav-arrows") || e.target.closest(".bottom-actions")) return;
     var containerRect = $("ayah-container").getBoundingClientRect();
     var clickX = e.clientX;
     var midX = containerRect.left + containerRect.width / 2;
@@ -1291,8 +1291,7 @@
       });
     }
 
-    $("search-link").addEventListener("click", function (e) {
-      e.preventDefault();
+    $("search-btn").addEventListener("click", function () {
       $("search-overlay").classList.remove("hidden");
       $("search-input").value = "";
       $("search-results").innerHTML = "";

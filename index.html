@@ -26,26 +26,9 @@
 
   <!-- Header -->
   <header class="header">
-    <div class="header-col">
-      <a href="#about" class="header-link" id="about-link">À propos</a>
-      <div class="header-actions">
-        <button class="action-btn" id="share-btn" aria-label="Partager ce verset">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-          </svg>
-        </button>
-        <button class="action-btn" id="bookmark-btn" aria-label="Ajouter aux favoris">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <a href="#stats" class="header-link" id="stats-btn">Stats</a>
     <span class="header-title" id="header-title">Aujourd'hui tu dois lire : 208 versets</span>
-    <div class="header-col header-col-right">
-      <a href="#settings" class="header-link" id="settings-btn">Réglages</a>
-      <a href="#stats" class="header-link" id="stats-btn">Stats</a>
-    </div>
+    <a href="#settings" class="header-link" id="settings-btn">Réglages</a>
   </header>
 
   <!-- Ayah viewer -->
@@ -96,9 +79,26 @@
         <div class="progress-fill-khatma" id="khatma-fill" style="width:0%"></div>
       </div>
     </div>
-    <div class="bottom-links">
-      <a href="#sourates" class="browse-link" id="browse-link">Parcourir les sourates</a>
-      <a href="#search" class="browse-link" id="search-link">Rechercher</a>
+    <div class="bottom-bar">
+      <a href="#sourates" class="bottom-link" id="browse-link">Parcourir les sourates</a>
+      <div class="bottom-actions">
+        <button class="action-btn" id="search-btn" aria-label="Rechercher">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+        <button class="action-btn" id="share-btn" aria-label="Partager ce verset">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+        <button class="action-btn" id="bookmark-btn" aria-label="Ajouter aux favoris">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </button>
+      </div>
+      <a href="#about" class="bottom-link" id="about-link">À propos</a>
     </div>
   </div>
 </div>
