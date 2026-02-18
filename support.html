@@ -3,67 +3,343 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qurani — Support</title>
+  <title>Qurani — Support &amp; Help</title>
   <style>
-    body { font-family: -apple-system, system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
-    h1 { font-size: 24px; }
-    h2 { font-size: 18px; margin-top: 32px; }
-    p { margin: 12px 0; }
-    .date { color: #888; font-size: 14px; }
-    a { color: #1a73e8; }
-    .faq { background: #f8f8f8; border-radius: 8px; padding: 16px; margin: 16px 0; }
-    .faq h3 { font-size: 15px; margin: 0 0 8px 0; }
-    .faq p { margin: 4px 0; font-size: 14px; }
+    :root {
+      --green: #2d6a4f;
+      --green-light: #40916c;
+      --green-bg: #f0faf4;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --muted: #555;
+      --faint: #888;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    /* HERO */
+    .hero {
+      background: var(--green);
+      color: #fff;
+      text-align: center;
+      padding: 48px 20px 40px;
+    }
+    .hero-icon {
+      font-size: 52px;
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      margin-bottom: 6px;
+    }
+    .hero p {
+      font-size: 15px;
+      opacity: .85;
+    }
+
+    /* CONTENT */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* CONTACT CARD */
+    .contact-card {
+      background: var(--green-bg);
+      border: 1px solid #b7e4c7;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0 40px;
+      text-align: center;
+    }
+    .contact-card h2 {
+      font-size: 17px;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+    .contact-card p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .contact-card a.btn {
+      display: inline-block;
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .contact-card .note {
+      font-size: 12px;
+      color: var(--faint);
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    /* FEATURES GRID */
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 480px) { .features { grid-template-columns: 1fr; } }
+    .feature {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .feature-icon { font-size: 22px; margin-bottom: 6px; }
+    .feature h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .feature p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* FAQ */
+    .faq-list { margin-bottom: 40px; }
+    details {
+      border-bottom: 1px solid var(--border);
+    }
+    details:first-child { border-top: 1px solid var(--border); }
+    summary {
+      padding: 16px 4px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "+";
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--faint);
+      flex-shrink: 0;
+    }
+    details[open] summary::after { content: "−"; }
+    .faq-answer {
+      padding: 0 4px 16px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--faint);
+      text-align: center;
+    }
+    .footer a { color: var(--green-light); text-decoration: none; }
+
+    /* LANG TOGGLE */
+    .lang-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 20px 0;
+      max-width: 680px;
+      margin: 0 auto;
+      gap: 8px;
+    }
+    .lang-btn {
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .lang-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
   </style>
 </head>
 <body>
-  <h1>Support — Qurani</h1>
-  <p class="date">Application de lecture du Coran en 30 jours</p>
 
-  <h2>Nous contacter</h2>
-  <p>Pour toute question, suggestion ou signalement de bug, contactez-nous par e-mail :</p>
-  <p><a href="mailto:tmshparis@gmail.com">tmshparis@gmail.com</a></p>
-  <p>Nous répondons généralement sous 24 à 48 heures.</p>
-
-  <h2>Questions fréquentes</h2>
-
-  <div class="faq">
-    <h3>Comment fonctionne le plan de lecture en 30 jours ?</h3>
-    <p>Qurani divise les 6236 versets du Coran en 30 portions quotidiennes. Chaque jour, l'application vous indique combien de versets lire. Votre progression est sauvegardée automatiquement.</p>
+  <div class="hero">
+    <div class="hero-icon">📖</div>
+    <h1>Qurani — Support</h1>
+    <p>Lire le Coran en 30 jours &nbsp;·&nbsp; Read the Quran in 30 days</p>
   </div>
 
-  <div class="faq">
-    <h3>Mes données sont-elles sauvegardées ?</h3>
-    <p>Votre progression est stockée localement sur votre appareil. Aucune donnée n'est envoyée à un serveur. Si vous désinstallez l'application, votre progression sera perdue.</p>
-  </div>
+  <div class="container">
 
-  <div class="faq">
-    <h3>L'application fonctionne-t-elle sans Internet ?</h3>
-    <p>Oui. Après le premier lancement, Qurani fonctionne entièrement hors connexion. Le texte du Coran est intégré dans l'application.</p>
-  </div>
+    <!-- CONTACT -->
+    <div class="contact-card">
+      <h2>Nous contacter / Contact us</h2>
+      <p>Une question, un problème ou une suggestion ? Écrivez-nous.<br>
+         A question, a bug or a suggestion? Write to us.</p>
+      <a class="btn" href="mailto:tmshparis@gmail.com">tmshparis@gmail.com</a>
+      <p class="note">Réponse sous 24–48h &nbsp;·&nbsp; Response within 24–48h</p>
+    </div>
 
-  <div class="faq">
-    <h3>Comment changer le thème ou la taille du texte ?</h3>
-    <p>Allez dans Réglages (en haut à droite). Vous pouvez choisir entre 3 thèmes (Jour, Sépia, Nuit) et 3 tailles de texte (Petit, Moyen, Grand).</p>
-  </div>
+    <!-- FEATURES -->
+    <h2 class="section-title">Fonctionnalités / Features</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">📅</div>
+        <h3>Plan 30 jours</h3>
+        <p>Objectif quotidien calculé automatiquement pour finir le Coran en 30 jours.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔍</div>
+        <h3>Recherche</h3>
+        <p>Recherchez dans le texte arabe et la traduction française simultanément.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>Bilingue</h3>
+        <p>Arabe (Uthmani), français (Hamidullah) ou les deux côte à côte.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔖</div>
+        <h3>Favoris</h3>
+        <p>Sauvegardez vos versets préférés et retrouvez-les dans vos statistiques.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <h3>Statistiques</h3>
+        <p>Suivez votre progression, votre streak et vos jours de lecture.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔔</div>
+        <h3>Notifications</h3>
+        <p>Rappel quotidien pour maintenir votre plan de lecture.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📴</div>
+        <h3>Hors connexion</h3>
+        <p>Le Coran complet est disponible sans Internet après la première ouverture.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <h3>Thèmes</h3>
+        <p>Mode Jour, Sépia ou Nuit. Taille de texte ajustable.</p>
+      </div>
+    </div>
 
-  <div class="faq">
-    <h3>Comment réinitialiser ma progression ?</h3>
-    <p>Dans les Réglages, appuyez sur "Tout réinitialiser" en bas de la page. Attention, cette action est irréversible.</p>
-  </div>
+    <!-- FAQ -->
+    <h2 class="section-title">Questions fréquentes / FAQ</h2>
+    <div class="faq-list">
 
-  <div class="faq">
-    <h3>Comment partager un verset ?</h3>
-    <p>Pendant la lecture, appuyez sur le bouton de partage pour envoyer le verset par message, e-mail ou sur les réseaux sociaux.</p>
-  </div>
+      <details>
+        <summary>Comment fonctionne le plan de lecture en 30 jours ?</summary>
+        <div class="faq-answer">
+          L'application divise les 6 236 versets du Coran en 30 portions quotidiennes adaptées. Chaque jour, le compteur en haut de l'écran indique le nombre de versets à lire. Votre position est sauvegardée automatiquement à chaque verset.
+        </div>
+      </details>
 
-  <div class="faq">
-    <h3>Comment sauvegarder un verset en favori ?</h3>
-    <p>Pendant la lecture, appuyez sur le bouton signet pour ajouter le verset à vos favoris. Retrouvez tous vos versets sauvegardés dans la section Favoris.</p>
-  </div>
+      <details>
+        <summary>Quelle est la différence entre « Lecture libre » et « Mon plan 30 jours » ?</summary>
+        <div class="faq-answer">
+          <strong>Lecture libre</strong> vous permet de parcourir n'importe quelle sourate sans modifier votre progression dans le plan de 30 jours.<br><br>
+          <strong>Mon plan 30 jours</strong> repositionne votre point de progression à l'endroit choisi. Utile si vous avez lu le Coran en dehors de l'application et voulez resynchroniser votre avancement.
+        </div>
+      </details>
 
-  <h2>Liens utiles</h2>
-  <p><a href="privacy.html">Politique de confidentialité</a></p>
-  <p><a href="https://tmshparis.github.io/ayat/">Accéder à l'application web</a></p>
+      <details>
+        <summary>L'application fonctionne-t-elle sans Internet ?</summary>
+        <div class="faq-answer">
+          Oui. Après le premier lancement, Qurani fonctionne entièrement hors connexion. Le texte intégral du Coran (arabe + traduction française) est mis en cache sur votre appareil.
+        </div>
+      </details>
+
+      <details>
+        <summary>Mes données sont-elles sauvegardées ?</summary>
+        <div class="faq-answer">
+          Votre progression, vos favoris et vos réglages sont stockés localement sur votre appareil. Aucune donnée personnelle n'est envoyée à un serveur externe.
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment changer la langue d'affichage ?</summary>
+        <div class="faq-answer">
+          Allez dans <strong>Menu → Réglages</strong>. Vous pouvez choisir entre trois modes : Arabe seul, Arabe + Français, ou Français seul. La traduction utilisée est celle de Muhammad Hamidullah.
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment changer le thème ou la taille du texte ?</summary>
+        <div class="faq-answer">
+          Dans <strong>Menu → Réglages</strong>, choisissez parmi 4 thèmes (Auto, Jour, Sépia, Nuit) et 3 tailles de police (Petit, Moyen, Grand).
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment naviguer entre les versets ?</summary>
+        <div class="faq-answer">
+          Balayez l'écran vers la gauche ou appuyez sur la partie droite de l'écran pour passer au verset suivant. Balayez vers la droite ou appuyez à gauche pour revenir au verset précédent.
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment sauvegarder un verset en favori ?</summary>
+        <div class="faq-answer">
+          Appuyez sur l'icône signet (🔖) en haut à droite pendant la lecture. Le verset est ajouté à vos favoris. Retrouvez tous vos versets sauvegardés dans <strong>Menu → Statistiques</strong>.
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment partager un verset ?</summary>
+        <div class="faq-answer">
+          Appuyez sur l'icône de partage en haut à droite pour partager le verset en cours via vos applications (Messages, WhatsApp, e-mail, etc.).
+        </div>
+      </details>
+
+      <details>
+        <summary>Comment réinitialiser ma progression ?</summary>
+        <div class="faq-answer">
+          Allez dans <strong>Menu → Réglages</strong>, puis appuyez sur <strong>« Tout réinitialiser »</strong> en bas de la page. Attention : cette action efface toute votre progression et vos favoris de façon irréversible.
+        </div>
+      </details>
+
+      <details>
+        <summary>How does the 30-day reading plan work? (English)</summary>
+        <div class="faq-answer">
+          Qurani automatically divides the 6,236 Quran verses into 30 daily portions. The counter at the top of the screen shows how many verses to read today. Your progress is saved automatically after each verse.
+        </div>
+      </details>
+
+      <details>
+        <summary>Does the app work offline? (English)</summary>
+        <div class="faq-answer">
+          Yes. After the first launch, the full Quran (Arabic + French translation) is cached on your device and works completely offline.
+        </div>
+      </details>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <p>
+        <a href="privacy.html">Politique de confidentialité / Privacy Policy</a>
+        &nbsp;·&nbsp;
+        <a href="https://tmshparis.github.io/ayat/">Ouvrir l'application</a>
+      </p>
+      <p style="margin-top:8px;">© 2026 IslamSounnah &nbsp;·&nbsp; tmshparis@gmail.com</p>
+    </div>
+
+  </div>
 </body>
 </html>
