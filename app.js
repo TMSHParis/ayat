@@ -814,7 +814,8 @@
       !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("stats-overlay").classList.contains("hidden")
+      !$("stats-overlay").classList.contains("hidden") ||
+      !$("search-overlay").classList.contains("hidden")
     ) return;
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
@@ -837,7 +838,8 @@
       !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("stats-overlay").classList.contains("hidden")
+      !$("stats-overlay").classList.contains("hidden") ||
+      !$("search-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -1189,6 +1191,123 @@
     });
     $("surah-close").addEventListener("click", function () {
       $("surah-overlay").classList.add("hidden");
+    });
+
+    // ---- QURAN SEARCH ----
+    var searchTimer = null;
+    var MAX_RESULTS = 50;
+
+    function performSearch(query) {
+      var resultsEl = $("search-results");
+      var hintEl = $("search-hint");
+      resultsEl.innerHTML = "";
+
+      if (!query || query.length < 2) {
+        hintEl.classList.remove("hidden");
+        return;
+      }
+      hintEl.classList.add("hidden");
+
+      var q = query.toLowerCase();
+      var results = [];
+
+      for (var i = 0; i < surahs.length; i++) {
+        var s = surahs[i];
+        var sFr = surahsFr[i];
+        for (var j = 0; j < s.ayahs.length; j++) {
+          // Skip basmala entries for search
+          var isBasmala = false;
+          var displayNum = j + 1;
+          if (s.surahNumber !== 1 && s.surahNumber !== 9) {
+            if (j === 0) { isBasmala = true; displayNum = 0; }
+            else { displayNum = j; }
+          }
+          if (isBasmala) continue;
+
+          var arText = s.ayahs[j];
+          var frText = sFr && sFr.ayahs[j] ? sFr.ayahs[j] : "";
+          var matchAr = arText.indexOf(query) !== -1;
+          var matchFr = frText.toLowerCase().indexOf(q) !== -1;
+
+          if (matchAr || matchFr) {
+            results.push({
+              surahIdx: i,
+              ayahIdx: j,
+              surahNumber: s.surahNumber,
+              surahNameFr: SURAH_NAMES_FR[s.surahNumber] || "Sourate " + s.surahNumber,
+              ayahNumber: displayNum,
+              arText: arText,
+              frText: frText
+            });
+            if (results.length >= MAX_RESULTS) break;
+          }
+        }
+        if (results.length >= MAX_RESULTS) break;
+      }
+
+      if (results.length === 0) {
+        var noRes = document.createElement("p");
+        noRes.className = "search-no-results";
+        noRes.textContent = "Aucun résultat pour « " + query + " »";
+        resultsEl.appendChild(noRes);
+        return;
+      }
+
+      var countEl = document.createElement("p");
+      countEl.className = "search-result-count";
+      countEl.textContent = results.length >= MAX_RESULTS
+        ? MAX_RESULTS + "+ résultats"
+        : results.length + " résultat" + (results.length > 1 ? "s" : "");
+      resultsEl.appendChild(countEl);
+
+      results.forEach(function (r) {
+        var item = document.createElement("div");
+        item.className = "search-result-item";
+
+        var ref = document.createElement("div");
+        ref.className = "search-result-ref";
+        ref.textContent = "Sourate " + r.surahNameFr + " — Verset " + r.ayahNumber;
+
+        var arDiv = document.createElement("div");
+        arDiv.className = "search-result-ar";
+        arDiv.textContent = r.arText;
+
+        item.appendChild(ref);
+        item.appendChild(arDiv);
+
+        if (r.frText) {
+          var frDiv = document.createElement("div");
+          frDiv.className = "search-result-fr";
+          frDiv.textContent = r.frText;
+          item.appendChild(frDiv);
+        }
+
+        item.addEventListener("click", function () {
+          $("search-overlay").classList.add("hidden");
+          enterFreeReading(r.surahIdx, r.ayahIdx);
+        });
+
+        resultsEl.appendChild(item);
+      });
+    }
+
+    $("search-link").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("search-overlay").classList.remove("hidden");
+      $("search-input").value = "";
+      $("search-results").innerHTML = "";
+      $("search-hint").classList.remove("hidden");
+      setTimeout(function () { $("search-input").focus(); }, 100);
+    });
+    $("search-close").addEventListener("click", function () {
+      $("search-overlay").classList.add("hidden");
+    });
+    $("search-input").addEventListener("input", function () {
+      var val = this.value.trim();
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        performSearch(val);
+      }, 300);
     });
 
     if ("serviceWorker" in navigator) {

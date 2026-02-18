@@ -95,21 +95,25 @@ html, body {
 /* ---- HEADER ---- */
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 8px 18px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 6px 18px;
   flex-shrink: 0;
   position: relative;
 }
-.header-left {
+.header-col {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  z-index: 1;
+}
+.header-col-right {
+  align-items: flex-end;
 }
 .header-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 .header-link {
   font-size: 11px;
@@ -127,9 +131,11 @@ html, body {
   text-align: center;
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   white-space: nowrap;
   pointer-events: none;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* ---- AYAH VIEWER ---- */
@@ -621,11 +627,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- HEADER RIGHT ---- */
-.header-right {
-  display: flex;
-  gap: 14px;
-}
+/* (header-right removed — now using header-col) */
 
 /* ---- ACTION BUTTONS (share + bookmark in header) ---- */
 .action-btn {
@@ -747,6 +749,73 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   transition: color .2s;
 }
 .stats-link:hover { color: var(--text-muted); }
+
+/* ---- SEARCH ---- */
+.search-input-wrap {
+  padding: 8px 24px 0;
+}
+.search-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 8px 24px 0;
+  line-height: 1.5;
+}
+.search-result-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.search-result-item:hover { background: var(--track); }
+.search-result-ref {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.search-result-ar {
+  font-family: "Amiri Quran", "Amiri", serif;
+  font-size: 18px;
+  color: var(--text);
+  direction: rtl;
+  text-align: right;
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.search-result-fr {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.search-no-results {
+  font-size: 13px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 40px 20px;
+}
+.search-result-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 8px 24px 0;
+}
+
+/* ---- BOTTOM LINKS ---- */
+.bottom-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0 4px;
+}
+.bottom-links .browse-link {
+  padding: 0;
+}
 
 /* ---- TOAST ---- */
 .toast {
