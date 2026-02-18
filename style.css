@@ -97,7 +97,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 8px 18px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 4px 18px;
   flex-shrink: 0;
   position: relative;
 }
@@ -126,7 +126,7 @@ html, body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   z-index: 1;
 }
 .action-btn {

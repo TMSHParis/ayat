@@ -976,14 +976,6 @@
     });
 
     // ---- HEADER ACTION ICONS ----
-    $("search-btn").addEventListener("click", function () {
-      overlayOpenedFromMenu = null; // opened directly, not from menu
-      $("search-overlay").classList.remove("hidden");
-      $("search-input").value = "";
-      $("search-results").innerHTML = "";
-      $("search-hint").classList.remove("hidden");
-      setTimeout(function () { $("search-input").focus(); }, 100);
-    });
     $("share-btn").addEventListener("click", shareCurrentAyah);
     $("bookmark-btn").addEventListener("click", toggleBookmark);
     updateBookmarkBtn();
