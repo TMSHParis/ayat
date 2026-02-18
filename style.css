@@ -123,6 +123,26 @@ html, body {
   white-space: nowrap;
 }
 .back-btn:hover { color: var(--text-muted); }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  padding: 4px;
+  transition: color .2s;
+  display: flex;
+  align-items: center;
+}
+.action-btn:hover { color: var(--text-muted); }
+.action-btn:active { color: var(--text-secondary); }
+.action-btn.bookmarked { color: #f59e0b; }
+.action-btn.bookmarked svg { fill: #f59e0b; }
 .header-title {
   font-size: 11px;
   font-weight: 500;
@@ -322,15 +342,15 @@ html, body {
 }
 .menu-item {
   font-size: 15px;
-  color: var(--text-secondary);
+  color: var(--text);
   text-decoration: none;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
   transition: color .2s;
 }
 .menu-item:last-child { border-bottom: none; }
-.menu-item:hover { color: var(--text-muted); }
-.menu-item:active { color: var(--text-faint); }
+.menu-item:hover { color: var(--text-secondary); }
+.menu-item:active { color: var(--text-muted); }
 
 /* ---- OVERLAY (settings, about) ---- */
 .overlay {
@@ -352,7 +372,7 @@ html, body {
 .overlay-header h2 {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 .close-btn {
   background: none;
@@ -565,7 +585,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   align-items: center;
   gap: 8px;
   padding: 10px 0 14px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .verse-picker-label {
   font-size: 11px;
@@ -573,9 +593,9 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   white-space: nowrap;
 }
 .verse-picker-input {
-  width: 60px;
-  font-size: 14px;
-  padding: 6px 8px;
+  width: 50px;
+  font-size: 13px;
+  padding: 5px 6px;
   border: 1px solid var(--btn-border);
   border-radius: 8px;
   background: var(--bg);
@@ -590,14 +610,15 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   margin: 0;
 }
 .verse-picker-btn {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
   background: none;
   border: 1px solid var(--btn-border);
   border-radius: 50px;
-  padding: 6px 16px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: all .2s;
+  white-space: nowrap;
 }
 .verse-picker-btn:hover {
   border-color: var(--text-faint);
@@ -630,7 +651,6 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- (action buttons removed — all actions are now in menu) ---- */
 
 /* ---- SURAH SEARCH ---- */
 .surah-search-wrap {

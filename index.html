@@ -35,6 +35,23 @@
     </button>
     <button class="back-btn hidden" id="back-btn" aria-label="Retour">← Retour</button>
     <span class="header-title" id="header-title">Aujourd'hui tu dois lire : 208 versets</span>
+    <div class="header-actions" id="header-actions">
+      <button class="action-btn" id="search-btn" aria-label="Rechercher">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <button class="action-btn" id="share-btn" aria-label="Partager">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+      </button>
+      <button class="action-btn" id="bookmark-btn" aria-label="Signet">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <!-- Ayah viewer -->
@@ -103,7 +120,6 @@
       <a href="#" class="menu-item" id="menu-settings">Réglages</a>
       <a href="#" class="menu-item" id="menu-browse">Parcourir les sourates</a>
       <a href="#" class="menu-item" id="menu-search">Rechercher dans le Coran</a>
-      <a href="#" class="menu-item" id="menu-bookmark">Sauvegarder ce verset</a>
       <a href="#" class="menu-item" id="menu-stats">Statistiques</a>
       <a href="#" class="menu-item" id="menu-about">À propos</a>
       <a href="#" class="menu-item" id="menu-share">Partager</a>
@@ -297,11 +313,15 @@
   <div class="overlay-body">
     <div class="help-section">
       <div class="help-title">Lire le Coran en 30 jours</div>
-      <div class="help-text">L'application calcule automatiquement le nombre de versets que vous devez lire chaque jour pour terminer le Coran en 30 jours. Le compteur en haut de l'écran indique votre objectif quotidien.</div>
+      <div class="help-text">L'application divise les 6236 versets du Coran en 30 portions quotidiennes. Chaque jour, le compteur en haut de l'écran vous indique combien de versets il vous reste à lire. Quand vous passez au verset suivant, votre progression avance automatiquement. Une fois l'objectif du jour atteint, un message de félicitation apparaît, mais vous pouvez continuer à lire si vous le souhaitez.</div>
     </div>
     <div class="help-section">
-      <div class="help-title">Lecture libre vs Mon plan 30 jours</div>
-      <div class="help-text">En parcourant les sourates, deux boutons sont disponibles :<br><br>« Lecture libre » — Consultez n'importe quel verset sans modifier votre progression dans le plan de 30 jours.<br><br>« Mon plan 30 jours » — Repositionne votre plan de lecture à cet endroit précis. Utile si vous avez lu le Coran en dehors de l'application.</div>
+      <div class="help-title">Lecture libre</div>
+      <div class="help-text">Le bouton « Lecture libre » vous permet de consulter n'importe quel verset du Coran sans aucune conséquence sur votre plan de 30 jours. Votre progression reste exactement là où elle était.<br><br>Exemple : vous êtes au verset 50 de la sourate Al-Baqara dans votre plan. Vous voulez relire un passage de la sourate Ya-Sin. Utilisez « Lecture libre » : votre plan restera au verset 50 de Al-Baqara quand vous reviendrez.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Mon plan 30 jours</div>
+      <div class="help-text">Le bouton « Mon plan 30 jours » repositionne votre progression de lecture à l'endroit que vous choisissez. Toute la suite de votre plan de 30 jours reprendra à partir de ce point.<br><br>Quand l'utiliser ? Si vous avez déjà lu une partie du Coran en dehors de l'application (dans un mushaf papier, à la mosquée, etc.), utilisez ce bouton pour synchroniser l'application avec votre avancement réel. Ainsi, l'application ne vous fera pas relire ce que vous avez déjà lu.<br><br>Attention : ce bouton modifie définitivement votre position dans le plan. Utilisez-le uniquement si vous voulez vraiment déplacer votre progression.</div>
     </div>
     <div class="help-section">
       <div class="help-title">Navigation</div>
