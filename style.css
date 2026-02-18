@@ -101,15 +101,28 @@ html, body {
   flex-shrink: 0;
   position: relative;
 }
-.header-link {
-  font-size: 11px;
+.menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--text-faint);
-  text-decoration: none;
+  padding: 4px;
   transition: color .2s;
-  white-space: nowrap;
   z-index: 1;
 }
-.header-link:hover { color: var(--text-muted); }
+.menu-btn:hover { color: var(--text-muted); }
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 12px;
+  padding: 4px 0;
+  transition: color .2s;
+  z-index: 1;
+  white-space: nowrap;
+}
+.back-btn:hover { color: var(--text-muted); }
 .header-title {
   font-size: 11px;
   font-weight: 500;
@@ -302,25 +315,22 @@ html, body {
   background: linear-gradient(90deg, #10b981, #059669);
 }
 
-/* ---- BOTTOM BAR ---- */
-.bottom-bar {
+/* ---- MENU NAV ---- */
+.menu-nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 18px 4px;
+  flex-direction: column;
 }
-.bottom-link {
-  font-size: 11px;
-  color: var(--text-faint);
+.menu-item {
+  font-size: 15px;
+  color: var(--text-secondary);
   text-decoration: none;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
   transition: color .2s;
-  white-space: nowrap;
 }
-.bottom-link:hover { color: var(--text-muted); }
-.bottom-actions {
-  display: flex;
-  gap: 14px;
-}
+.menu-item:last-child { border-bottom: none; }
+.menu-item:hover { color: var(--text-muted); }
+.menu-item:active { color: var(--text-faint); }
 
 /* ---- OVERLAY (settings, about) ---- */
 .overlay {
@@ -620,21 +630,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---- ACTION BUTTONS (search, share, bookmark in bottom bar) ---- */
-.action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-faint);
-  padding: 4px;
-  transition: color .2s;
-  display: flex;
-  align-items: center;
-}
-.action-btn:hover { color: var(--text-muted); }
-.action-btn:active { color: var(--text-secondary); }
-.action-btn.bookmarked { color: #f59e0b; }
-.action-btn.bookmarked svg { fill: #f59e0b; }
+/* ---- (action buttons removed — all actions are now in menu) ---- */
 
 /* ---- SURAH SEARCH ---- */
 .surah-search-wrap {
@@ -795,6 +791,23 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   font-size: 11px;
   color: var(--text-faint);
   padding: 8px 24px 0;
+}
+
+/* ---- HELP OVERLAY ---- */
+.help-section {
+  margin-bottom: 24px;
+}
+.help-section:last-child { margin-bottom: 0; }
+.help-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.help-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
 }
 
 /* ---- TOAST ---- */

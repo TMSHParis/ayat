@@ -344,7 +344,8 @@
 
     // Header
     $("header-title").textContent = "Lecture libre";
-    $("about-link").textContent = "\u2190 Retour";
+    $("menu-btn").classList.add("hidden");
+    $("back-btn").classList.remove("hidden");
 
     // Ayah reference
     if (ayahData.isBasmala) {
@@ -392,7 +393,8 @@
     freeReadAyahIdx = 0;
 
     // Restore header
-    $("about-link").textContent = "\u00C0 propos";
+    $("back-btn").classList.add("hidden");
+    $("menu-btn").classList.remove("hidden");
 
     // Restore progress bar classes and labels
     $("today-fill").className = "progress-fill-today";
@@ -461,7 +463,8 @@
       freeReadMode = false;
       freeReadSurahIdx = 0;
       freeReadAyahIdx = 0;
-      $("about-link").textContent = "\u00C0 propos";
+      $("back-btn").classList.add("hidden");
+      $("menu-btn").classList.remove("hidden");
       $("today-fill").className = "progress-fill-today";
       document.querySelector(".progress-row:first-child .progress-labels span:first-child")
         .textContent = "Versets du jour";
@@ -688,12 +691,7 @@
   }
 
   function updateBookmarkBtn() {
-    var btn = $("bookmark-btn");
-    if (!btn) return;
-    var key = getCurrentAyahKey();
-    var bookmarks = loadBookmarks();
-    var isBookmarked = bookmarks.some(function (b) { return b.key === key; });
-    btn.classList.toggle("bookmarked", isBookmarked);
+    // No longer a visible bookmark button in the UI — kept for internal state checks
   }
 
   function toggleBookmark() {
@@ -810,17 +808,19 @@
     if (didSwipe) return;
     // Ignore if an overlay is open
     if (
+      !$("menu-overlay").classList.contains("hidden") ||
       !$("settings-overlay").classList.contains("hidden") ||
       !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
       !$("stats-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden") ||
+      !$("help-overlay").classList.contains("hidden")
     ) return;
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
     if (tag === "button" || tag === "a" || tag === "input" || tag === "svg" || tag === "polyline" || tag === "line" || tag === "path") return;
-    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".nav-arrows") || e.target.closest(".bottom-actions")) return;
+    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".nav-arrows")) return;
     var containerRect = $("ayah-container").getBoundingClientRect();
     var clickX = e.clientX;
     var midX = containerRect.left + containerRect.width / 2;
@@ -834,12 +834,14 @@
   // ---- KEYBOARD ----
   function onKeyDown(e) {
     if (
+      !$("menu-overlay").classList.contains("hidden") ||
       !$("settings-overlay").classList.contains("hidden") ||
       !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
       !$("stats-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden") ||
+      !$("help-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -919,23 +921,72 @@
       $("goal-reached").classList.add("hidden");
     });
 
-    $("about-link").addEventListener("click", function (e) {
-      e.preventDefault();
-      if (freeReadMode) {
-        exitFreeReading();
-      } else {
-        $("about-overlay").classList.remove("hidden");
-      }
+    // ---- MENU (hamburger) ----
+    $("menu-btn").addEventListener("click", function () {
+      $("menu-overlay").classList.remove("hidden");
     });
-    $("about-close").addEventListener("click", function () {
-      $("about-overlay").classList.add("hidden");
+    $("menu-close").addEventListener("click", function () {
+      $("menu-overlay").classList.add("hidden");
     });
-
-    $("settings-btn").addEventListener("click", function (e) {
+    $("menu-settings").addEventListener("click", function (e) {
       e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
       render();
       updateReminderUI();
       $("settings-overlay").classList.remove("hidden");
+    });
+    $("menu-browse").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      $("surah-overlay").classList.remove("hidden");
+    });
+    $("menu-search").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      $("search-overlay").classList.remove("hidden");
+      $("search-input").value = "";
+      $("search-results").innerHTML = "";
+      $("search-hint").classList.remove("hidden");
+      setTimeout(function () { $("search-input").focus(); }, 100);
+    });
+    $("menu-bookmark").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      toggleBookmark();
+    });
+    $("menu-stats").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      renderStats();
+      $("stats-overlay").classList.remove("hidden");
+    });
+    $("menu-about").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      $("about-overlay").classList.remove("hidden");
+    });
+    $("menu-share").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      shareCurrentAyah();
+    });
+    $("menu-help").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      $("help-overlay").classList.remove("hidden");
+    });
+
+    // ---- BACK BUTTON (free reading) ----
+    $("back-btn").addEventListener("click", function () {
+      exitFreeReading();
+    });
+
+    // ---- OVERLAY CLOSE BUTTONS ----
+    $("about-close").addEventListener("click", function () {
+      $("about-overlay").classList.add("hidden");
+    });
+    $("help-close").addEventListener("click", function () {
+      $("help-overlay").classList.add("hidden");
     });
     $("settings-close").addEventListener("click", function () {
       $("settings-overlay").classList.add("hidden");
@@ -984,17 +1035,7 @@
       }
     });
 
-    // ---- SHARE & BOOKMARK ----
-    $("share-btn").addEventListener("click", shareCurrentAyah);
-    $("bookmark-btn").addEventListener("click", toggleBookmark);
-    updateBookmarkBtn();
-
     // ---- STATS ----
-    $("stats-btn").addEventListener("click", function (e) {
-      e.preventDefault();
-      renderStats();
-      $("stats-overlay").classList.remove("hidden");
-    });
     $("stats-close").addEventListener("click", function () {
       $("stats-overlay").classList.add("hidden");
     });
@@ -1113,11 +1154,11 @@
 
       var pickerBtn = document.createElement("button");
       pickerBtn.className = "verse-picker-btn";
-      pickerBtn.textContent = "Lire";
+      pickerBtn.textContent = "Lecture libre";
 
       var jumpBtn = document.createElement("button");
       jumpBtn.className = "verse-picker-btn verse-picker-btn-jump";
-      jumpBtn.textContent = "Reprendre ici";
+      jumpBtn.textContent = "Mon plan 30 jours";
 
       picker.appendChild(pickerLabel);
       picker.appendChild(pickerInput);
@@ -1183,10 +1224,6 @@
     });
 
     $("ayah-ref").addEventListener("click", function () {
-      $("surah-overlay").classList.remove("hidden");
-    });
-    $("browse-link").addEventListener("click", function (e) {
-      e.preventDefault();
       $("surah-overlay").classList.remove("hidden");
     });
     $("surah-close").addEventListener("click", function () {
@@ -1291,13 +1328,6 @@
       });
     }
 
-    $("search-btn").addEventListener("click", function () {
-      $("search-overlay").classList.remove("hidden");
-      $("search-input").value = "";
-      $("search-results").innerHTML = "";
-      $("search-hint").classList.remove("hidden");
-      setTimeout(function () { $("search-input").focus(); }, 100);
-    });
     $("search-close").addEventListener("click", function () {
       $("search-overlay").classList.add("hidden");
     });
