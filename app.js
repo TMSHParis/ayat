@@ -58,6 +58,89 @@
   var state = null;
   var goalDismissed = false;
 
+  // ---- BOOKMARKS ----
+  var BOOKMARKS_KEY = "qurani-bookmarks";
+  function loadBookmarks() {
+    try {
+      var raw = localStorage.getItem(BOOKMARKS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveBookmarks(bookmarks) {
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  }
+
+  // ---- STATS ----
+  var STATS_KEY = "qurani-stats";
+  function loadStats() {
+    try {
+      var raw = localStorage.getItem(STATS_KEY);
+      if (!raw) return { totalVersesRead: 0, readDates: [], streak: 0 };
+      return JSON.parse(raw);
+    } catch (e) { return { totalVersesRead: 0, readDates: [], streak: 0 }; }
+  }
+  function saveStats(stats) {
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  }
+  function recordReading() {
+    var stats = loadStats();
+    stats.totalVersesRead++;
+    var today = getLocalDateStr();
+    if (stats.readDates.indexOf(today) === -1) {
+      stats.readDates.push(today);
+      // Keep only last 365 days
+      if (stats.readDates.length > 365) stats.readDates = stats.readDates.slice(-365);
+    }
+    // Calculate streak
+    stats.streak = computeStreak(stats.readDates);
+    saveStats(stats);
+  }
+  function computeStreak(dates) {
+    if (!dates || dates.length === 0) return 0;
+    var sorted = dates.slice().sort().reverse();
+    var today = getLocalDateStr();
+    // If today is not in the list, check yesterday
+    var checkDate = today;
+    if (sorted[0] !== today) {
+      var yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      var yStr = yesterday.getFullYear() + "-" + String(yesterday.getMonth() + 1).padStart(2, "0") + "-" + String(yesterday.getDate()).padStart(2, "0");
+      if (sorted[0] !== yStr) return 0;
+      checkDate = yStr;
+    }
+    var streak = 0;
+    var d = new Date(checkDate + "T12:00:00");
+    for (var i = 0; i < 365; i++) {
+      var dStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      if (sorted.indexOf(dStr) !== -1) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // ---- TOAST ----
+  var toastTimer = null;
+  function showToast(msg) {
+    var existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(function () {
+      el.classList.add("show");
+    });
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.classList.remove("show");
+      setTimeout(function () { el.remove(); }, 300);
+    }, 2000);
+  }
+
   // ---- FREE READING (ephemeral, not persisted) ----
   var freeReadMode = false;
   var freeReadSurahIdx = 0;
@@ -136,13 +219,21 @@
   }
 
   // ---- THEME ----
+  function getEffectiveTheme() {
+    if (state.theme === "auto") {
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return state.theme;
+  }
+
   function applyTheme() {
     document.body.classList.remove("dark", "sepia");
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (state.theme === "dark") {
+    var effective = getEffectiveTheme();
+    if (effective === "dark") {
       document.body.classList.add("dark");
       meta.content = "#111111";
-    } else if (state.theme === "sepia") {
+    } else if (effective === "sepia") {
       document.body.classList.add("sepia");
       meta.content = "#fdf9f4";
     } else {
@@ -433,6 +524,9 @@
       $("goal-reached").classList.add("hidden");
     }
 
+    // Update bookmark button
+    updateBookmarkBtn();
+
     // Settings sync
     $("cycle-count").textContent = state.cycleCount;
     document.querySelectorAll("#goal-buttons .setting-btn").forEach(function (btn) {
@@ -458,6 +552,8 @@
     state.todayReadCount++;
     state.lastReadDate = getLocalDateStr();
     saveState();
+    recordReading();
+    updateBookmarkBtn();
     fadeAndRender();
   }
 
@@ -501,12 +597,135 @@
     }
   }
 
+  // ---- BOOKMARK BUTTON STATE ----
+  function getCurrentAyahKey() {
+    if (freeReadMode) {
+      var fa = getFreeReadAyah();
+      return fa.surahNumber + ":" + fa.ayahNumber;
+    }
+    var a = getAyahByGlobalIndex(state.globalIndex);
+    return a.surahNumber + ":" + a.ayahNumber;
+  }
+
+  function updateBookmarkBtn() {
+    var btn = $("bookmark-btn");
+    if (!btn) return;
+    var key = getCurrentAyahKey();
+    var bookmarks = loadBookmarks();
+    var isBookmarked = bookmarks.some(function (b) { return b.key === key; });
+    btn.classList.toggle("bookmarked", isBookmarked);
+  }
+
+  function toggleBookmark() {
+    var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+    var key = ayah.surahNumber + ":" + ayah.ayahNumber;
+    var bookmarks = loadBookmarks();
+    var idx = -1;
+    for (var i = 0; i < bookmarks.length; i++) {
+      if (bookmarks[i].key === key) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      bookmarks.splice(idx, 1);
+      showToast("Favori retiré");
+    } else {
+      bookmarks.push({
+        key: key,
+        surahNumber: ayah.surahNumber,
+        surahNameFr: ayah.surahNameFr,
+        ayahNumber: ayah.ayahNumber,
+        text: ayah.text,
+        date: getLocalDateStr()
+      });
+      showToast("Ajouté aux favoris");
+    }
+    saveBookmarks(bookmarks);
+    updateBookmarkBtn();
+  }
+
+  function shareCurrentAyah() {
+    var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+    var ref = ayah.isBasmala
+      ? "Sourate " + ayah.surahNameFr + " — Basmala"
+      : "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
+    var text = ayah.text + "\n\n" + ref + "\n— Qurani";
+
+    if (navigator.share) {
+      navigator.share({ text: text }).catch(function () {});
+    } else {
+      // Fallback: copy to clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+          showToast("Copié dans le presse-papiers");
+        });
+      }
+    }
+  }
+
+  function renderBookmarksList() {
+    var list = $("bookmarks-list");
+    var empty = $("bookmarks-empty");
+    var bookmarks = loadBookmarks();
+    list.innerHTML = "";
+    if (bookmarks.length === 0) {
+      list.appendChild(empty);
+      return;
+    }
+    empty.remove();
+    bookmarks.slice().reverse().forEach(function (b) {
+      var item = document.createElement("div");
+      item.className = "bookmark-item";
+
+      var ref = document.createElement("div");
+      ref.className = "bookmark-item-ref";
+      ref.textContent = "Sourate " + b.surahNameFr + " — Verset " + b.ayahNumber;
+
+      var text = document.createElement("div");
+      text.className = "bookmark-item-text";
+      text.textContent = b.text;
+
+      var actions = document.createElement("div");
+      actions.className = "bookmark-item-actions";
+      var delBtn = document.createElement("button");
+      delBtn.className = "bookmark-action-btn";
+      delBtn.textContent = "Supprimer";
+      delBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var bms = loadBookmarks();
+        var filtered = bms.filter(function (x) { return x.key !== b.key; });
+        saveBookmarks(filtered);
+        renderBookmarksList();
+        updateBookmarkBtn();
+      });
+      actions.appendChild(delBtn);
+
+      item.appendChild(ref);
+      item.appendChild(text);
+      item.appendChild(actions);
+      list.appendChild(item);
+    });
+  }
+
+  function renderStats() {
+    var stats = loadStats();
+    $("stat-streak").textContent = stats.streak || 0;
+    $("stat-total-verses").textContent = stats.totalVersesRead || 0;
+    $("stat-khatmas").textContent = state ? state.cycleCount : 0;
+    if (state && state.startDate) {
+      var parts = state.startDate.split("-");
+      $("stat-start-date").textContent = parts[2] + "/" + parts[1] + "/" + parts[0];
+    } else {
+      $("stat-start-date").textContent = "—";
+    }
+  }
+
   // ---- KEYBOARD ----
   function onKeyDown(e) {
     if (
       !$("settings-overlay").classList.contains("hidden") ||
       !$("about-overlay").classList.contains("hidden") ||
-      !$("surah-overlay").classList.contains("hidden")
+      !$("surah-overlay").classList.contains("hidden") ||
+      !$("bookmarks-overlay").classList.contains("hidden") ||
+      !$("stats-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -628,6 +847,60 @@
         $("settings-overlay").classList.add("hidden");
       }
     });
+
+    // ---- SHARE & BOOKMARK ----
+    $("share-btn").addEventListener("click", shareCurrentAyah);
+    $("bookmark-btn").addEventListener("click", toggleBookmark);
+    updateBookmarkBtn();
+
+    // ---- STATS ----
+    $("stats-btn").addEventListener("click", function (e) {
+      e.preventDefault();
+      renderStats();
+      $("stats-overlay").classList.remove("hidden");
+    });
+    $("stats-close").addEventListener("click", function () {
+      $("stats-overlay").classList.add("hidden");
+    });
+    $("stats-bookmarks-link").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("stats-overlay").classList.add("hidden");
+      renderBookmarksList();
+      $("bookmarks-overlay").classList.remove("hidden");
+    });
+
+    // ---- BOOKMARKS ----
+    $("bookmarks-close").addEventListener("click", function () {
+      $("bookmarks-overlay").classList.add("hidden");
+    });
+
+    // ---- SURAH SEARCH ----
+    $("surah-search").addEventListener("input", function () {
+      var query = this.value.toLowerCase().trim();
+      var items = surahListEl.children;
+      for (var i = 0; i < items.length; i++) {
+        var wrapper = items[i];
+        var frName = wrapper.querySelector(".surah-name-fr");
+        var arName = wrapper.querySelector(".surah-name-ar");
+        var num = wrapper.querySelector(".surah-num");
+        if (!frName) { wrapper.classList.remove("hidden"); continue; }
+        var text = (frName.textContent + " " + arName.textContent + " " + num.textContent).toLowerCase();
+        if (!query || text.indexOf(query) !== -1) {
+          wrapper.classList.remove("hidden");
+        } else {
+          wrapper.classList.add("hidden");
+        }
+      }
+    });
+
+    // ---- AUTO THEME: listen for system changes ----
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+        if (state.theme === "auto") {
+          applyTheme();
+        }
+      });
+    }
 
     // ---- NOTIFICATIONS (OneSignal) ----
     $("reminder-toggle-btn").addEventListener("click", function () {

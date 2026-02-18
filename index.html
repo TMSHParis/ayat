@@ -28,8 +28,25 @@
   <header class="header">
     <a href="#about" class="header-link" id="about-link">À propos</a>
     <span class="header-title" id="header-title">Aujourd'hui : 208 versets</span>
-    <a href="#settings" class="header-link" id="settings-btn">Réglages</a>
+    <div class="header-right">
+      <a href="#stats" class="header-link" id="stats-btn">Stats</a>
+      <a href="#settings" class="header-link" id="settings-btn">Réglages</a>
+    </div>
   </header>
+
+  <!-- Action buttons (share + bookmark) -->
+  <div class="action-bar" id="action-bar">
+    <button class="action-btn" id="share-btn" aria-label="Partager ce verset">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+      </svg>
+    </button>
+    <button class="action-btn" id="bookmark-btn" aria-label="Ajouter aux favoris">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- Ayah viewer -->
   <div class="ayah-container" id="ayah-container">
@@ -108,6 +125,7 @@
     <div class="setting-group">
       <div class="setting-label">Apparence</div>
       <div class="setting-buttons" id="theme-buttons">
+        <button class="setting-btn" data-theme="auto">Auto</button>
         <button class="setting-btn active" data-theme="light">Jour</button>
         <button class="setting-btn" data-theme="sepia">Sépia</button>
         <button class="setting-btn" data-theme="dark">Nuit</button>
@@ -173,7 +191,60 @@
     </button>
   </div>
   <p class="surah-overlay-note">Choisissez une sourate pour la lire librement, sans impact sur votre progression.</p>
+  <div class="surah-search-wrap">
+    <input type="text" id="surah-search" class="surah-search" placeholder="Rechercher une sourate..." autocomplete="off">
+  </div>
   <div class="overlay-body" id="surah-list"></div>
+</div>
+
+<!-- ====== BOOKMARKS OVERLAY ====== -->
+<div id="bookmarks-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Favoris</h2>
+    <button class="close-btn" id="bookmarks-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body" id="bookmarks-list">
+    <p class="bookmarks-empty" id="bookmarks-empty">Aucun favori pour le moment. Appuyez sur le signet pendant la lecture pour en ajouter.</p>
+  </div>
+</div>
+
+<!-- ====== STATS OVERLAY ====== -->
+<div id="stats-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Statistiques</h2>
+    <button class="close-btn" id="stats-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Jours consécutifs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total-verses">0</div>
+        <div class="stat-label">Versets lus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-khatmas">0</div>
+        <div class="stat-label">Lectures complètes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-start-date">—</div>
+        <div class="stat-label">Début de la lecture</div>
+      </div>
+    </div>
+    <div class="stats-links">
+      <a href="#bookmarks" class="stats-link" id="stats-bookmarks-link">Voir mes favoris</a>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
