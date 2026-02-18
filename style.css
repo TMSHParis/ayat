@@ -513,8 +513,9 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 .verse-picker {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 10px 0 14px;
+  flex-wrap: wrap;
 }
 .verse-picker-label {
   font-size: 11px;
@@ -551,6 +552,15 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 .verse-picker-btn:hover {
   border-color: var(--text-faint);
   color: var(--text-secondary);
+}
+.verse-picker-btn-jump {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+.verse-picker-btn-jump:hover {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
 }
 
 /* ---- LOADING ---- */

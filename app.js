@@ -433,6 +433,42 @@
     }, 150);
   }
 
+  // ---- GLOBAL INDEX HELPER ----
+  function getGlobalIndexForSurahAyah(surahArrayIndex, ayahIdx) {
+    var count = 0;
+    for (var i = 0; i < surahArrayIndex; i++) {
+      count += surahs[i].ayahs.length;
+    }
+    return count + ayahIdx;
+  }
+
+  function jumpToPosition(surahArrayIndex, ayahIdx) {
+    var newGlobalIndex = getGlobalIndexForSurahAyah(surahArrayIndex, ayahIdx);
+    // Account for multiple khatma cycles
+    var currentCycle = Math.floor(state.globalIndex / totalAyat);
+    state.globalIndex = (currentCycle * totalAyat) + newGlobalIndex;
+    state.lastReadDate = getLocalDateStr();
+    saveState();
+
+    // Exit free reading if active
+    if (freeReadMode) {
+      freeReadMode = false;
+      freeReadSurahIdx = 0;
+      freeReadAyahIdx = 0;
+      $("about-link").textContent = "\u00C0 propos";
+      $("today-fill").className = "progress-fill-today";
+      document.querySelector(".progress-row:first-child .progress-labels span:first-child")
+        .textContent = "Versets du jour";
+      document.querySelector(".progress-row:last-child .progress-labels span:first-child")
+        .textContent = "Lecture compl\u00e8te";
+    }
+
+    $("surah-overlay").classList.add("hidden");
+    render();
+    $("ayah-scroll").scrollTop = 0;
+    showToast("Progression mise \u00e0 jour");
+  }
+
   // ---- QURAN ACCESS ----
   function getAyahByGlobalIndex(globalIndex) {
     var idx = ((globalIndex % totalAyat) + totalAyat) % totalAyat;
@@ -979,9 +1015,14 @@
       pickerBtn.className = "verse-picker-btn";
       pickerBtn.textContent = "Lire";
 
+      var jumpBtn = document.createElement("button");
+      jumpBtn.className = "verse-picker-btn verse-picker-btn-jump";
+      jumpBtn.textContent = "Reprendre ici";
+
       picker.appendChild(pickerLabel);
       picker.appendChild(pickerInput);
       picker.appendChild(pickerBtn);
+      picker.appendChild(jumpBtn);
 
       wrapper.appendChild(item);
       wrapper.appendChild(picker);
@@ -1013,6 +1054,21 @@
           ayahIdx = verseNum; // index 0 = Basmala, index 1 = verse 1, etc.
         }
         enterFreeReading(surahArrayIndex, ayahIdx);
+      });
+
+      jumpBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var verseNum = parseInt(pickerInput.value, 10);
+        if (isNaN(verseNum) || verseNum < 1) verseNum = 1;
+        if (verseNum > realVerseCount) verseNum = realVerseCount;
+
+        var ayahIdx;
+        if (s.surahNumber === 1 || s.surahNumber === 9) {
+          ayahIdx = verseNum - 1;
+        } else {
+          ayahIdx = verseNum;
+        }
+        jumpToPosition(surahArrayIndex, ayahIdx);
       });
 
       // Allow pressing Enter in the input
