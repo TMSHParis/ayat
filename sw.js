@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v19";
+const CACHE_NAME = "qurani-v20";
 
 const PRECACHE = [
   "./",
@@ -6,6 +6,7 @@ const PRECACHE = [
   "./style.css",
   "./app.js",
   "./quran.json",
+  "./quran-fr.json",
   "./manifest.json",
   "./fonts/Amiri-Regular.ttf",
   "./fonts/Amiri-Bold.ttf",

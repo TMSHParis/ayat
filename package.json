@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Qurani — Lecture du Coran en 30 jours",
   "scripts": {
-    "build": "rm -rf www && mkdir -p www/fonts www/icons && cp index.html style.css app.js quran.json manifest.json OneSignalSDKWorker.js sw.js privacy.html support.html www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/",
+    "build": "rm -rf www && mkdir -p www/fonts www/icons && cp index.html style.css app.js quran.json quran-fr.json manifest.json OneSignalSDKWorker.js sw.js privacy.html support.html www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/",
     "cap:sync": "npm run build && npx cap sync"
   },
   "repository": {

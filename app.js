@@ -42,8 +42,10 @@
 
   // ---- DATA ----
   var surahs = [];
+  var surahsFr = []; // French translation (parallel structure)
   var totalAyat = 0;
   var BASMALA = ""; // extracted from surah 1, verse 1
+  var BASMALA_FR = "Au nom d'Allah, le Tout Mis\u00e9ricordieux, le Tr\u00e8s Mis\u00e9ricordieux.";
 
   // ---- STATE ----
   var STORAGE_KEY = "qurani-app-state";
@@ -172,6 +174,7 @@
       khatmaGoal: 1,
       textSize: "M",
       theme: "light",
+      displayLang: "ar",
     };
   }
 
@@ -321,6 +324,9 @@
       }
     }
 
+    var frSurah = surahsFr[freeReadSurahIdx];
+    var frText = frSurah && frSurah.ayahs[ayahIdx] ? frSurah.ayahs[ayahIdx] : "";
+
     return {
       surahNumber: surah.surahNumber,
       surahNameAr: surah.surahNameAr,
@@ -328,6 +334,7 @@
       ayahNumber: displayNumber,
       isBasmala: isBasmala,
       text: surah.ayahs[ayahIdx],
+      textFr: frText,
     };
   }
 
@@ -350,8 +357,7 @@
 
     // Ayah text
     var ayahEl = $("ayah-text");
-    ayahEl.textContent = ayahData.text;
-    ayahEl.className = "ayah-text size-" + state.textSize;
+    renderAyahText(ayahEl, ayahData);
 
     // Progress: surah progress (green bar)
     var surahPct = ((freeReadAyahIdx + 1) / surah.ayahs.length) * 100;
@@ -480,17 +486,16 @@
         var isBasmala = false;
         var displayNumber = ayahIdx + 1;
 
-        // For surahs where we split the Basmala (all except 1 and 9):
-        // ayahIdx 0 = Basmala (display as "Basmala")
-        // ayahIdx 1+ = real verses (numbered from 1)
         if (surah.surahNumber !== 1 && surah.surahNumber !== 9) {
           if (ayahIdx === 0) {
             isBasmala = true;
             displayNumber = 0;
           } else {
-            displayNumber = ayahIdx; // ayahIdx 1 = verse 1, ayahIdx 2 = verse 2, etc.
+            displayNumber = ayahIdx;
           }
         }
+
+        var frText = surahsFr[i] && surahsFr[i].ayahs[ayahIdx] ? surahsFr[i].ayahs[ayahIdx] : "";
 
         return {
           surahNumber: surah.surahNumber,
@@ -499,6 +504,7 @@
           ayahNumber: displayNumber,
           isBasmala: isBasmala,
           text: surah.ayahs[ayahIdx],
+          textFr: frText,
         };
       }
       count += surah.ayahs.length;
@@ -510,7 +516,40 @@
       ayahNumber: 1,
       isBasmala: false,
       text: surahs[0].ayahs[0],
+      textFr: surahsFr[0] ? surahsFr[0].ayahs[0] : "",
     };
+  }
+
+  // ---- DISPLAY TEXT HELPER ----
+  function renderAyahText(ayahEl, ayah) {
+    ayahEl.innerHTML = "";
+    var lang = state.displayLang;
+    if (lang === "ar" || lang === "ar-fr") {
+      var arSpan = document.createElement("span");
+      arSpan.className = "ayah-arabic";
+      arSpan.setAttribute("dir", "rtl");
+      arSpan.textContent = ayah.text;
+      ayahEl.appendChild(arSpan);
+    }
+    if (lang === "ar-fr" || lang === "fr") {
+      if (lang === "ar-fr") {
+        var br = document.createElement("div");
+        br.className = "ayah-separator";
+        ayahEl.appendChild(br);
+      }
+      var frSpan = document.createElement("span");
+      frSpan.className = "ayah-french";
+      frSpan.setAttribute("dir", "ltr");
+      frSpan.textContent = ayah.textFr || "";
+      ayahEl.appendChild(frSpan);
+    }
+    // Set direction based on mode
+    if (lang === "fr") {
+      ayahEl.setAttribute("dir", "ltr");
+    } else {
+      ayahEl.setAttribute("dir", "rtl");
+    }
+    ayahEl.className = "ayah-text size-" + state.textSize;
   }
 
   // ---- RENDER ----
@@ -522,7 +561,7 @@
     var ayah = getAyahByGlobalIndex(state.globalIndex);
 
     // Header title
-    $("header-title").textContent = "Aujourd\u2019hui : " + todayTarget + " versets";
+    $("header-title").textContent = "Aujourd\u2019hui tu dois lire : " + todayTarget + " versets";
 
     // Ayah reference — in French
     if (ayah.isBasmala) {
@@ -532,10 +571,9 @@
         "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
     }
 
-    // Ayah text (Arabic only)
+    // Ayah text
     var ayahEl = $("ayah-text");
-    ayahEl.textContent = ayah.text;
-    ayahEl.className = "ayah-text size-" + state.textSize;
+    renderAyahText(ayahEl, ayah);
 
     // Progress: today
     var todayPct = Math.min(
@@ -573,6 +611,9 @@
     });
     document.querySelectorAll("#theme-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.theme === state.theme);
+    });
+    document.querySelectorAll("#lang-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.lang === state.displayLang);
     });
     applyTheme();
   }
@@ -615,10 +656,12 @@
   // ---- SWIPE ----
   var touchStartX = null;
   var touchStartY = null;
+  var didSwipe = false;
 
   function onTouchStart(e) {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
+    didSwipe = false;
   }
 
   function onTouchEnd(e) {
@@ -628,6 +671,7 @@
     touchStartX = null;
     touchStartY = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      didSwipe = true;
       if (dx < 0) goNext();
       else goPrev();
     }
@@ -683,7 +727,13 @@
     var ref = ayah.isBasmala
       ? "Sourate " + ayah.surahNameFr + " — Basmala"
       : "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
-    var text = ayah.text + "\n\n" + ref + "\n— Qurani";
+    var shareText = ayah.text;
+    if (state.displayLang === "ar-fr") {
+      shareText = ayah.text + "\n\n" + (ayah.textFr || "");
+    } else if (state.displayLang === "fr") {
+      shareText = ayah.textFr || ayah.text;
+    }
+    var text = shareText + "\n\n" + ref + "\n— Qurani";
 
     if (navigator.share) {
       navigator.share({ text: text }).catch(function () {});
@@ -754,6 +804,32 @@
     }
   }
 
+  // ---- TAP TO NAVIGATE ----
+  function onTapNavigate(e) {
+    // Ignore if a swipe just happened
+    if (didSwipe) return;
+    // Ignore if an overlay is open
+    if (
+      !$("settings-overlay").classList.contains("hidden") ||
+      !$("about-overlay").classList.contains("hidden") ||
+      !$("surah-overlay").classList.contains("hidden") ||
+      !$("bookmarks-overlay").classList.contains("hidden") ||
+      !$("stats-overlay").classList.contains("hidden")
+    ) return;
+    // Ignore clicks on buttons, links, and interactive elements
+    var tag = e.target.tagName.toLowerCase();
+    if (tag === "button" || tag === "a" || tag === "input" || tag === "svg" || tag === "polyline" || tag === "line" || tag === "path") return;
+    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".nav-arrows") || e.target.closest(".header-actions")) return;
+    var containerRect = $("ayah-container").getBoundingClientRect();
+    var clickX = e.clientX;
+    var midX = containerRect.left + containerRect.width / 2;
+    if (clickX >= midX) {
+      goNext();
+    } else {
+      goPrev();
+    }
+  }
+
   // ---- KEYBOARD ----
   function onKeyDown(e) {
     if (
@@ -775,16 +851,18 @@
   // ---- INIT ----
   async function init() {
     try {
-      var res = await fetch("quran.json");
-      var rawSurahs = await res.json();
+      var results = await Promise.all([
+        fetch("quran.json").then(function (r) { return r.json(); }),
+        fetch("quran-fr.json").then(function (r) { return r.json(); })
+      ]);
+      var rawSurahs = results[0];
+      var rawSurahsFr = results[1];
 
       // Extract the Basmala from surah 1 verse 1 (remove BOM if present)
       BASMALA = rawSurahs[0].ayahs[0].replace(/^\uFEFF/, "");
 
       // For every surah except 1 (Al-Fatiha) and 9 (At-Tawba):
       // Split the Basmala out of verse 1 into its own separate verse.
-      // This keeps the total ayah count accurate to the mushaf numbering
-      // while displaying the Basmala on its own line.
       surahs = rawSurahs.map(function (s) {
         if (s.surahNumber === 1 || s.surahNumber === 9) return s;
         var v1 = s.ayahs[0];
@@ -797,6 +875,16 @@
           };
         }
         return s;
+      });
+
+      // Same structure for French: add basmala entry for surahs that have it
+      surahsFr = rawSurahsFr.map(function (s) {
+        if (s.surahNumber === 1 || s.surahNumber === 9) return s;
+        // Add basmala as first entry to keep indices aligned with Arabic
+        return {
+          surahNumber: s.surahNumber,
+          ayahs: [BASMALA_FR].concat(s.ayahs),
+        };
       });
 
       totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
@@ -820,6 +908,7 @@
 
     $("ayah-container").addEventListener("touchstart", onTouchStart, { passive: true });
     $("ayah-container").addEventListener("touchend", onTouchEnd);
+    $("ayah-container").addEventListener("click", onTapNavigate);
 
     document.addEventListener("keydown", onKeyDown);
 
@@ -871,6 +960,15 @@
         state.theme = btn.dataset.theme;
         saveState();
         render();
+      });
+    });
+
+    document.querySelectorAll("#lang-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.displayLang = btn.dataset.lang;
+        saveState();
+        if (freeReadMode) renderFreeReading();
+        else render();
       });
     });
 

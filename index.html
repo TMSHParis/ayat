@@ -26,27 +26,27 @@
 
   <!-- Header -->
   <header class="header">
-    <a href="#about" class="header-link" id="about-link">À propos</a>
-    <span class="header-title" id="header-title">Aujourd'hui : 208 versets</span>
+    <div class="header-left">
+      <a href="#about" class="header-link" id="about-link">À propos</a>
+      <div class="header-actions">
+        <button class="action-btn" id="share-btn" aria-label="Partager ce verset">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+        <button class="action-btn" id="bookmark-btn" aria-label="Ajouter aux favoris">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <span class="header-title" id="header-title">Aujourd'hui tu dois lire : 208 versets</span>
     <div class="header-right">
       <a href="#stats" class="header-link" id="stats-btn">Stats</a>
       <a href="#settings" class="header-link" id="settings-btn">Réglages</a>
     </div>
   </header>
-
-  <!-- Action buttons (share + bookmark) -->
-  <div class="action-bar" id="action-bar">
-    <button class="action-btn" id="share-btn" aria-label="Partager ce verset">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-      </svg>
-    </button>
-    <button class="action-btn" id="bookmark-btn" aria-label="Ajouter aux favoris">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-      </svg>
-    </button>
-  </div>
 
   <!-- Ayah viewer -->
   <div class="ayah-container" id="ayah-container">
@@ -129,6 +129,14 @@
         <button class="setting-btn active" data-theme="light">Jour</button>
         <button class="setting-btn" data-theme="sepia">Sépia</button>
         <button class="setting-btn" data-theme="dark">Nuit</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Langue</div>
+      <div class="setting-buttons" id="lang-buttons">
+        <button class="setting-btn active" data-lang="ar">Arabe</button>
+        <button class="setting-btn" data-lang="ar-fr">Arabe + Français</button>
+        <button class="setting-btn" data-lang="fr">Français</button>
       </div>
     </div>
     <div class="setting-group">
