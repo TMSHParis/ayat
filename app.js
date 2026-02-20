@@ -783,7 +783,7 @@
     var ayah = getAyahByGlobalIndex(state.globalIndex);
 
     // Header title
-    $("header-title").textContent = "Qurani";
+    $("header-title").textContent = "QURANI";
 
     // Ayah reference — in French
     if (ayah.isBasmala) {
