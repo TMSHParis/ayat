@@ -147,10 +147,16 @@
   var tajwidData = null;
   var tajwidLoading = false;
   var segmentCache = new Map();
-  var TASHKEEL_REGEX = /[\u064B-\u065F\u0670]/g;
 
-  function stripTashkeel(text) {
-    return text.replace(TASHKEEL_REGEX, "");
+  // Waqf / pause marks and non-recitation structural signs.
+  // Removed in Minimal mode; kept in Tajwid mode.
+  // Range covers: U+0615 (small high tah), U+06D6-U+06E4 (pause/sajda/hizb marks),
+  // U+06E7-U+06ED (superscript recitation annotations).
+  // Excludes U+06E5-U+06E6 (small waw/yeh — actual letter shapes in Uthmani text).
+  var WAQF_REGEX = /[\u0615\u06D6-\u06E4\u06E7-\u06ED]/g;
+
+  function stripWaqfMarks(text) {
+    return text.replace(WAQF_REGEX, "");
   }
 
   // Split text into colored segments using tajwid overlay markers.
@@ -182,9 +188,105 @@
     return segments;
   }
 
+  // ---- ALGORITHMIC TAJWID DETECTION ----
+  // Detects basic tajweed rules from raw Arabic text when no curated overlay exists.
+  // Covers: qalqalah, ghunnah, madd, idgham, ikhfaa, iqlab, izhar.
+  function detectTajwidOverlays(text) {
+    var overlays = [];
+    var n = text.length;
+    var SUKUN = 0x0652, SHADDA = 0x0651, FATHA = 0x064E, DAMMA = 0x064F, KASRA = 0x0650;
+    var TANWIN_F = 0x064B, TANWIN_D = 0x064C, TANWIN_K = 0x064D;
+    var MADDA_ABV = 0x0653, SMALL_ALEF = 0x0670;
+    var NUN = 0x0646, MEEM = 0x0645;
+    var ALEF = 0x0627, ALEF_W = 0x0671, WAW = 0x0648, YAH = 0x064A, ALEF_M = 0x0649;
+    var QALQALAH = new Set([0x0642, 0x0637, 0x0628, 0x062C, 0x062F]); // ق ط ب ج د
+    var IDGHAM   = new Set([YAH, ALEF_M, 0x0631, MEEM, 0x0644, WAW, NUN]); // ي ى ر م ل و ن
+    var IKHFAA   = new Set([0x062A,0x062B,0x062C,0x062F,0x0630,0x0632,0x0633,0x0634,0x0635,0x0636,0x0637,0x0638,0x0641,0x0642,0x0643]);
+    var IZHAR    = new Set([0x062D,0x062E,0x0639,0x063A,0x0647,0x0621,0x0623,0x0624,0x0625,0x0626]);
+
+    function isDiac(cp) {
+      return (cp >= 0x064B && cp <= 0x065F) || cp === SMALL_ALEF || cp === MADDA_ABV ||
+             (cp >= 0x06D6 && cp <= 0x06ED) || cp === 0x0615;
+    }
+    function hasDiac(pos, dc) {
+      for (var k = pos + 1; k < n; k++) {
+        var c = text.codePointAt(k);
+        if (!isDiac(c)) break;
+        if (c === dc) return true;
+      }
+      return false;
+    }
+    function getEnd(pos) {
+      var e = pos + 1;
+      while (e < n && isDiac(text.codePointAt(e))) e++;
+      return e;
+    }
+    function nextBase(from) {
+      var i = from;
+      while (i < n) {
+        var c = text.codePointAt(i);
+        if (c !== 0x20 && c !== 0x200C && !isDiac(c)) return i;
+        i++;
+      }
+      return -1;
+    }
+
+    var i = 0;
+    while (i < n) {
+      var c = text.codePointAt(i);
+      if (isDiac(c) || c === 0x20 || c === 0x200C) { i++; continue; }
+      var end = getEnd(i);
+
+      // Qalqalah: ق ط ب ج د + sukun
+      if (QALQALAH.has(c) && hasDiac(i, SUKUN)) {
+        overlays.push({ start: i, end: end, rule: 'qalqalah' }); i = end; continue;
+      }
+      // Ghunnah: ن or م + shadda
+      if ((c === NUN || c === MEEM) && hasDiac(i, SHADDA)) {
+        overlays.push({ start: i, end: end, rule: 'ghunnah' }); i = end; continue;
+      }
+      // Madd: letter with explicit madda sign or small high alef
+      if (hasDiac(i, MADDA_ABV) || hasDiac(i, SMALL_ALEF)) {
+        overlays.push({ start: i, end: end, rule: 'madd' }); i = end; continue;
+      }
+      // Madd: bare alef/waw/yah/alef-maqsura after appropriate vowel
+      if (end === i + 1 && (c === ALEF || c === ALEF_W || c === WAW || c === YAH || c === ALEF_M)) {
+        var pv = -1;
+        for (var kk = i - 1; kk >= 0; kk--) {
+          var pc = text.codePointAt(kk);
+          if (!isDiac(pc)) break;
+          if (pc === FATHA || pc === DAMMA || pc === KASRA) { pv = pc; break; }
+        }
+        var isMadd = ((c === ALEF || c === ALEF_W) && pv === FATHA) ||
+                     (c === WAW && pv === DAMMA) ||
+                     ((c === YAH || c === ALEF_M) && pv === KASRA);
+        if (isMadd) { overlays.push({ start: i, end: end, rule: 'madd' }); i = end; continue; }
+      }
+      // Noon sakin / tanwin rules (idgham, ikhfaa, iqlab, izhar)
+      var noonSakin = (c === NUN && hasDiac(i, SUKUN));
+      var tanwin = hasDiac(i, TANWIN_F) || hasDiac(i, TANWIN_D) || hasDiac(i, TANWIN_K);
+      if (noonSakin || tanwin) {
+        var nxtPos = nextBase(end);
+        if (nxtPos >= 0) {
+          var nxtC = text.codePointAt(nxtPos);
+          var rule = null;
+          if (nxtC === 0x0628) rule = 'iqlab';
+          else if (IDGHAM.has(nxtC)) rule = 'idgham';
+          else if (IKHFAA.has(nxtC)) rule = 'ikhfaa';
+          else if (IZHAR.has(nxtC)) rule = 'izhar';
+          if (rule) { overlays.push({ start: i, end: end, rule: rule }); i = end; continue; }
+        }
+      }
+      i = end;
+    }
+    return overlays;
+  }
+
   function getSegmentsForAyah(cacheKey, text, overlays) {
     if (!segmentCache.has(cacheKey)) {
-      segmentCache.set(cacheKey, segmentAyah(text, overlays));
+      // Use curated overlay if available, otherwise fall back to algorithmic detection
+      var effectiveOverlays = (overlays !== null) ? overlays : detectTajwidOverlays(text);
+      segmentCache.set(cacheKey, segmentAyah(text, effectiveOverlays));
     }
     return segmentCache.get(cacheKey);
   }
@@ -212,29 +314,19 @@
   function applyMode() {
     document.body.classList.toggle("mode-tajwid", state.readingMode === "tajwid");
     document.body.classList.toggle("mode-minimal", state.readingMode !== "tajwid");
+    document.body.classList.toggle("tajwid-no-colors", state.readingMode === "tajwid" && !state.tajwidColors);
   }
 
   function setReadingMode(mode) {
     state.readingMode = mode;
-    if (mode === "tajwid") {
-      state.showTashkeel = true; // tajwid requires full tashkeel
-    }
     segmentCache.clear();
     applyMode();
     saveState();
+    // Load curated tajwid overlay in background to enhance algorithmic detection.
+    // We no longer wait for it — algorithmic detection renders colors immediately.
     if (mode === "tajwid" && !tajwidData && !tajwidLoading) {
       loadTajwidOverlay();
-      return; // will re-render automatically after load
     }
-    if (freeReadMode) renderFreeReading();
-    else render();
-  }
-
-  function setTashkeel(enabled) {
-    if (state.readingMode === "tajwid") return; // locked on in tajwid mode
-    state.showTashkeel = enabled;
-    segmentCache.clear();
-    saveState();
     if (freeReadMode) renderFreeReading();
     else render();
   }
@@ -272,7 +364,7 @@
       theme: "light",
       displayLang: "ar",
       readingMode: "minimal",
-      showTashkeel: true,
+      tajwidColors: true,
     };
   }
 
@@ -632,10 +724,11 @@
       arSpan.className = "ayah-arabic";
       arSpan.setAttribute("dir", "rtl");
 
-      if (mode === "tajwid" && tajwidData) {
-        // Tajwid mode: render colored segments
+      if (mode === "tajwid") {
+        // Tajwid mode: render colored segments.
+        // Uses curated overlay from tajwidData when available, otherwise algorithmic detection.
         var key = ayah.surahNumber + ":" + ayah.ayahNumber;
-        var overlays = tajwidData[key] || null;
+        var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
         var segments = getSegmentsForAyah(key, ayah.text, overlays);
         var frag = document.createDocumentFragment();
         for (var s = 0; s < segments.length; s++) {
@@ -647,11 +740,8 @@
         }
         arSpan.appendChild(frag);
       } else {
-        // Minimal mode (with or without tashkeel)
-        var displayText = (!state.showTashkeel)
-          ? stripTashkeel(ayah.text)
-          : ayah.text;
-        arSpan.textContent = displayText;
+        // Minimal mode: keep harakat, remove waqf / pause marks
+        arSpan.textContent = stripWaqfMarks(ayah.text);
       }
 
       ayahEl.appendChild(arSpan);
@@ -745,12 +835,22 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
     });
-    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.tashkeel === (state.showTashkeel ? "on" : "off"));
+    var tajwidColorGroup = $("tajwid-color-group");
+    if (tajwidColorGroup) {
+      tajwidColorGroup.classList.toggle("hidden", state.readingMode !== "tajwid");
+    }
+    document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", (btn.dataset.tajwidColors === "true") === !!state.tajwidColors);
     });
-    var tashkeelGroup = $("tashkeel-group");
-    if (tashkeelGroup) {
-      tashkeelGroup.classList.toggle("hidden", state.readingMode === "tajwid");
+    var modeHint = $("mode-hint");
+    if (modeHint) {
+      if (state.readingMode === "tajwid") {
+        modeHint.textContent = state.tajwidColors
+          ? "Couleurs tajwid activ\u00e9es \u2014 les signes de waqf sont affich\u00e9s."
+          : "Mode tajwid sans couleurs \u2014 les signes de waqf sont affich\u00e9s.";
+      } else {
+        modeHint.textContent = "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
+      }
     }
     applyTheme();
     applyMode();
@@ -1179,9 +1279,12 @@
       });
     });
 
-    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
+    document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        setTashkeel(btn.dataset.tashkeel === "on");
+        state.tajwidColors = btn.dataset.tajwidColors === "true";
+        applyMode();
+        saveState();
+        render();
       });
     });
 

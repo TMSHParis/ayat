@@ -176,14 +176,14 @@
         <button class="setting-btn active" data-mode="minimal">Minimal</button>
         <button class="setting-btn" data-mode="tajwid">Tajwid</button>
       </div>
-      <div class="setting-hint" id="mode-hint-tajwid" style="display:none;">Couleurs tajwid activées. Le tashkeel complet est conservé.</div>
-    </div>
-    <div class="setting-group" id="tashkeel-group">
-      <div class="setting-label">Tashkeel (voyelles)</div>
-      <div class="setting-buttons" id="tashkeel-buttons">
-        <button class="setting-btn active" data-tashkeel="on">Avec</button>
-        <button class="setting-btn" data-tashkeel="off">Sans</button>
+      <div id="tajwid-color-group" class="setting-sub-group hidden">
+        <div class="setting-sub-label">Couleurs Tajwid</div>
+        <div class="setting-buttons" id="tajwid-color-buttons">
+          <button class="setting-btn" data-tajwid-colors="true">Avec couleurs</button>
+          <button class="setting-btn" data-tajwid-colors="false">Sans couleurs</button>
+        </div>
       </div>
+      <div class="setting-hint" id="mode-hint">Texte pur — voyelles conservées, signes de waqf masqués.</div>
     </div>
     <div class="setting-group">
       <div class="setting-label">Rappels quotidiens</div>
