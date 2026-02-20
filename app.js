@@ -1168,14 +1168,7 @@
       e.preventDefault();
       openOverlayFromMenu("surah-overlay");
     });
-    $("menu-search").addEventListener("click", function (e) {
-      e.preventDefault();
-      openOverlayFromMenu("search-overlay");
-      $("search-input").value = "";
-      $("search-results").innerHTML = "";
-      $("search-hint").classList.remove("hidden");
-      setTimeout(function () { $("search-input").focus(); }, 100);
-    });
+    // (search removed from menu — accessed via header search icon)
     $("menu-stats").addEventListener("click", function (e) {
       e.preventDefault();
       renderStats();
@@ -1196,8 +1189,31 @@
     });
 
     // ---- HEADER ACTION ICONS ----
+    $("search-btn").addEventListener("click", function () {
+      $("search-overlay").classList.remove("hidden");
+      $("search-input").value = "";
+      $("search-results").innerHTML = "";
+      $("search-hint").classList.remove("hidden");
+      setTimeout(function () { $("search-input").focus(); }, 100);
+    });
+
+    // ---- BOTTOM BAR ICONS ----
     $("bookmark-btn").addEventListener("click", toggleBookmark);
     updateBookmarkBtn();
+    $("share-btn").addEventListener("click", function () {
+      var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+      var ref = "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
+      var text = ayah.text + "\n\n" + ref;
+      if (navigator.share) {
+        navigator.share({ title: "Qurani", text: text }).catch(function () {});
+      } else {
+        navigator.clipboard.writeText(text).then(function () {
+          showToast("Verset copié");
+        }).catch(function () {
+          showToast("Impossible de copier");
+        });
+      }
+    });
 
     // ---- OVERLAY CLOSE BUTTONS (return to menu) ----
     var overlayOpenedFromMenu = null;
