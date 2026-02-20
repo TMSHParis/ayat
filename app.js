@@ -147,10 +147,16 @@
   var tajwidData = null;
   var tajwidLoading = false;
   var segmentCache = new Map();
-  var TASHKEEL_REGEX = /[\u064B-\u065F\u0670]/g;
 
-  function stripTashkeel(text) {
-    return text.replace(TASHKEEL_REGEX, "");
+  // Waqf / pause marks and non-recitation structural signs.
+  // Removed in Minimal mode; kept in Tajwid mode.
+  // Range covers: U+0615 (small high tah), U+06D6-U+06E4 (pause/sajda/hizb marks),
+  // U+06E7-U+06ED (superscript recitation annotations).
+  // Excludes U+06E5-U+06E6 (small waw/yeh — actual letter shapes in Uthmani text).
+  var WAQF_REGEX = /[\u0615\u06D6-\u06E4\u06E7-\u06ED]/g;
+
+  function stripWaqfMarks(text) {
+    return text.replace(WAQF_REGEX, "");
   }
 
   // Split text into colored segments using tajwid overlay markers.
@@ -216,9 +222,6 @@
 
   function setReadingMode(mode) {
     state.readingMode = mode;
-    if (mode === "tajwid") {
-      state.showTashkeel = true; // tajwid requires full tashkeel
-    }
     segmentCache.clear();
     applyMode();
     saveState();
@@ -226,15 +229,6 @@
       loadTajwidOverlay();
       return; // will re-render automatically after load
     }
-    if (freeReadMode) renderFreeReading();
-    else render();
-  }
-
-  function setTashkeel(enabled) {
-    if (state.readingMode === "tajwid") return; // locked on in tajwid mode
-    state.showTashkeel = enabled;
-    segmentCache.clear();
-    saveState();
     if (freeReadMode) renderFreeReading();
     else render();
   }
@@ -272,7 +266,6 @@
       theme: "light",
       displayLang: "ar",
       readingMode: "minimal",
-      showTashkeel: true,
     };
   }
 
@@ -647,11 +640,8 @@
         }
         arSpan.appendChild(frag);
       } else {
-        // Minimal mode (with or without tashkeel)
-        var displayText = (!state.showTashkeel)
-          ? stripTashkeel(ayah.text)
-          : ayah.text;
-        arSpan.textContent = displayText;
+        // Minimal mode: keep harakat, remove waqf / pause marks
+        arSpan.textContent = stripWaqfMarks(ayah.text);
       }
 
       ayahEl.appendChild(arSpan);
@@ -745,12 +735,11 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
     });
-    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.tashkeel === (state.showTashkeel ? "on" : "off"));
-    });
-    var tashkeelGroup = $("tashkeel-group");
-    if (tashkeelGroup) {
-      tashkeelGroup.classList.toggle("hidden", state.readingMode === "tajwid");
+    var modeHint = $("mode-hint");
+    if (modeHint) {
+      modeHint.textContent = state.readingMode === "tajwid"
+        ? "Couleurs tajwid activées \u2014 les signes de waqf (م ج لا\u2026) sont affich\u00e9s."
+        : "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
     }
     applyTheme();
     applyMode();
@@ -1176,12 +1165,6 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         setReadingMode(btn.dataset.mode);
-      });
-    });
-
-    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        setTashkeel(btn.dataset.tashkeel === "on");
       });
     });
 
