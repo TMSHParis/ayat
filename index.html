@@ -61,6 +61,12 @@
           <line x1="12" y1="2" x2="12" y2="15"/>
         </svg>
       </button>
+      <button class="nav-btn" id="qibla-btn" aria-label="Direction de la Mecque">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+        </svg>
+      </button>
       <button class="nav-btn" id="prev-btn" aria-label="Verset précédent">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
@@ -407,6 +413,68 @@
   </div>
 
   <div class="overlay-body" id="search-results"></div>
+</div>
+
+<!-- ====== QIBLA OVERLAY ====== -->
+<div id="qibla-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Qibla</h2>
+    <button class="close-btn" id="qibla-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body qibla-body">
+
+    <!-- État : chargement -->
+    <div id="qibla-loading" class="qibla-state">
+      <div class="spinner"></div>
+      <p class="qibla-state-text">Localisation en cours…</p>
+    </div>
+
+    <!-- État : erreur -->
+    <div id="qibla-error" class="qibla-state hidden">
+      <p class="qibla-state-text" id="qibla-error-msg">Localisation non disponible.</p>
+      <button class="qibla-action-btn" id="qibla-retry">Réessayer</button>
+    </div>
+
+    <!-- Vue boussole -->
+    <div id="qibla-compass-view" class="hidden">
+      <div class="qibla-compass-wrap">
+        <div class="qibla-compass">
+          <span class="qibla-cardinal qibla-n">N</span>
+          <span class="qibla-cardinal qibla-e">E</span>
+          <span class="qibla-cardinal qibla-s">S</span>
+          <span class="qibla-cardinal qibla-w">O</span>
+          <!-- Aiguille SVG — tip dorée vers la Mecque -->
+          <svg id="qibla-needle" class="qibla-needle" viewBox="-8 -60 16 120" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="0,-56 -5,0 5,0" fill="#f59e0b"/>
+            <polygon points="0,56 -5,0 5,0" fill="currentColor" opacity="0.18"/>
+            <circle cx="0" cy="0" r="4" fill="var(--glass-overlay)" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>
+          </svg>
+          <div class="qibla-center-dot"></div>
+        </div>
+      </div>
+
+      <div class="qibla-info">
+        <div class="qibla-bearing-row">
+          <span class="qibla-bearing-val" id="qibla-bearing-val">—</span><span class="qibla-bearing-deg">°</span>
+        </div>
+        <div class="qibla-info-label">Direction de la Mecque</div>
+        <div class="qibla-distance" id="qibla-dist">— km</div>
+      </div>
+
+      <div id="qibla-orient-prompt" class="qibla-orient-prompt hidden">
+        <button class="qibla-action-btn" id="qibla-orient-btn">Activer la boussole en direct</button>
+        <p class="qibla-orient-note">Autorisez l'accès à l'orientation pour une boussole live</p>
+      </div>
+      <div id="qibla-live-status" class="qibla-live-status hidden">
+        <span class="qibla-live-dot"></span>Boussole active
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
