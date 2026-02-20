@@ -23,70 +23,74 @@
 
 /* ---- THEME VARIABLES ---- */
 :root {
-  --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(251,191,36,.07) 0%, transparent 65%),
-        radial-gradient(ellipse 70% 45% at 85% 100%, rgba(249,115,22,.05) 0%, transparent 65%),
-        #f9f9f9;
-  --bg-solid: #f9f9f9;
+  /* Ambient base + vivid blobs — iOS 26 style */
+  --bg-solid: #f0ede8;
+  --blob-1:   rgba(251, 191,  36, 0.55);   /* amber, top-left  */
+  --blob-2:   rgba(249, 115,  22, 0.42);   /* orange, bot-right */
   --text: #000000;
-  --text-secondary: #222222;
+  --text-secondary: #1a1a1a;
   --text-muted: #888888;
   --text-faint: #bbbbbb;
-  --border: #ececec;
-  --track: #f0f0f0;
-  --overlay-bg: #ffffff;
-  --btn-border: #e0e0e0;
-  --btn-active-border: #222222;
-  --btn-active-text: #222222;
-  /* Liquid Glass tokens */
-  --glass-bg:        rgba(252, 252, 252, 0.68);
-  --glass-border:    rgba(255, 255, 255, 0.60);
-  --glass-overlay:   rgba(249, 249, 249, 0.86);
-  --glass-shadow:    0 4px 28px rgba(0,0,0,.06), 0 1px 0 rgba(255,255,255,.85) inset;
-  --glass-blur:      blur(28px) saturate(1.8);
+  --border: #e8e4de;
+  --track: #e8e4de;
+  --overlay-bg: #f0ede8;
+  --btn-border: #d8d4ce;
+  --btn-active-border: #1a1a1a;
+  --btn-active-text: #1a1a1a;
+  /* Liquid Glass tokens — very transparent, high blur, bright specular */
+  --glass-bg:      rgba(255, 255, 255, 0.26);
+  --glass-border:  rgba(255, 255, 255, 0.88);
+  --glass-overlay: rgba(240, 236, 228, 0.76);
+  --glass-shadow:  0 8px 40px rgba(0,0,0,.12),
+                   0 2px 0   rgba(255,255,255,1.0) inset,
+                   0 -1px 0  rgba(0,0,0,.04)       inset;
+  --glass-blur:    blur(40px) saturate(220%) brightness(1.06);
 }
 
 body.sepia {
-  --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(251,191,36,.07) 0%, transparent 65%),
-        radial-gradient(ellipse 70% 45% at 85% 100%, rgba(180,120,50,.06) 0%, transparent 65%),
-        #fdf8f2;
-  --bg-solid: #fdf8f2;
+  --bg-solid: #ede0c8;
+  --blob-1:   rgba(251, 191,  36, 0.50);
+  --blob-2:   rgba(200, 130,  50, 0.40);
   --text: #2c2416;
   --text-secondary: #3d3425;
   --text-muted: #8a7e6e;
   --text-faint: #b8ad9e;
-  --border: #ede6db;
-  --track: #ede6db;
+  --border: #dfd5c0;
+  --track: #dfd5c0;
   --overlay-bg: #fdf9f4;
-  --btn-border: #d6cdbf;
+  --btn-border: #d0c7b4;
   --btn-active-border: #3d3425;
   --btn-active-text: #3d3425;
-  --glass-bg:        rgba(253, 250, 245, 0.70);
-  --glass-border:    rgba(255, 255, 255, 0.62);
-  --glass-overlay:   rgba(252, 248, 242, 0.88);
-  --glass-shadow:    0 4px 28px rgba(0,0,0,.05), 0 1px 0 rgba(255,255,255,.80) inset;
-  --glass-blur:      blur(28px) saturate(1.6);
+  --glass-bg:      rgba(255, 248, 225, 0.28);
+  --glass-border:  rgba(255, 255, 255, 0.85);
+  --glass-overlay: rgba(236, 224, 200, 0.78);
+  --glass-shadow:  0 8px 40px rgba(100,60,0,.10),
+                   0 2px 0   rgba(255,255,255,.98) inset,
+                   0 -1px 0  rgba(100,60,0,.04)    inset;
+  --glass-blur:    blur(40px) saturate(210%) brightness(1.05);
 }
 
 body.dark {
-  --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(245,158,11,.06) 0%, transparent 65%),
-        radial-gradient(ellipse 70% 45% at 85% 100%, rgba(249,115,22,.04) 0%, transparent 65%),
-        #101010;
-  --bg-solid: #101010;
+  --bg-solid: #060606;
+  --blob-1:   rgba(245, 158,  11, 0.28);
+  --blob-2:   rgba(234,  88,  12, 0.20);
   --text: #e8e8e8;
   --text-secondary: #dddddd;
   --text-muted: #888888;
   --text-faint: #555555;
-  --border: #222222;
-  --track: #1e1e1e;
-  --overlay-bg: #111111;
-  --btn-border: #333333;
+  --border: #1e1e1e;
+  --track: #1a1a1a;
+  --overlay-bg: #0a0a0a;
+  --btn-border: #2e2e2e;
   --btn-active-border: #e0e0e0;
   --btn-active-text: #e0e0e0;
-  --glass-bg:        rgba(22, 22, 22, 0.70);
-  --glass-border:    rgba(255, 255, 255, 0.07);
-  --glass-overlay:   rgba(14, 14, 14, 0.88);
-  --glass-shadow:    0 4px 32px rgba(0,0,0,.50), 0 1px 0 rgba(255,255,255,.05) inset;
-  --glass-blur:      blur(28px) saturate(1.6);
+  --glass-bg:      rgba(255, 255, 255, 0.055);
+  --glass-border:  rgba(255, 255, 255, 0.14);
+  --glass-overlay: rgba(6, 6, 6, 0.76);
+  --glass-shadow:  0 8px 48px rgba(0,0,0,.70),
+                   0 2px 0   rgba(255,255,255,.10) inset,
+                   0 -1px 0  rgba(0,0,0,.30)       inset;
+  --glass-blur:    blur(40px) saturate(200%) brightness(0.94);
 }
 
 * {
@@ -96,16 +100,68 @@ body.dark {
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-solid);
+  transition: background .4s ease;
+}
+
+body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--bg);
+  isolation: isolate;          /* own stacking context — blobs go below content */
+  background: transparent;     /* html bg-solid shows through */
   color: var(--text);
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   transition: color .3s ease;
+}
+
+/* ---- ANIMATED BACKGROUND BLOBS ---- */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;                 /* behind body content, visible through transparent bg */
+  will-change: transform;
+}
+
+/* Blob 1 — top-left warm glow */
+body::before {
+  width: 80vw;
+  height: 80vh;
+  top: -28%;
+  left: -18%;
+  background: var(--blob-1);
+  filter: blur(70px);
+  animation: blob-drift-1 26s ease-in-out infinite alternate;
+}
+
+/* Blob 2 — bottom-right deeper glow */
+body::after {
+  width: 72vw;
+  height: 72vh;
+  bottom: -24%;
+  right: -16%;
+  background: var(--blob-2);
+  filter: blur(80px);
+  animation: blob-drift-2 34s ease-in-out infinite alternate;
+}
+
+@keyframes blob-drift-1 {
+  from { transform: translate(0,   0  ) scale(1.00); }
+  to   { transform: translate(8%,  10%) scale(1.18); }
+}
+
+@keyframes blob-drift-2 {
+  from { transform: translate(0,    0  ) scale(1.00); }
+  to   { transform: translate(-7%, -9%) scale(1.14); }
 }
 
 /* ---- LAYOUT ---- */
