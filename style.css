@@ -1155,12 +1155,12 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 2px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), 0 0 0 8px var(--track);
+  box-shadow: 0 4px 28px rgba(0,0,0,.04), 0 0 0 8px var(--track), 0 0 0 0 transparent;
   transition: border-color .4s ease, box-shadow .4s ease;
 }
 .qibla-compass.aligned {
   border-color: #10b981;
-  box-shadow: 0 4px 28px rgba(16,185,129,.12), 0 0 0 8px rgba(16,185,129,.08), 0 1px 0 rgba(255,255,255,.85) inset;
+  box-shadow: 0 4px 28px rgba(16,185,129,.10), 0 0 0 8px rgba(16,185,129,.08), 0 0 12px rgba(16,185,129,.15);
 }
 .qibla-cardinal {
   position: absolute;
@@ -1217,10 +1217,11 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   transform: translate(-50%, -50%);
   z-index: 2;
 }
-/* Aligned badge */
+/* Aligned badge — always in layout, shown via opacity to avoid shift */
 .qibla-aligned-badge {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 11px;
   color: #10b981;
@@ -1229,10 +1230,18 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(16,185,129,.25);
+  border: 1px solid transparent;
   border-radius: 50px;
+  height: 34px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.qibla-aligned-badge.visible {
+  opacity: 1;
+  visibility: visible;
+  border-color: rgba(16,185,129,.25);
   box-shadow: 0 2px 12px rgba(16,185,129,.08);
-  transition: opacity .3s ease;
 }
 .qibla-aligned-dot {
   width: 7px;
@@ -1274,6 +1283,14 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   font-size: 13px;
   color: var(--text-muted);
   font-weight: 300;
+}
+.qibla-location {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 300;
+  margin-top: 10px;
+  letter-spacing: 0.2px;
+  min-height: 16px;
 }
 .qibla-orient-prompt {
   display: flex;

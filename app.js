@@ -1122,8 +1122,25 @@
       var compass = $("qibla-compass");
       var badge = $("qibla-aligned-badge");
       if (compass) compass.classList.toggle("aligned", isAligned);
-      if (badge) badge.classList.toggle("hidden", !isAligned);
+      if (badge) badge.classList.toggle("visible", isAligned);
     }
+  }
+
+  function fetchQiblaLocation(lat, lon) {
+    var url = "https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json&accept-language=fr&zoom=10";
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var addr = data.address || {};
+        var city = addr.city || addr.town || addr.village || addr.municipality || "";
+        var country = addr.country || "";
+        var locEl = $("qibla-location");
+        if (locEl && (city || country)) {
+          var parts = [city, country].filter(Boolean).join(", ");
+          locEl.textContent = "Actuellement \u00e0 " + parts;
+        }
+      })
+      .catch(function () {});
   }
 
   function stopQiblaOrientation() {
@@ -1194,7 +1211,9 @@
     $("qibla-compass-view").classList.add("hidden");
     $("qibla-orient-prompt").classList.add("hidden");
     $("qibla-live-status").classList.add("hidden");
-    $("qibla-aligned-badge").classList.add("hidden");
+    $("qibla-aligned-badge").classList.remove("visible");
+    var locEl = $("qibla-location");
+    if (locEl) locEl.textContent = "";
     var compass = $("qibla-compass");
     if (compass) compass.classList.remove("aligned");
     qiblaBearing = null;
@@ -1220,6 +1239,7 @@
         $("qibla-compass-view").classList.remove("hidden");
         $("qibla-bearing-val").textContent = Math.round(qiblaBearing);
         $("qibla-dist").textContent = dist.toLocaleString("fr-FR") + "\u202fkm";
+        fetchQiblaLocation(lat, lon);
 
         // Remove live class for initial static positioning
         var needle = $("qibla-needle");
