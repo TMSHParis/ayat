@@ -848,5 +848,44 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 .toast.show { opacity: 1; }
 
+/* ---- TAJWID COLORS ---- */
+/* Standard tajwid color conventions (light mode) */
+.tajwid-ghunnah  { color: #C62828; }   /* Red    — nasalisation */
+.tajwid-idgham   { color: #2E7D32; }   /* Green  — assimilation */
+.tajwid-ikhfaa   { color: #E65100; }   /* Orange — dissimulation */
+.tajwid-qalqalah { color: #6A1B9A; }   /* Purple — écho */
+.tajwid-madd     { color: #1565C0; }   /* Blue   — prolongation */
+.tajwid-iqlab    { color: #00695C; }   /* Teal   — conversion */
+.tajwid-izhar    { color: #37474F; }   /* Gris   — articulation claire */
+
+/* Dark mode — softer/lighter tones on dark background */
+body.dark .tajwid-ghunnah  { color: #EF9A9A; }
+body.dark .tajwid-idgham   { color: #A5D6A7; }
+body.dark .tajwid-ikhfaa   { color: #FFCC80; }
+body.dark .tajwid-qalqalah { color: #CE93D8; }
+body.dark .tajwid-madd     { color: #90CAF9; }
+body.dark .tajwid-iqlab    { color: #80CBC4; }
+body.dark .tajwid-izhar    { color: #B0BEC5; }
+
+/* Sepia mode */
+body.sepia .tajwid-ghunnah  { color: #b71c1c; }
+body.sepia .tajwid-idgham   { color: #1b5e20; }
+body.sepia .tajwid-ikhfaa   { color: #bf360c; }
+body.sepia .tajwid-qalqalah { color: #4a148c; }
+body.sepia .tajwid-madd     { color: #0d47a1; }
+body.sepia .tajwid-iqlab    { color: #004d40; }
+body.sepia .tajwid-izhar    { color: #37474F; }
+
+/* Minimal mode — silence all tajwid colors via CSS cascade, no re-render needed */
+body.mode-minimal [class^="tajwid-"] { color: inherit; }
+
+/* ---- SETTING HINT (below setting buttons) ---- */
+.setting-hint {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
 /* ---- HIDDEN ---- */
 .hidden { display: none !important; }

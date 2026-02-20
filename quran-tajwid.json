@@ -1,0 +1,91 @@
+{
+  "1:1": [
+    { "start": 7,  "end": 14, "rule": "izhar" },
+    { "start": 15, "end": 25, "rule": "madd" },
+    { "start": 26, "end": 35, "rule": "madd" }
+  ],
+  "1:2": [
+    { "start": 0,  "end": 9,  "rule": "izhar" },
+    { "start": 9,  "end": 15, "rule": "idgham" },
+    { "start": 23, "end": 36, "rule": "madd" }
+  ],
+  "1:3": [
+    { "start": 0,  "end": 11, "rule": "madd" },
+    { "start": 12, "end": 21, "rule": "madd" }
+  ],
+  "1:4": [
+    { "start": 0,  "end": 6,  "rule": "madd" },
+    { "start": 14, "end": 20, "rule": "idgham" }
+  ],
+  "1:5": [
+    { "start": 0,  "end": 7,  "rule": "ikhfaa" },
+    { "start": 18, "end": 29, "rule": "madd" }
+  ],
+  "1:6": [
+    { "start": 7,  "end": 15, "rule": "idgham" },
+    { "start": 16, "end": 28, "rule": "izhar" }
+  ],
+  "1:7": [
+    { "start": 0,  "end": 7,  "rule": "izhar" },
+    { "start": 30, "end": 40, "rule": "ikhfaa" },
+    { "start": 57, "end": 68, "rule": "ghunnah" },
+    { "start": 72, "end": 82, "rule": "idgham" },
+    { "start": 85, "end": 97, "rule": "madd" }
+  ],
+  "2:255": [
+    { "start": 0,  "end": 5,  "rule": "izhar" },
+    { "start": 6,  "end": 14, "rule": "madd" },
+    { "start": 20, "end": 28, "rule": "ghunnah" },
+    { "start": 42, "end": 52, "rule": "ikhfaa" },
+    { "start": 67, "end": 78, "rule": "madd" },
+    { "start": 92, "end": 102,"rule": "idgham" },
+    { "start": 115,"end": 126,"rule": "madd" },
+    { "start": 138,"end": 150,"rule": "qalqalah" }
+  ],
+  "36:1": [
+    { "start": 0, "end": 4, "rule": "madd" }
+  ],
+  "36:2": [
+    { "start": 0, "end": 9, "rule": "madd" },
+    { "start": 10,"end": 17,"rule": "izhar" }
+  ],
+  "36:3": [
+    { "start": 0, "end": 6, "rule": "ikhfaa" },
+    { "start": 7, "end": 18,"rule": "madd" }
+  ],
+  "55:1": [
+    { "start": 0, "end": 8, "rule": "madd" }
+  ],
+  "112:1": [
+    { "start": 0,  "end": 4,  "rule": "izhar" },
+    { "start": 5,  "end": 12, "rule": "idgham" }
+  ],
+  "112:2": [
+    { "start": 0,  "end": 7,  "rule": "madd" },
+    { "start": 8,  "end": 16, "rule": "izhar" }
+  ],
+  "112:3": [
+    { "start": 0,  "end": 5,  "rule": "izhar" },
+    { "start": 5,  "end": 12, "rule": "ghunnah" }
+  ],
+  "112:4": [
+    { "start": 0,  "end": 5,  "rule": "ikhfaa" },
+    { "start": 5,  "end": 14, "rule": "madd" }
+  ],
+  "113:1": [
+    { "start": 0,  "end": 5,  "rule": "izhar" },
+    { "start": 6,  "end": 13, "rule": "qalqalah" }
+  ],
+  "114:1": [
+    { "start": 0,  "end": 5,  "rule": "izhar" },
+    { "start": 6,  "end": 13, "rule": "idgham" }
+  ],
+  "114:3": [
+    { "start": 0,  "end": 6,  "rule": "ghunnah" },
+    { "start": 7,  "end": 14, "rule": "madd" }
+  ],
+  "114:6": [
+    { "start": 0,  "end": 6,  "rule": "ikhfaa" },
+    { "start": 10, "end": 18, "rule": "madd" }
+  ]
+}

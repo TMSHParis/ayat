@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v26";
+const CACHE_NAME = "qurani-v27";
 
 const PRECACHE = [
   "./",
