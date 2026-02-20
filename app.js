@@ -143,6 +143,102 @@
     }, 2000);
   }
 
+  // ---- TAJWID OVERLAY (lazy-loaded) ----
+  var tajwidData = null;
+  var tajwidLoading = false;
+  var segmentCache = new Map();
+  var TASHKEEL_REGEX = /[\u064B-\u065F\u0670]/g;
+
+  function stripTashkeel(text) {
+    return text.replace(TASHKEEL_REGEX, "");
+  }
+
+  // Split text into colored segments using tajwid overlay markers.
+  // Returns array of { chars: string, rule: string|null }.
+  function segmentAyah(text, overlays) {
+    if (!overlays || overlays.length === 0) {
+      return [{ chars: text, rule: null }];
+    }
+    var sorted = overlays.slice().sort(function (a, b) { return a.start - b.start; });
+    var segments = [];
+    var pos = 0;
+    var len = text.length;
+    for (var i = 0; i < sorted.length; i++) {
+      var ov = sorted[i];
+      var start = Math.min(Math.max(ov.start, pos), len);
+      var end   = Math.min(ov.end, len);
+      if (start >= len) break;
+      if (pos < start) {
+        segments.push({ chars: text.slice(pos, start), rule: null });
+      }
+      if (start < end) {
+        segments.push({ chars: text.slice(start, end), rule: ov.rule });
+      }
+      pos = end;
+    }
+    if (pos < len) {
+      segments.push({ chars: text.slice(pos), rule: null });
+    }
+    return segments;
+  }
+
+  function getSegmentsForAyah(cacheKey, text, overlays) {
+    if (!segmentCache.has(cacheKey)) {
+      segmentCache.set(cacheKey, segmentAyah(text, overlays));
+    }
+    return segmentCache.get(cacheKey);
+  }
+
+  function loadTajwidOverlay() {
+    if (tajwidData || tajwidLoading) return;
+    tajwidLoading = true;
+    fetch("quran-tajwid.json")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        tajwidData = data;
+        tajwidLoading = false;
+        segmentCache.clear();
+        if (state.readingMode === "tajwid") {
+          if (freeReadMode) renderFreeReading();
+          else render();
+        }
+      })
+      .catch(function () {
+        tajwidLoading = false;
+        // Overlay unavailable — tajwid mode shows plain text without colors
+      });
+  }
+
+  function applyMode() {
+    document.body.classList.toggle("mode-tajwid", state.readingMode === "tajwid");
+    document.body.classList.toggle("mode-minimal", state.readingMode !== "tajwid");
+  }
+
+  function setReadingMode(mode) {
+    state.readingMode = mode;
+    if (mode === "tajwid") {
+      state.showTashkeel = true; // tajwid requires full tashkeel
+    }
+    segmentCache.clear();
+    applyMode();
+    saveState();
+    if (mode === "tajwid" && !tajwidData && !tajwidLoading) {
+      loadTajwidOverlay();
+      return; // will re-render automatically after load
+    }
+    if (freeReadMode) renderFreeReading();
+    else render();
+  }
+
+  function setTashkeel(enabled) {
+    if (state.readingMode === "tajwid") return; // locked on in tajwid mode
+    state.showTashkeel = enabled;
+    segmentCache.clear();
+    saveState();
+    if (freeReadMode) renderFreeReading();
+    else render();
+  }
+
   // ---- FREE READING (ephemeral, not persisted) ----
   var freeReadMode = false;
   var freeReadSurahIdx = 0;
@@ -175,6 +271,8 @@
       textSize: "M",
       theme: "light",
       displayLang: "ar",
+      readingMode: "minimal",
+      showTashkeel: true,
     };
   }
 
@@ -527,13 +625,38 @@
   function renderAyahText(ayahEl, ayah) {
     ayahEl.innerHTML = "";
     var lang = state.displayLang;
+    var mode = state.readingMode;
+
     if (lang === "ar" || lang === "ar-fr") {
       var arSpan = document.createElement("span");
       arSpan.className = "ayah-arabic";
       arSpan.setAttribute("dir", "rtl");
-      arSpan.textContent = ayah.text;
+
+      if (mode === "tajwid" && tajwidData) {
+        // Tajwid mode: render colored segments
+        var key = ayah.surahNumber + ":" + ayah.ayahNumber;
+        var overlays = tajwidData[key] || null;
+        var segments = getSegmentsForAyah(key, ayah.text, overlays);
+        var frag = document.createDocumentFragment();
+        for (var s = 0; s < segments.length; s++) {
+          var seg = segments[s];
+          var segSpan = document.createElement("span");
+          segSpan.textContent = seg.chars;
+          if (seg.rule) segSpan.className = "tajwid-" + seg.rule;
+          frag.appendChild(segSpan);
+        }
+        arSpan.appendChild(frag);
+      } else {
+        // Minimal mode (with or without tashkeel)
+        var displayText = (!state.showTashkeel)
+          ? stripTashkeel(ayah.text)
+          : ayah.text;
+        arSpan.textContent = displayText;
+      }
+
       ayahEl.appendChild(arSpan);
     }
+
     if (lang === "ar-fr" || lang === "fr") {
       if (lang === "ar-fr") {
         var br = document.createElement("div");
@@ -546,7 +669,8 @@
       frSpan.textContent = ayah.textFr || "";
       ayahEl.appendChild(frSpan);
     }
-    // Set direction based on mode
+
+    // Set direction based on lang
     if (lang === "fr") {
       ayahEl.setAttribute("dir", "ltr");
     } else {
@@ -618,7 +742,18 @@
     document.querySelectorAll("#lang-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.lang === state.displayLang);
     });
+    document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
+    });
+    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.tashkeel === (state.showTashkeel ? "on" : "off"));
+    });
+    var tashkeelGroup = $("tashkeel-group");
+    if (tashkeelGroup) {
+      tashkeelGroup.classList.toggle("hidden", state.readingMode === "tajwid");
+    }
     applyTheme();
+    applyMode();
   }
 
   // ---- NAVIGATION ----
@@ -905,6 +1040,7 @@
 
     state = loadState();
     applyTheme(); // apply theme before showing UI to avoid flash
+    applyMode();  // apply reading mode before showing UI
 
     $("loading").classList.add("hidden");
     $("app").classList.remove("hidden");
@@ -1034,6 +1170,18 @@
         saveState();
         if (freeReadMode) renderFreeReading();
         else render();
+      });
+    });
+
+    document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setReadingMode(btn.dataset.mode);
+      });
+    });
+
+    document.querySelectorAll("#tashkeel-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        setTashkeel(btn.dataset.tashkeel === "on");
       });
     });
 
