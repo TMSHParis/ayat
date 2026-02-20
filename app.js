@@ -960,31 +960,6 @@
     updateBookmarkBtn();
   }
 
-  function shareCurrentAyah() {
-    var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
-    var ref = ayah.isBasmala
-      ? "Sourate " + ayah.surahNameFr + " — Basmala"
-      : "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
-    var shareText = ayah.text;
-    if (state.displayLang === "ar-fr") {
-      shareText = ayah.text + "\n\n" + (ayah.textFr || "");
-    } else if (state.displayLang === "fr") {
-      shareText = ayah.textFr || ayah.text;
-    }
-    var text = shareText + "\n\n" + ref + "\n— Qurani";
-
-    if (navigator.share) {
-      navigator.share({ text: text }).catch(function () {});
-    } else {
-      // Fallback: copy to clipboard
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function () {
-          showToast("Copié dans le presse-papiers");
-        });
-      }
-    }
-  }
-
   function renderBookmarksList() {
     var list = $("bookmarks-list");
     var empty = $("bookmarks-empty");
@@ -1196,11 +1171,6 @@
       e.preventDefault();
       openOverlayFromMenu("about-overlay");
     });
-    $("menu-share").addEventListener("click", function (e) {
-      e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      shareCurrentAyah();
-    });
     $("menu-help").addEventListener("click", function (e) {
       e.preventDefault();
       openOverlayFromMenu("help-overlay");
@@ -1212,7 +1182,6 @@
     });
 
     // ---- HEADER ACTION ICONS ----
-    $("share-btn").addEventListener("click", shareCurrentAyah);
     $("bookmark-btn").addEventListener("click", toggleBookmark);
     updateBookmarkBtn();
 
