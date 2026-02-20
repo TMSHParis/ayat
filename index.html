@@ -212,20 +212,35 @@
       </div>
     </div>
     <button class="reset-btn" id="reset-btn">Tout réinitialiser</button>
-  </div>
-</div>
 
-<!-- ====== ABOUT OVERLAY ====== -->
-<div id="about-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>À propos</h2>
-    <button class="close-btn" id="about-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body">
+    <!-- ---- STATISTIQUES ---- -->
+    <div class="settings-section-divider"></div>
+    <div class="settings-section-title">Statistiques</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Jours consécutifs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total-verses">0</div>
+        <div class="stat-label">Versets lus</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-khatmas">0</div>
+        <div class="stat-label">Lectures complètes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-start-date">—</div>
+        <div class="stat-label">Début de la lecture</div>
+      </div>
+    </div>
+    <div class="stats-links">
+      <a href="#bookmarks" class="stats-link" id="stats-bookmarks-link">Voir mes favoris</a>
+    </div>
+
+    <!-- ---- À PROPOS ---- -->
+    <div class="settings-section-divider"></div>
+    <div class="settings-section-title">À propos</div>
     <div class="about-page" style="padding:0;min-height:auto;direction:ltr;">
       <p>Application simple pour lire le Coran en 30 jours, verset par verset, sans distraction.</p>
       <hr class="divider">
@@ -235,6 +250,38 @@
       <hr class="divider">
       <p class="sub-label">Vie privée</p>
       <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les données sont stockées localement sur votre appareil uniquement.</p>
+    </div>
+
+    <!-- ---- AIDE ---- -->
+    <div class="settings-section-divider"></div>
+    <div class="settings-section-title">Aide</div>
+    <div class="help-section">
+      <div class="help-title">Lire le Coran en 30 jours</div>
+      <div class="help-text">L'application divise les 6236 versets du Coran en 30 portions quotidiennes. Chaque jour, le compteur en haut de l'écran vous indique combien de versets il vous reste à lire.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Navigation</div>
+      <div class="help-text">Balayez l'écran vers la gauche ou appuyez sur la partie droite pour passer au verset suivant. Balayez vers la droite ou appuyez sur la partie gauche pour revenir au verset précédent.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Lecture libre</div>
+      <div class="help-text">Consultez n'importe quel verset sans modifier votre plan de 30 jours. Votre progression reste exactement là où elle était.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Recherche</div>
+      <div class="help-text">Appuyez sur la loupe en haut à droite pour rechercher dans le Coran (arabe ou français). Vous pouvez aussi parcourir les sourates depuis la même fenêtre.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Favoris</div>
+      <div class="help-text">Appuyez sur le signet en bas à droite pour sauvegarder un verset. Retrouvez-les dans vos statistiques.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Partage</div>
+      <div class="help-text">Partagez le verset en cours de lecture avec vos proches via le bouton partager en bas à gauche.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Thèmes</div>
+      <div class="help-text">Quatre modes d'affichage : Auto (suit le système), Jour, Sépia et Nuit.</div>
     </div>
   </div>
 </div>
@@ -271,41 +318,6 @@
   </div>
 </div>
 
-<!-- ====== STATS OVERLAY ====== -->
-<div id="stats-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Statistiques</h2>
-    <button class="close-btn" id="stats-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="stat-streak">0</div>
-        <div class="stat-label">Jours consécutifs</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-total-verses">0</div>
-        <div class="stat-label">Versets lus</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-khatmas">0</div>
-        <div class="stat-label">Lectures complètes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-start-date">—</div>
-        <div class="stat-label">Début de la lecture</div>
-      </div>
-    </div>
-    <div class="stats-links">
-      <a href="#bookmarks" class="stats-link" id="stats-bookmarks-link">Voir mes favoris</a>
-    </div>
-  </div>
-</div>
-
 <!-- ====== SEARCH OVERLAY ====== -->
 <div id="search-overlay" class="overlay hidden">
   <div class="overlay-header">
@@ -320,57 +332,16 @@
     <input type="text" id="search-input" class="surah-search" placeholder="Rechercher dans le Coran..." autocomplete="off">
   </div>
   <div class="search-hint" id="search-hint">Tapez un mot en arabe ou en français pour trouver les versets correspondants.</div>
-  <div class="overlay-body" id="search-results"></div>
-</div>
-
-<!-- ====== HELP OVERLAY ====== -->
-<div id="help-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Aide</h2>
-    <button class="close-btn" id="help-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  <div class="search-browse-row">
+    <button class="search-browse-btn" id="search-browse-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
       </svg>
+      Parcourir les sourates
     </button>
   </div>
-  <div class="overlay-body">
-    <div class="help-section">
-      <div class="help-title">Lire le Coran en 30 jours</div>
-      <div class="help-text">L'application divise les 6236 versets du Coran en 30 portions quotidiennes. Chaque jour, le compteur en haut de l'écran vous indique combien de versets il vous reste à lire. Quand vous passez au verset suivant, votre progression avance automatiquement. Une fois l'objectif du jour atteint, un message de félicitation apparaît, mais vous pouvez continuer à lire si vous le souhaitez.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Lecture libre</div>
-      <div class="help-text">Le bouton « Lecture libre » vous permet de consulter n'importe quel verset du Coran sans aucune conséquence sur votre plan de 30 jours. Votre progression reste exactement là où elle était.<br><br>Exemple : vous êtes au verset 50 de la sourate Al-Baqara dans votre plan. Vous voulez relire un passage de la sourate Ya-Sin. Utilisez « Lecture libre » : votre plan restera au verset 50 de Al-Baqara quand vous reviendrez.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Mon plan 30 jours</div>
-      <div class="help-text">Le bouton « Mon plan 30 jours » repositionne votre progression de lecture à l'endroit que vous choisissez. Toute la suite de votre plan de 30 jours reprendra à partir de ce point.<br><br>Quand l'utiliser ? Si vous avez déjà lu une partie du Coran en dehors de l'application (dans un mushaf papier, à la mosquée, etc.), utilisez ce bouton pour synchroniser l'application avec votre avancement réel. Ainsi, l'application ne vous fera pas relire ce que vous avez déjà lu.<br><br>Attention : ce bouton modifie définitivement votre position dans le plan. Utilisez-le uniquement si vous voulez vraiment déplacer votre progression.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Navigation</div>
-      <div class="help-text">Balayez l'écran vers la gauche ou appuyez sur la partie droite pour passer au verset suivant. Balayez vers la droite ou appuyez sur la partie gauche pour revenir au verset précédent.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Langue</div>
-      <div class="help-text">Dans les Réglages, choisissez entre trois modes : Arabe seul, Arabe et Français, ou Français seul. La traduction utilisée est celle de Muhammad Hamidullah.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Recherche</div>
-      <div class="help-text">La recherche parcourt le texte arabe et la traduction française. Tapez au moins 2 caractères. Appuyez sur un résultat pour le lire.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Favoris</div>
-      <div class="help-text">Sauvegardez un verset depuis le menu. Retrouvez vos favoris dans les Statistiques.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Partage</div>
-      <div class="help-text">Partagez le verset en cours de lecture avec vos proches.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Thèmes</div>
-      <div class="help-text">Quatre modes d'affichage : Auto (suit le système), Jour, Sépia et Nuit.</div>
-    </div>
-  </div>
+  <div class="overlay-body" id="search-results"></div>
 </div>
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>

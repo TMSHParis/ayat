@@ -1037,14 +1037,10 @@
     if (didSwipe) return;
     // Ignore if an overlay is open
     if (
-      !$("menu-overlay").classList.contains("hidden") ||
       !$("settings-overlay").classList.contains("hidden") ||
-      !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("stats-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden") ||
-      !$("help-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden")
     ) return;
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
@@ -1063,14 +1059,10 @@
   // ---- KEYBOARD ----
   function onKeyDown(e) {
     if (
-      !$("menu-overlay").classList.contains("hidden") ||
       !$("settings-overlay").classList.contains("hidden") ||
-      !$("about-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("stats-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden") ||
-      !$("help-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -1151,36 +1143,12 @@
       $("goal-reached").classList.add("hidden");
     });
 
-    // ---- MENU (hamburger) ----
+    // ---- HAMBURGER → opens settings panel directly ----
     $("menu-btn").addEventListener("click", function () {
-      $("menu-overlay").classList.remove("hidden");
-    });
-    $("menu-close").addEventListener("click", function () {
-      $("menu-overlay").classList.add("hidden");
-    });
-    $("menu-settings").addEventListener("click", function (e) {
-      e.preventDefault();
       render();
       updateReminderUI();
-      openOverlayFromMenu("settings-overlay");
-    });
-    $("menu-browse").addEventListener("click", function (e) {
-      e.preventDefault();
-      openOverlayFromMenu("surah-overlay");
-    });
-    // (search removed from menu — accessed via header search icon)
-    $("menu-stats").addEventListener("click", function (e) {
-      e.preventDefault();
       renderStats();
-      openOverlayFromMenu("stats-overlay");
-    });
-    $("menu-about").addEventListener("click", function (e) {
-      e.preventDefault();
-      openOverlayFromMenu("about-overlay");
-    });
-    $("menu-help").addEventListener("click", function (e) {
-      e.preventDefault();
-      openOverlayFromMenu("help-overlay");
+      $("settings-overlay").classList.remove("hidden");
     });
 
     // ---- BACK BUTTON (free reading) ----
@@ -1215,28 +1183,16 @@
       }
     });
 
-    // ---- OVERLAY CLOSE BUTTONS (return to menu) ----
-    var overlayOpenedFromMenu = null;
-    function openOverlayFromMenu(overlayId) {
-      $("menu-overlay").classList.add("hidden");
-      $(overlayId).classList.remove("hidden");
-      overlayOpenedFromMenu = overlayId;
-    }
-    function closeOverlayToMenu(overlayId) {
+    // ---- OVERLAY CLOSE BUTTONS ----
+    function closeOverlay(overlayId) {
       $(overlayId).classList.add("hidden");
-      if (overlayOpenedFromMenu === overlayId) {
-        $("menu-overlay").classList.remove("hidden");
-        overlayOpenedFromMenu = null;
-      }
     }
-    $("about-close").addEventListener("click", function () {
-      closeOverlayToMenu("about-overlay");
-    });
-    $("help-close").addEventListener("click", function () {
-      closeOverlayToMenu("help-overlay");
-    });
+    // openOverlayFromMenu kept for surah overlay (opened from search, stats-link, etc.)
+    function openOverlayFromMenu(overlayId) {
+      $(overlayId).classList.remove("hidden");
+    }
     $("settings-close").addEventListener("click", function () {
-      closeOverlayToMenu("settings-overlay");
+      closeOverlay("settings-overlay");
     });
 
     document.querySelectorAll("#goal-buttons .setting-btn").forEach(function (btn) {
@@ -1310,22 +1266,16 @@
       }
     });
 
-    // ---- STATS ----
-    $("stats-close").addEventListener("click", function () {
-      closeOverlayToMenu("stats-overlay");
-    });
+    // ---- STATS (now inside settings panel) ----
     $("stats-bookmarks-link").addEventListener("click", function (e) {
       e.preventDefault();
-      $("stats-overlay").classList.add("hidden");
       renderBookmarksList();
       $("bookmarks-overlay").classList.remove("hidden");
     });
 
     // ---- BOOKMARKS ----
     $("bookmarks-close").addEventListener("click", function () {
-      // Bookmarks is opened from stats, so go back to stats
       $("bookmarks-overlay").classList.add("hidden");
-      $("stats-overlay").classList.remove("hidden");
     });
 
     // ---- SURAH SEARCH ----
@@ -1504,7 +1454,7 @@
       $("surah-overlay").classList.remove("hidden");
     });
     $("surah-close").addEventListener("click", function () {
-      closeOverlayToMenu("surah-overlay");
+      closeOverlay("surah-overlay");
     });
 
     // ---- QURAN SEARCH ----
@@ -1606,7 +1556,11 @@
     }
 
     $("search-close").addEventListener("click", function () {
-      closeOverlayToMenu("search-overlay");
+      closeOverlay("search-overlay");
+    });
+    $("search-browse-btn").addEventListener("click", function () {
+      closeOverlay("search-overlay");
+      $("surah-overlay").classList.remove("hidden");
     });
     $("search-input").addEventListener("input", function () {
       var val = this.value.trim();
