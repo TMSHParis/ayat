@@ -1158,7 +1158,9 @@
 
     // ---- HEADER ACTION ICONS ----
     $("search-btn").addEventListener("click", function () {
-      $("search-overlay").classList.remove("hidden");
+      var overlay = $("search-overlay");
+      overlay.classList.remove("hidden");
+      overlay.classList.remove("has-results");
       $("search-input").value = "";
       $("search-results").innerHTML = "";
       $("search-hint").classList.remove("hidden");
@@ -1464,10 +1466,12 @@
     function performSearch(query) {
       var resultsEl = $("search-results");
       var hintEl = $("search-hint");
+      var overlay = $("search-overlay");
       resultsEl.innerHTML = "";
 
       if (!query || query.length < 2) {
         hintEl.classList.remove("hidden");
+        overlay.classList.remove("has-results");
         return;
       }
       hintEl.classList.add("hidden");
@@ -1508,6 +1512,8 @@
         }
         if (results.length >= MAX_RESULTS) break;
       }
+
+      overlay.classList.add("has-results");
 
       if (results.length === 0) {
         var noRes = document.createElement("p");
