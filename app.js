@@ -1040,7 +1040,8 @@
       !$("settings-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden") ||
+      !$("qibla-overlay").classList.contains("hidden")
     ) return;
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
@@ -1062,7 +1063,8 @@
       !$("settings-overlay").classList.contains("hidden") ||
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
-      !$("search-overlay").classList.contains("hidden")
+      !$("search-overlay").classList.contains("hidden") ||
+      !$("qibla-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -1071,6 +1073,127 @@
       e.preventDefault();
       goPrev();
     }
+  }
+
+  // ---- QIBLA ----
+  var MECCA_LAT = 21.4225;
+  var MECCA_LON = 39.8262;
+  var qiblaBearing = null;
+  var qiblaOrientListeners = [];
+
+  function toRad(deg) { return deg * Math.PI / 180; }
+
+  function calcQiblaBearing(lat, lon) {
+    var φ1 = toRad(lat), φ2 = toRad(MECCA_LAT);
+    var Δλ = toRad(MECCA_LON - lon);
+    var y = Math.sin(Δλ) * Math.cos(φ2);
+    var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+  }
+
+  function calcDistance(lat, lon) {
+    var R = 6371;
+    var Δφ = toRad(MECCA_LAT - lat), Δλ = toRad(MECCA_LON - lon);
+    var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(toRad(lat)) * Math.cos(toRad(MECCA_LAT)) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  function rotateNeedle(deg) {
+    var needle = $("qibla-needle");
+    if (!needle) return;
+    needle.style.transform = "translate(-50%, -50%) rotate(" + deg + "deg)";
+  }
+
+  function stopQiblaOrientation() {
+    qiblaOrientListeners.forEach(function (info) {
+      window.removeEventListener(info.event, info.fn, true);
+    });
+    qiblaOrientListeners = [];
+  }
+
+  function startQiblaOrientation() {
+    if (typeof DeviceOrientationEvent === "undefined") return;
+
+    // iOS 13+ requires explicit permission
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+      $("qibla-orient-prompt").classList.remove("hidden");
+      return;
+    }
+
+    var hasLive = false;
+
+    function handleOrientation(e) {
+      var heading = null;
+      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+        heading = e.webkitCompassHeading; // iOS (clockwise from North)
+      } else if (e.absolute && e.alpha !== null) {
+        heading = (360 - e.alpha) % 360; // Android absolute
+      }
+      if (heading === null || qiblaBearing === null) return;
+      rotateNeedle(qiblaBearing - heading);
+      if (!hasLive) {
+        hasLive = true;
+        var liveEl = $("qibla-live-status");
+        if (liveEl) liveEl.classList.remove("hidden");
+      }
+    }
+
+    var absHandler = function (e) { handleOrientation(e); };
+    var relHandler = function (e) { handleOrientation(e); };
+
+    window.addEventListener("deviceorientationabsolute", absHandler, true);
+    window.addEventListener("deviceorientation", relHandler, true);
+    qiblaOrientListeners.push({ event: "deviceorientationabsolute", fn: absHandler });
+    qiblaOrientListeners.push({ event: "deviceorientation", fn: relHandler });
+  }
+
+  function openQiblaOverlay() {
+    $("qibla-overlay").classList.remove("hidden");
+    $("qibla-loading").classList.remove("hidden");
+    $("qibla-error").classList.add("hidden");
+    $("qibla-compass-view").classList.add("hidden");
+    $("qibla-orient-prompt").classList.add("hidden");
+    $("qibla-live-status").classList.add("hidden");
+    qiblaBearing = null;
+    stopQiblaOrientation();
+
+    if (!navigator.geolocation) {
+      $("qibla-loading").classList.add("hidden");
+      $("qibla-error").classList.remove("hidden");
+      $("qibla-error-msg").textContent = "La géolocalisation n'est pas disponible sur cet appareil.";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        var lat = pos.coords.latitude, lon = pos.coords.longitude;
+        qiblaBearing = calcQiblaBearing(lat, lon);
+        var dist = calcDistance(lat, lon);
+
+        $("qibla-loading").classList.add("hidden");
+        $("qibla-compass-view").classList.remove("hidden");
+        $("qibla-bearing-val").textContent = Math.round(qiblaBearing);
+        $("qibla-dist").textContent = dist.toLocaleString("fr-FR") + "\u202fkm";
+        rotateNeedle(qiblaBearing);
+        startQiblaOrientation();
+      },
+      function (err) {
+        $("qibla-loading").classList.add("hidden");
+        $("qibla-error").classList.remove("hidden");
+        $("qibla-error-msg").textContent = err.code === 1
+          ? "Accès à la localisation refusé. Vérifiez les permissions de l'application."
+          : "Impossible d'accéder à votre position. Réessayez.";
+      },
+      { timeout: 12000, enableHighAccuracy: false }
+    );
+  }
+
+  function closeQiblaOverlay() {
+    $("qibla-overlay").classList.add("hidden");
+    stopQiblaOrientation();
+    qiblaBearing = null;
   }
 
   // ---- INIT ----
@@ -1168,6 +1291,33 @@
     });
 
     // ---- BOTTOM BAR ICONS ----
+    $("qibla-btn").addEventListener("click", openQiblaOverlay);
+    $("qibla-close").addEventListener("click", closeQiblaOverlay);
+    $("qibla-retry").addEventListener("click", openQiblaOverlay);
+    $("qibla-orient-btn").addEventListener("click", function () {
+      DeviceOrientationEvent.requestPermission().then(function (res) {
+        if (res === "granted") {
+          $("qibla-orient-prompt").classList.add("hidden");
+          var hasLive = false;
+          var handler = function (e) {
+            var heading = null;
+            if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+              heading = e.webkitCompassHeading;
+            } else if (e.absolute && e.alpha !== null) {
+              heading = (360 - e.alpha) % 360;
+            }
+            if (heading === null || qiblaBearing === null) return;
+            rotateNeedle(qiblaBearing - heading);
+            if (!hasLive) {
+              hasLive = true;
+              $("qibla-live-status").classList.remove("hidden");
+            }
+          };
+          window.addEventListener("deviceorientation", handler, true);
+          qiblaOrientListeners.push({ event: "deviceorientation", fn: handler });
+        }
+      }).catch(function () {});
+    });
     $("bookmark-btn").addEventListener("click", toggleBookmark);
     updateBookmarkBtn();
     $("share-btn").addEventListener("click", function () {
