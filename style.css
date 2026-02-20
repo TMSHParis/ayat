@@ -879,6 +879,21 @@ body.sepia .tajwid-izhar    { color: #37474F; }
 /* Minimal mode — silence all tajwid colors via CSS cascade, no re-render needed */
 body.mode-minimal [class^="tajwid-"] { color: inherit; }
 
+/* Tajwid mode without colors — same cascade trick */
+body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
+
+/* ---- TAJWID COLOR SUB-GROUP (shown only when tajwid mode is active) ---- */
+.setting-sub-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.setting-sub-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
 /* ---- SETTING HINT (below setting buttons) ---- */
 .setting-hint {
   font-size: 10px;

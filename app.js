@@ -218,6 +218,7 @@
   function applyMode() {
     document.body.classList.toggle("mode-tajwid", state.readingMode === "tajwid");
     document.body.classList.toggle("mode-minimal", state.readingMode !== "tajwid");
+    document.body.classList.toggle("tajwid-no-colors", state.readingMode === "tajwid" && !state.tajwidColors);
   }
 
   function setReadingMode(mode) {
@@ -266,6 +267,7 @@
       theme: "light",
       displayLang: "ar",
       readingMode: "minimal",
+      tajwidColors: true,
     };
   }
 
@@ -735,11 +737,22 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
     });
+    var tajwidColorGroup = $("tajwid-color-group");
+    if (tajwidColorGroup) {
+      tajwidColorGroup.classList.toggle("hidden", state.readingMode !== "tajwid");
+    }
+    document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", (btn.dataset.tajwidColors === "true") === !!state.tajwidColors);
+    });
     var modeHint = $("mode-hint");
     if (modeHint) {
-      modeHint.textContent = state.readingMode === "tajwid"
-        ? "Couleurs tajwid activées \u2014 les signes de waqf (م ج لا\u2026) sont affich\u00e9s."
-        : "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
+      if (state.readingMode === "tajwid") {
+        modeHint.textContent = state.tajwidColors
+          ? "Couleurs tajwid activ\u00e9es \u2014 les signes de waqf sont affich\u00e9s."
+          : "Mode tajwid sans couleurs \u2014 les signes de waqf sont affich\u00e9s.";
+      } else {
+        modeHint.textContent = "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
+      }
     }
     applyTheme();
     applyMode();
@@ -1165,6 +1178,15 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         setReadingMode(btn.dataset.mode);
+      });
+    });
+
+    document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.tajwidColors = btn.dataset.tajwidColors === "true";
+        applyMode();
+        saveState();
+        render();
       });
     });
 
