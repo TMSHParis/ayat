@@ -627,13 +627,13 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   color: var(--text-secondary);
 }
 .verse-picker-btn-jump {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 .verse-picker-btn-jump:hover {
-  background: #3b82f6;
+  background: #f59e0b;
   color: #fff;
-  border-color: #3b82f6;
+  border-color: #f59e0b;
 }
 
 /* ---- LOADING ---- */
