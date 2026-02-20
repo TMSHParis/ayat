@@ -1078,32 +1078,52 @@
   // ---- QIBLA ----
   var MECCA_LAT = 21.4225;
   var MECCA_LON = 39.8262;
+  var ALIGN_THRESHOLD = 10; // degrees
   var qiblaBearing = null;
+  var qiblaCurrentRot = 0; // tracks accumulated rotation for smooth wraparound
+  var qiblaHasAbsolute = false; // prefer absolute orientation when available
   var qiblaOrientListeners = [];
+  var qiblaIsAligned = false;
 
   function toRad(deg) { return deg * Math.PI / 180; }
 
   function calcQiblaBearing(lat, lon) {
-    var φ1 = toRad(lat), φ2 = toRad(MECCA_LAT);
-    var Δλ = toRad(MECCA_LON - lon);
-    var y = Math.sin(Δλ) * Math.cos(φ2);
-    var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    var p1 = toRad(lat), p2 = toRad(MECCA_LAT);
+    var dl = toRad(MECCA_LON - lon);
+    var y = Math.sin(dl) * Math.cos(p2);
+    var x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
   }
 
   function calcDistance(lat, lon) {
     var R = 6371;
-    var Δφ = toRad(MECCA_LAT - lat), Δλ = toRad(MECCA_LON - lon);
-    var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    var dp = toRad(MECCA_LAT - lat), dl = toRad(MECCA_LON - lon);
+    var a = Math.sin(dp / 2) * Math.sin(dp / 2) +
             Math.cos(toRad(lat)) * Math.cos(toRad(MECCA_LAT)) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            Math.sin(dl / 2) * Math.sin(dl / 2);
     return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
-  function rotateNeedle(deg) {
+  // Shortest-path rotation to avoid 360→0 jumps
+  function setNeedleRotation(targetDeg) {
+    var diff = ((targetDeg - qiblaCurrentRot) % 360 + 540) % 360 - 180;
+    qiblaCurrentRot += diff;
     var needle = $("qibla-needle");
     if (!needle) return;
-    needle.style.transform = "translate(-50%, -50%) rotate(" + deg + "deg)";
+    needle.style.transform = "translateX(-50%) rotate(" + qiblaCurrentRot + "deg)";
+  }
+
+  function updateAlignedState(rotationDeg) {
+    // rotationDeg is how far the needle is from pointing straight up (0 = aligned)
+    var normalised = ((rotationDeg % 360) + 360) % 360;
+    var isAligned = normalised < ALIGN_THRESHOLD || normalised > (360 - ALIGN_THRESHOLD);
+    if (isAligned !== qiblaIsAligned) {
+      qiblaIsAligned = isAligned;
+      var compass = $("qibla-compass");
+      var badge = $("qibla-aligned-badge");
+      if (compass) compass.classList.toggle("aligned", isAligned);
+      if (badge) badge.classList.toggle("hidden", !isAligned);
+    }
   }
 
   function stopQiblaOrientation() {
@@ -1111,6 +1131,44 @@
       window.removeEventListener(info.event, info.fn, true);
     });
     qiblaOrientListeners = [];
+    qiblaHasAbsolute = false;
+  }
+
+  function handleQiblaOrientation(e) {
+    if (qiblaBearing === null) return;
+    var heading = null;
+
+    // iOS Safari: webkitCompassHeading (geographic north, clockwise)
+    if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+      heading = e.webkitCompassHeading;
+    }
+    // Absolute orientation (Android Chrome): geographic north
+    else if (e.absolute === true && e.alpha !== null) {
+      if (!qiblaHasAbsolute) qiblaHasAbsolute = true;
+      heading = (360 - e.alpha) % 360;
+    }
+    // Fallback: relative alpha (not calibrated but rotates)
+    else if (!qiblaHasAbsolute && e.alpha !== null) {
+      heading = (360 - e.alpha) % 360;
+    }
+
+    if (heading === null) return;
+
+    // Switch to live mode (no CSS transition delay)
+    var needle = $("qibla-needle");
+    if (needle && !needle.classList.contains("live")) {
+      needle.classList.add("live");
+    }
+
+    var rotation = qiblaBearing - heading;
+    setNeedleRotation(rotation);
+    updateAlignedState(rotation);
+
+    // Show live badge once
+    var liveEl = $("qibla-live-status");
+    if (liveEl && liveEl.classList.contains("hidden")) {
+      liveEl.classList.remove("hidden");
+    }
   }
 
   function startQiblaOrientation() {
@@ -1122,31 +1180,11 @@
       return;
     }
 
-    var hasLive = false;
-
-    function handleOrientation(e) {
-      var heading = null;
-      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
-        heading = e.webkitCompassHeading; // iOS (clockwise from North)
-      } else if (e.absolute && e.alpha !== null) {
-        heading = (360 - e.alpha) % 360; // Android absolute
-      }
-      if (heading === null || qiblaBearing === null) return;
-      rotateNeedle(qiblaBearing - heading);
-      if (!hasLive) {
-        hasLive = true;
-        var liveEl = $("qibla-live-status");
-        if (liveEl) liveEl.classList.remove("hidden");
-      }
-    }
-
-    var absHandler = function (e) { handleOrientation(e); };
-    var relHandler = function (e) { handleOrientation(e); };
-
-    window.addEventListener("deviceorientationabsolute", absHandler, true);
-    window.addEventListener("deviceorientation", relHandler, true);
-    qiblaOrientListeners.push({ event: "deviceorientationabsolute", fn: absHandler });
-    qiblaOrientListeners.push({ event: "deviceorientation", fn: relHandler });
+    // Listen on both events; handleQiblaOrientation picks the best source
+    window.addEventListener("deviceorientationabsolute", handleQiblaOrientation, true);
+    window.addEventListener("deviceorientation", handleQiblaOrientation, true);
+    qiblaOrientListeners.push({ event: "deviceorientationabsolute", fn: handleQiblaOrientation });
+    qiblaOrientListeners.push({ event: "deviceorientation", fn: handleQiblaOrientation });
   }
 
   function openQiblaOverlay() {
@@ -1156,13 +1194,18 @@
     $("qibla-compass-view").classList.add("hidden");
     $("qibla-orient-prompt").classList.add("hidden");
     $("qibla-live-status").classList.add("hidden");
+    $("qibla-aligned-badge").classList.add("hidden");
+    var compass = $("qibla-compass");
+    if (compass) compass.classList.remove("aligned");
     qiblaBearing = null;
+    qiblaCurrentRot = 0;
+    qiblaIsAligned = false;
     stopQiblaOrientation();
 
     if (!navigator.geolocation) {
       $("qibla-loading").classList.add("hidden");
       $("qibla-error").classList.remove("hidden");
-      $("qibla-error-msg").textContent = "La géolocalisation n'est pas disponible sur cet appareil.";
+      $("qibla-error-msg").textContent = "La g\u00e9olocalisation n'est pas disponible sur cet appareil.";
       return;
     }
 
@@ -1170,21 +1213,27 @@
       function (pos) {
         var lat = pos.coords.latitude, lon = pos.coords.longitude;
         qiblaBearing = calcQiblaBearing(lat, lon);
+        qiblaCurrentRot = qiblaBearing; // init rotation to static bearing
         var dist = calcDistance(lat, lon);
 
         $("qibla-loading").classList.add("hidden");
         $("qibla-compass-view").classList.remove("hidden");
         $("qibla-bearing-val").textContent = Math.round(qiblaBearing);
         $("qibla-dist").textContent = dist.toLocaleString("fr-FR") + "\u202fkm";
-        rotateNeedle(qiblaBearing);
+
+        // Remove live class for initial static positioning
+        var needle = $("qibla-needle");
+        if (needle) needle.classList.remove("live");
+        setNeedleRotation(qiblaBearing);
+
         startQiblaOrientation();
       },
       function (err) {
         $("qibla-loading").classList.add("hidden");
         $("qibla-error").classList.remove("hidden");
         $("qibla-error-msg").textContent = err.code === 1
-          ? "Accès à la localisation refusé. Vérifiez les permissions de l'application."
-          : "Impossible d'accéder à votre position. Réessayez.";
+          ? "Acc\u00e8s \u00e0 la localisation refus\u00e9. V\u00e9rifiez les permissions de l'application."
+          : "Impossible d'acc\u00e9der \u00e0 votre position. R\u00e9essayez.";
       },
       { timeout: 12000, enableHighAccuracy: false }
     );
@@ -1194,6 +1243,8 @@
     $("qibla-overlay").classList.add("hidden");
     stopQiblaOrientation();
     qiblaBearing = null;
+    qiblaCurrentRot = 0;
+    qiblaIsAligned = false;
   }
 
   // ---- INIT ----
@@ -1298,23 +1349,8 @@
       DeviceOrientationEvent.requestPermission().then(function (res) {
         if (res === "granted") {
           $("qibla-orient-prompt").classList.add("hidden");
-          var hasLive = false;
-          var handler = function (e) {
-            var heading = null;
-            if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
-              heading = e.webkitCompassHeading;
-            } else if (e.absolute && e.alpha !== null) {
-              heading = (360 - e.alpha) % 360;
-            }
-            if (heading === null || qiblaBearing === null) return;
-            rotateNeedle(qiblaBearing - heading);
-            if (!hasLive) {
-              hasLive = true;
-              $("qibla-live-status").classList.remove("hidden");
-            }
-          };
-          window.addEventListener("deviceorientation", handler, true);
-          qiblaOrientListeners.push({ event: "deviceorientation", fn: handler });
+          window.addEventListener("deviceorientation", handleQiblaOrientation, true);
+          qiblaOrientListeners.push({ event: "deviceorientation", fn: handleQiblaOrientation });
         }
       }).catch(function () {});
     });

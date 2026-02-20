@@ -1105,7 +1105,7 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 24px;
   min-height: 100%;
   padding: 32px 24px;
 }
@@ -1137,6 +1137,12 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   border-color: var(--text-faint);
   color: var(--text-secondary);
 }
+.qibla-compass-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
 .qibla-compass-wrap {
   position: relative;
 }
@@ -1148,8 +1154,13 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  border: 2px solid var(--glass-border);
   box-shadow: var(--glass-shadow), 0 0 0 8px var(--track);
+  transition: border-color .4s ease, box-shadow .4s ease;
+}
+.qibla-compass.aligned {
+  border-color: #10b981;
+  box-shadow: 0 4px 28px rgba(16,185,129,.12), 0 0 0 8px rgba(16,185,129,.08), 0 1px 0 rgba(255,255,255,.85) inset;
 }
 .qibla-cardinal {
   position: absolute;
@@ -1160,33 +1171,75 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   line-height: 1;
   pointer-events: none;
 }
-.qibla-n { top: 13px; left: 50%; transform: translateX(-50%); color: var(--text-muted); font-weight: 400; }
-.qibla-s { bottom: 13px; left: 50%; transform: translateX(-50%); }
-.qibla-e { right: 13px; top: 50%; transform: translateY(-50%); }
-.qibla-w { left: 13px; top: 50%; transform: translateY(-50%); }
+.qibla-n { top: 14px; left: 50%; transform: translateX(-50%); color: var(--text-muted); font-weight: 400; }
+.qibla-s { bottom: 14px; left: 50%; transform: translateX(-50%); }
+.qibla-e { right: 14px; top: 50%; transform: translateY(-50%); }
+.qibla-w { left: 14px; top: 50%; transform: translateY(-50%); }
+/* Needle container — spans compass, rotates from center */
 .qibla-needle {
   position: absolute;
-  width: 16px;
-  height: 120px;
-  top: 50%;
+  top: 12px;
+  bottom: 12px;
   left: 50%;
+  width: 28px;
+  transform: translateX(-50%) rotate(0deg);
   transform-origin: center center;
-  transform: translate(-50%, -50%) rotate(0deg);
-  transition: transform 0.28s ease;
-  color: var(--text-faint);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+.qibla-needle.live {
+  transition: none;
+}
+.qibla-kaaba {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.15));
+}
+.qibla-needle-svg {
+  flex: 1;
+  width: 12px;
   overflow: visible;
+  color: var(--text-faint);
 }
 .qibla-center-dot {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: var(--glass-border);
-  border: 1px solid var(--text-faint);
+  background: var(--glass-bg);
+  border: 1.5px solid var(--text-faint);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.5;
+  z-index: 2;
+}
+/* Aligned badge */
+.qibla-aligned-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #10b981;
+  letter-spacing: 0.3px;
+  padding: 8px 18px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(16,185,129,.25);
+  border-radius: 50px;
+  box-shadow: 0 2px 12px rgba(16,185,129,.08);
+  transition: opacity .3s ease;
+}
+.qibla-aligned-dot {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .qibla-info {
   text-align: center;
