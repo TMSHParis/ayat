@@ -377,21 +377,57 @@ html, body {
 }
 
 /* ---- MENU NAV ---- */
+.menu-overlay-header {
+  justify-content: space-between;
+}
+.menu-overlay-title {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-muted);
+  letter-spacing: 2.5px;
+}
 .menu-nav {
   display: flex;
   flex-direction: column;
+  gap: 3px;
 }
 .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-size: 15px;
   color: var(--text);
   text-decoration: none;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
-  transition: color .2s;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border-bottom: none;
+  transition: background .15s ease;
 }
-.menu-item:last-child { border-bottom: none; }
-.menu-item:hover { color: var(--text-secondary); }
-.menu-item:active { color: var(--text-muted); }
+.menu-item:hover { background: var(--track); }
+.menu-item:active { background: var(--border); }
+.menu-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.menu-item-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+}
+.menu-item-chevron {
+  color: var(--text-faint);
+}
 
 /* ---- OVERLAY — glass panel ---- */
 .overlay {
@@ -413,9 +449,10 @@ html, body {
   border-bottom: 1px solid var(--glass-border);
 }
 .overlay-header h2 {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 300;
   color: var(--text-muted);
+  letter-spacing: 0.4px;
 }
 .close-btn {
   background: none;
@@ -534,8 +571,8 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   background: none;
   border: none;
   cursor: pointer;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding: 0;
   transition: color .2s;
 }
 .reset-btn:hover { color: #e53e3e; }
@@ -770,23 +807,29 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 10px;
 }
 .stat-card {
-  background: var(--track);
-  border-radius: 12px;
-  padding: 20px 16px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 14px;
+  padding: 16px 12px;
   text-align: center;
 }
 .stat-value {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 200;
   color: var(--text-secondary);
   margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 .stat-label {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
 }
 .stats-links {
   margin-top: 24px;
@@ -1022,13 +1065,15 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 /* ---- TAJWID COLOR SUB-GROUP (shown only when tajwid mode is active) ---- */
 .setting-sub-group {
   margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  padding: 12px;
+  background: var(--track);
+  border-radius: 10px;
 }
 .setting-sub-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
 }
 
 /* ---- SETTING HINT (below setting buttons) ---- */
@@ -1043,12 +1088,12 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 .settings-section-divider {
   height: 1px;
   background: var(--border);
-  margin: 24px 0 20px;
+  margin: 28px 0 22px;
 }
 .settings-section-title {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .6px;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--text-faint);
   margin-bottom: 14px;
