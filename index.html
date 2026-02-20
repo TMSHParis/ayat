@@ -440,21 +440,27 @@
     </div>
 
     <!-- Vue boussole -->
-    <div id="qibla-compass-view" class="hidden">
+    <div id="qibla-compass-view" class="qibla-compass-view hidden">
       <div class="qibla-compass-wrap">
-        <div class="qibla-compass">
+        <div class="qibla-compass" id="qibla-compass">
           <span class="qibla-cardinal qibla-n">N</span>
           <span class="qibla-cardinal qibla-e">E</span>
           <span class="qibla-cardinal qibla-s">S</span>
           <span class="qibla-cardinal qibla-w">O</span>
-          <!-- Aiguille SVG — tip dorée vers la Mecque -->
-          <svg id="qibla-needle" class="qibla-needle" viewBox="-8 -60 16 120" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="0,-56 -5,0 5,0" fill="#f59e0b"/>
-            <polygon points="0,56 -5,0 5,0" fill="currentColor" opacity="0.18"/>
-            <circle cx="0" cy="0" r="4" fill="var(--glass-overlay)" stroke="currentColor" stroke-width="1.2" opacity="0.6"/>
-          </svg>
+          <!-- Aiguille + Kaaba — tournent ensemble -->
+          <div class="qibla-needle" id="qibla-needle">
+            <span class="qibla-kaaba">🕋</span>
+            <svg class="qibla-needle-svg" viewBox="-6 -48 12 96">
+              <polygon points="0,-46 -4,0 4,0" fill="#f59e0b"/>
+              <polygon points="0,46 -4,0 4,0" fill="currentColor" opacity="0.18"/>
+            </svg>
+          </div>
           <div class="qibla-center-dot"></div>
         </div>
+      </div>
+
+      <div class="qibla-aligned-badge hidden" id="qibla-aligned-badge">
+        <span class="qibla-aligned-dot"></span>Aligné avec la Qibla
       </div>
 
       <div class="qibla-info">
