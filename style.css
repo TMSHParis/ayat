@@ -876,8 +876,8 @@ body.sepia .tajwid-madd     { color: #0d47a1; }
 body.sepia .tajwid-iqlab    { color: #004d40; }
 body.sepia .tajwid-izhar    { color: #37474F; }
 
-/* Minimal mode — silence all tajwid colors via CSS cascade, no re-render needed */
-body.mode-minimal [class^="tajwid-"] { color: inherit; }
+/* Minimal mode without colors — silence all tajwid colors via CSS cascade */
+body.minimal-no-colors [class^="tajwid-"] { color: inherit; }
 
 /* Tajwid mode without colors — same cascade trick */
 body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }

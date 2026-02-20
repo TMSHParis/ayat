@@ -315,6 +315,7 @@
     document.body.classList.toggle("mode-tajwid", state.readingMode === "tajwid");
     document.body.classList.toggle("mode-minimal", state.readingMode !== "tajwid");
     document.body.classList.toggle("tajwid-no-colors", state.readingMode === "tajwid" && !state.tajwidColors);
+    document.body.classList.toggle("minimal-no-colors", state.readingMode !== "tajwid" && !state.minimalColors);
   }
 
   function setReadingMode(mode) {
@@ -324,7 +325,7 @@
     saveState();
     // Load curated tajwid overlay in background to enhance algorithmic detection.
     // We no longer wait for it — algorithmic detection renders colors immediately.
-    if (mode === "tajwid" && !tajwidData && !tajwidLoading) {
+    if ((mode === "tajwid" || (mode === "minimal" && state.minimalColors)) && !tajwidData && !tajwidLoading) {
       loadTajwidOverlay();
     }
     if (freeReadMode) renderFreeReading();
@@ -365,6 +366,7 @@
       displayLang: "ar",
       readingMode: "minimal",
       tajwidColors: true,
+      minimalColors: false,
     };
   }
 
@@ -724,8 +726,8 @@
       arSpan.className = "ayah-arabic";
       arSpan.setAttribute("dir", "rtl");
 
-      if (mode === "tajwid") {
-        // Tajwid mode: render colored segments.
+      if (mode === "tajwid" || (mode === "minimal" && state.minimalColors)) {
+        // Tajwid mode or minimal+colors: render colored segments.
         // Uses curated overlay from tajwidData when available, otherwise algorithmic detection.
         var key = ayah.surahNumber + ":" + ayah.ayahNumber;
         var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
@@ -734,13 +736,16 @@
         for (var s = 0; s < segments.length; s++) {
           var seg = segments[s];
           var segSpan = document.createElement("span");
-          segSpan.textContent = seg.chars;
+          // In minimal mode, strip waqf marks from each segment's chars
+          var segText = (mode === "minimal") ? stripWaqfMarks(seg.chars) : seg.chars;
+          if (!segText) continue;
+          segSpan.textContent = segText;
           if (seg.rule) segSpan.className = "tajwid-" + seg.rule;
           frag.appendChild(segSpan);
         }
         arSpan.appendChild(frag);
       } else {
-        // Minimal mode: keep harakat, remove waqf / pause marks
+        // Minimal mode without colors: keep harakat, remove waqf / pause marks
         arSpan.textContent = stripWaqfMarks(ayah.text);
       }
 
@@ -835,6 +840,13 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
     });
+    var minimalColorGroup = $("minimal-color-group");
+    if (minimalColorGroup) {
+      minimalColorGroup.classList.toggle("hidden", state.readingMode !== "minimal");
+    }
+    document.querySelectorAll("#minimal-color-buttons .setting-btn").forEach(function (btn) {
+      btn.classList.toggle("active", (btn.dataset.minimalColors === "true") === !!state.minimalColors);
+    });
     var tajwidColorGroup = $("tajwid-color-group");
     if (tajwidColorGroup) {
       tajwidColorGroup.classList.toggle("hidden", state.readingMode !== "tajwid");
@@ -849,7 +861,9 @@
           ? "Couleurs tajwid activ\u00e9es \u2014 les signes de waqf sont affich\u00e9s."
           : "Mode tajwid sans couleurs \u2014 les signes de waqf sont affich\u00e9s.";
       } else {
-        modeHint.textContent = "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
+        modeHint.textContent = state.minimalColors
+          ? "Couleurs tajwid activ\u00e9es \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s."
+          : "Texte pur \u2014 voyelles conserv\u00e9es, signes de waqf masqu\u00e9s.";
       }
     }
     applyTheme();
@@ -1245,6 +1259,19 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         setReadingMode(btn.dataset.mode);
+      });
+    });
+
+    document.querySelectorAll("#minimal-color-buttons .setting-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.minimalColors = btn.dataset.minimalColors === "true";
+        if (state.minimalColors && !tajwidData && !tajwidLoading) {
+          loadTajwidOverlay();
+        }
+        segmentCache.clear();
+        applyMode();
+        saveState();
+        render();
       });
     });
 
