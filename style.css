@@ -1100,6 +1100,32 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 }
 
 /* ---- QIBLA ---- */
+.qibla-verse {
+  text-align: center;
+  padding: 0 8px 4px;
+}
+.qibla-verse-ar {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: 17px;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  direction: rtl;
+  margin: 0 0 10px;
+}
+.qibla-verse-fr {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0 0 6px;
+}
+.qibla-verse-ref {
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.4px;
+  margin: 0;
+}
 .qibla-body {
   display: flex;
   flex-direction: column;
