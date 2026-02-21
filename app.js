@@ -1077,6 +1077,89 @@
     }
   }
 
+  // ---- TAFSIR (long-press) ----
+  var TAFSIR_HOLD_MS = 1200;
+  var tafsirTimer = null;
+  var tafsirTouchStartX = 0;
+  var tafsirTouchStartY = 0;
+
+  function getCurrentAyahForTafsir() {
+    var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+    var surah = ayah.surahNumber;
+    var aya = ayah.ayahNumber;
+    if (ayah.isBasmala) aya = 1;
+    return { surah: surah, aya: aya, ref: ayah.surahNameFr + " \u2014 Verset " + aya };
+  }
+
+  function fetchTafsir() {
+    var info = getCurrentAyahForTafsir();
+    $("tafsir-overlay").classList.remove("hidden");
+    $("tafsir-loading").classList.remove("hidden");
+    $("tafsir-error").classList.add("hidden");
+    $("tafsir-content").classList.add("hidden");
+    $("tafsir-header-title").textContent = "Tafsir";
+    $("tafsir-ayah-ref").textContent = info.ref;
+
+    fetch("https://quranenc.com/api/v1/translation/aya/french_mokhtasar/" + info.surah + "/" + info.aya)
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        $("tafsir-loading").classList.add("hidden");
+        $("tafsir-content").classList.remove("hidden");
+
+        var text = (data.result || data.translation || "");
+        // Clean HTML tags
+        var div = document.createElement("div");
+        div.innerHTML = text;
+        var clean = div.textContent || div.innerText || text;
+
+        // Footnotes
+        var footnotes = data.footnotes || "";
+        if (footnotes) {
+          var fnDiv = document.createElement("div");
+          fnDiv.innerHTML = footnotes;
+          var fnClean = fnDiv.textContent || fnDiv.innerText || footnotes;
+          if (fnClean.trim()) clean += "\n\n" + fnClean.trim();
+        }
+
+        var paragraphs = clean.split(/\n+/).filter(Boolean);
+        $("tafsir-text").innerHTML = paragraphs.map(function (p) {
+          return "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>";
+        }).join("");
+      })
+      .catch(function () {
+        $("tafsir-loading").classList.add("hidden");
+        $("tafsir-error").classList.remove("hidden");
+      });
+  }
+
+  function onTafsirTouchStart(e) {
+    tafsirTouchStartX = e.touches[0].clientX;
+    tafsirTouchStartY = e.touches[0].clientY;
+    clearTimeout(tafsirTimer);
+    tafsirTimer = setTimeout(function () {
+      if (navigator.vibrate) navigator.vibrate(30);
+      fetchTafsir();
+    }, TAFSIR_HOLD_MS);
+  }
+
+  function onTafsirTouchMove(e) {
+    if (!tafsirTimer) return;
+    var dx = Math.abs(e.touches[0].clientX - tafsirTouchStartX);
+    var dy = Math.abs(e.touches[0].clientY - tafsirTouchStartY);
+    if (dx > 10 || dy > 10) {
+      clearTimeout(tafsirTimer);
+      tafsirTimer = null;
+    }
+  }
+
+  function onTafsirTouchEnd() {
+    clearTimeout(tafsirTimer);
+    tafsirTimer = null;
+  }
+
   // ---- DOCK AUTO-HIDE ----
   var dockTimer = null;
   var DOCK_HIDE_DELAY = 3000; // ms
@@ -1377,6 +1460,14 @@
     $("ayah-container").addEventListener("touchstart", onTouchStart, { passive: true });
     $("ayah-container").addEventListener("touchend", onTouchEnd);
     $("ayah-container").addEventListener("click", onTapNavigate);
+
+    // Tafsir long-press
+    $("ayah-container").addEventListener("touchstart", onTafsirTouchStart, { passive: true });
+    $("ayah-container").addEventListener("touchmove", onTafsirTouchMove, { passive: true });
+    $("ayah-container").addEventListener("touchend", onTafsirTouchEnd);
+    $("tafsir-close").addEventListener("click", function () {
+      $("tafsir-overlay").classList.add("hidden");
+    });
 
     document.addEventListener("keydown", onKeyDown);
 
