@@ -872,7 +872,7 @@
 
   // ---- NAVIGATION ----
   function goNext() {
-    if (freeReadMode) { goNextFreeRead(); return; }
+    if (freeReadMode) { goNextFreeRead(); showDock(); return; }
     var newIndex = state.globalIndex + 1;
     if (newIndex > 0 && newIndex % totalAyat === 0) {
       state.cycleCount++;
@@ -884,15 +884,17 @@
     recordReading();
     updateBookmarkBtn();
     fadeAndRender();
+    showDock();
   }
 
   function goPrev() {
-    if (freeReadMode) { goPrevFreeRead(); return; }
+    if (freeReadMode) { goPrevFreeRead(); showDock(); return; }
     if (state.globalIndex <= 0) return;
     state.globalIndex--;
     state.todayReadCount = Math.max(0, state.todayReadCount - 1);
     saveState();
     fadeAndRender();
+    showDock();
   }
 
   function fadeAndRender() {
@@ -1072,6 +1074,52 @@
     } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
       e.preventDefault();
       goPrev();
+    }
+  }
+
+  // ---- DOCK AUTO-HIDE ----
+  var dockTimer = null;
+  var DOCK_HIDE_DELAY = 3000; // ms
+
+  function showDock() {
+    var dock = $("nav-arrows");
+    if (!dock) return;
+    dock.classList.remove("dock-hidden");
+    clearTimeout(dockTimer);
+    dockTimer = setTimeout(hideDock, DOCK_HIDE_DELAY);
+  }
+
+  function hideDock() {
+    var dock = $("nav-arrows");
+    if (!dock) return;
+    dock.classList.add("dock-hidden");
+  }
+
+  function initDockAutoHide() {
+    // Start hidden after initial delay
+    dockTimer = setTimeout(hideDock, DOCK_HIDE_DELAY);
+
+    // Show on any touch/click on the ayah area
+    $("ayah-container").addEventListener("touchstart", showDock, { passive: true });
+    $("ayah-container").addEventListener("click", showDock);
+
+    // Keep dock visible while interacting with it
+    var dock = $("nav-arrows");
+    if (dock) {
+      dock.addEventListener("touchstart", function (e) {
+        clearTimeout(dockTimer);
+        dock.classList.remove("dock-hidden");
+      }, { passive: true });
+      dock.addEventListener("mouseover", function () {
+        clearTimeout(dockTimer);
+        dock.classList.remove("dock-hidden");
+      });
+      dock.addEventListener("mouseleave", function () {
+        dockTimer = setTimeout(hideDock, DOCK_HIDE_DELAY);
+      });
+      dock.addEventListener("touchend", function () {
+        dockTimer = setTimeout(hideDock, DOCK_HIDE_DELAY);
+      });
     }
   }
 
@@ -1390,6 +1438,9 @@
         });
       }
     });
+
+    // ---- DOCK AUTO-HIDE ----
+    initDockAutoHide();
 
     // ---- OVERLAY CLOSE BUTTONS ----
     function closeOverlay(overlayId) {
