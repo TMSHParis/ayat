@@ -489,6 +489,31 @@
   </div>
 </div>
 
+<!-- ====== TAFSIR OVERLAY ====== -->
+<div id="tafsir-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2 id="tafsir-header-title">Tafsir</h2>
+    <button class="close-btn" id="tafsir-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body tafsir-body">
+    <div id="tafsir-loading" class="tafsir-state">
+      <div class="spinner"></div>
+    </div>
+    <div id="tafsir-error" class="tafsir-state hidden">
+      <p class="tafsir-error-text">Impossible de charger le tafsir.</p>
+    </div>
+    <div id="tafsir-content" class="tafsir-content hidden">
+      <p class="tafsir-ayah-ref" id="tafsir-ayah-ref"></p>
+      <div class="tafsir-text" id="tafsir-text"></div>
+      <p class="tafsir-source">Tafsir Al-Mukhtasar — Centre d'études coraniques</p>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script src="app.js"></script>
 </body>

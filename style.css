@@ -1353,5 +1353,52 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   flex-shrink: 0;
 }
 
+/* ---- TAFSIR ---- */
+.tafsir-body {
+  padding: 24px;
+}
+.tafsir-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+.tafsir-error-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.tafsir-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tafsir-ayah-ref {
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin: 0;
+}
+.tafsir-text {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.tafsir-text p {
+  margin: 0 0 12px;
+}
+.tafsir-text p:last-child {
+  margin-bottom: 0;
+}
+.tafsir-source {
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
+  margin: 8px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border);
+}
+
 /* ---- HIDDEN ---- */
 .hidden { display: none !important; }
