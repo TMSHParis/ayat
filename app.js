@@ -1109,19 +1109,28 @@
         $("tafsir-loading").classList.add("hidden");
         $("tafsir-content").classList.remove("hidden");
 
-        var text = (data.result || data.translation || "");
+        // API can return { result: { translation, footnotes } } or { translation, footnotes }
+        var entry = data.result && typeof data.result === "object" ? data.result : data;
+        var text = entry.translation || entry.text || "";
+
         // Clean HTML tags
         var div = document.createElement("div");
         div.innerHTML = text;
         var clean = div.textContent || div.innerText || text;
 
         // Footnotes
-        var footnotes = data.footnotes || "";
-        if (footnotes) {
+        var footnotes = entry.footnotes || "";
+        if (footnotes && typeof footnotes === "string") {
           var fnDiv = document.createElement("div");
           fnDiv.innerHTML = footnotes;
           var fnClean = fnDiv.textContent || fnDiv.innerText || footnotes;
           if (fnClean.trim()) clean += "\n\n" + fnClean.trim();
+        }
+
+        if (!clean.trim()) {
+          $("tafsir-content").classList.add("hidden");
+          $("tafsir-error").classList.remove("hidden");
+          return;
         }
 
         var paragraphs = clean.split(/\n+/).filter(Boolean);
