@@ -1023,7 +1023,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   left: 50%;
   transform: translateX(-50%);
   background: var(--text-secondary);
-  color: var(--bg);
+  color: var(--bg-solid);
   font-size: 12px;
   padding: 10px 20px;
   border-radius: 50px;
