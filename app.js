@@ -72,6 +72,31 @@
     localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
   }
 
+  // ---- FOLDERS ----
+  var FOLDERS_KEY = "qurani-folders";
+  function loadFolders() {
+    try {
+      var raw = localStorage.getItem(FOLDERS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveFolders(folders) {
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
+  }
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  }
+  function getFolderName(folderId) {
+    if (!folderId) return null;
+    var folders = loadFolders();
+    for (var i = 0; i < folders.length; i++) {
+      if (folders[i].id === folderId) return folders[i].name;
+    }
+    return null;
+  }
+
+  var pendingBookmarkAyah = null;
+
   // ---- STATS ----
   var STATS_KEY = "qurani-stats";
   function loadStats() {
@@ -960,33 +985,90 @@
     }
     if (idx >= 0) {
       bookmarks.splice(idx, 1);
+      saveBookmarks(bookmarks);
+      updateBookmarkBtn();
       showToast("Favori retiré");
     } else {
-      bookmarks.push({
-        key: key,
-        surahNumber: ayah.surahNumber,
-        surahNameFr: ayah.surahNameFr,
-        ayahNumber: ayah.ayahNumber,
-        text: ayah.text,
-        date: getLocalDateStr()
-      });
-      showToast("Ajouté aux favoris");
+      showFolderPicker(ayah);
     }
+  }
+
+  function addBookmarkToFolder(ayah, folderId) {
+    var bookmarks = loadBookmarks();
+    bookmarks.push({
+      key: ayah.surahNumber + ":" + ayah.ayahNumber,
+      surahNumber: ayah.surahNumber,
+      surahNameFr: ayah.surahNameFr,
+      ayahNumber: ayah.ayahNumber,
+      text: ayah.text,
+      date: getLocalDateStr(),
+      folderId: folderId || null
+    });
     saveBookmarks(bookmarks);
     updateBookmarkBtn();
+    var name = getFolderName(folderId);
+    showToast(name ? "Ajout\u00e9 dans \u00ab\u00a0" + name + "\u00a0\u00bb" : "Ajout\u00e9 aux favoris");
+  }
+
+  function showFolderPicker(ayah) {
+    var folders = loadFolders();
+    var listEl = $("folder-picker-list");
+    listEl.innerHTML = "";
+
+    function makeOption(iconPath, label, onClick) {
+      var btn = document.createElement("button");
+      btn.className = "folder-option";
+      btn.innerHTML =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+        iconPath + '</svg>' +
+        '<span>' + label + '</span>';
+      btn.addEventListener("click", onClick);
+      return btn;
+    }
+
+    var PAGE_ICON = '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>';
+    var FOLDER_ICON = '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>';
+
+    listEl.appendChild(makeOption(PAGE_ICON, "Sans dossier", function () {
+      addBookmarkToFolder(ayah, null);
+      hideFolderPicker();
+    }));
+
+    folders.forEach(function (folder) {
+      var safe = folder.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      listEl.appendChild(makeOption(FOLDER_ICON, safe, function () {
+        addBookmarkToFolder(ayah, folder.id);
+        hideFolderPicker();
+      }));
+    });
+
+    $("folder-new-row").classList.add("hidden");
+    $("folder-new-input").value = "";
+    $("folder-new-btn").classList.remove("hidden");
+    pendingBookmarkAyah = ayah;
+    $("folder-picker-wrap").classList.remove("hidden");
+  }
+
+  function hideFolderPicker() {
+    $("folder-picker-wrap").classList.add("hidden");
+    pendingBookmarkAyah = null;
   }
 
   function renderBookmarksList() {
     var list = $("bookmarks-list");
-    var empty = $("bookmarks-empty");
     var bookmarks = loadBookmarks();
+    var folders = loadFolders();
     list.innerHTML = "";
+
     if (bookmarks.length === 0) {
-      list.appendChild(empty);
+      var emptyMsg = document.createElement("p");
+      emptyMsg.className = "bookmarks-empty";
+      emptyMsg.textContent = "Aucun favori pour le moment. Appuyez sur le signet pendant la lecture pour en ajouter.";
+      list.appendChild(emptyMsg);
       return;
     }
-    empty.remove();
-    bookmarks.slice().reverse().forEach(function (b) {
+
+    function createBookmarkItem(b) {
       var item = document.createElement("div");
       item.className = "bookmark-item";
 
@@ -1016,8 +1098,42 @@
       item.appendChild(ref);
       item.appendChild(text);
       item.appendChild(actions);
-      list.appendChild(item);
+      return item;
+    }
+
+    var FOLDER_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+    var PAGE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>';
+
+    function appendSectionHeader(iconSvg, title) {
+      var hdr = document.createElement("div");
+      hdr.className = "folder-section-header";
+      hdr.innerHTML = iconSvg + "<span>" + title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</span>";
+      list.appendChild(hdr);
+    }
+
+    if (folders.length === 0) {
+      bookmarks.slice().reverse().forEach(function (b) {
+        list.appendChild(createBookmarkItem(b));
+      });
+      return;
+    }
+
+    folders.forEach(function (folder) {
+      var inFolder = bookmarks.filter(function (b) { return b.folderId === folder.id; });
+      if (inFolder.length === 0) return;
+      appendSectionHeader(FOLDER_SVG, folder.name);
+      inFolder.slice().reverse().forEach(function (b) {
+        list.appendChild(createBookmarkItem(b));
+      });
     });
+
+    var ungrouped = bookmarks.filter(function (b) { return !b.folderId; });
+    if (ungrouped.length > 0) {
+      appendSectionHeader(PAGE_SVG, "Sans dossier");
+      ungrouped.slice().reverse().forEach(function (b) {
+        list.appendChild(createBookmarkItem(b));
+      });
+    }
   }
 
   function renderStats() {
@@ -1635,6 +1751,30 @@
     // ---- BOOKMARKS ----
     $("bookmarks-close").addEventListener("click", function () {
       $("bookmarks-overlay").classList.add("hidden");
+    });
+
+    // ---- FOLDER PICKER ----
+    $("folder-picker-backdrop").addEventListener("click", hideFolderPicker);
+    $("folder-new-btn").addEventListener("click", function () {
+      $("folder-new-btn").classList.add("hidden");
+      $("folder-new-row").classList.remove("hidden");
+      $("folder-new-input").focus();
+    });
+    function createFolderAndAddBookmark() {
+      var name = $("folder-new-input").value.trim();
+      if (!name) return;
+      var folders = loadFolders();
+      var newFolder = { id: generateId(), name: name };
+      folders.push(newFolder);
+      saveFolders(folders);
+      if (pendingBookmarkAyah) {
+        addBookmarkToFolder(pendingBookmarkAyah, newFolder.id);
+      }
+      hideFolderPicker();
+    }
+    $("folder-new-confirm").addEventListener("click", createFolderAndAddBookmark);
+    $("folder-new-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") createFolderAndAddBookmark();
     });
 
     // ---- SURAH SEARCH ----

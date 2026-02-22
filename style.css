@@ -809,6 +809,117 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 .bookmark-action-btn:hover { color: #e53e3e; }
 
+/* ---- FOLDER SECTIONS IN BOOKMARKS ---- */
+.folder-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+.folder-section-header:first-child { padding-top: 4px; }
+
+/* ---- FOLDER PICKER SHEET ---- */
+.folder-picker-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.folder-picker-wrap.hidden { display: none; }
+.folder-picker-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+.folder-picker-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: var(--overlay-bg);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 1;
+}
+.folder-picker-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.folder-picker-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 24px 6px;
+}
+.folder-picker-list { padding: 4px 0; }
+.folder-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 13px 24px;
+  font-size: 15px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s;
+}
+.folder-option:hover, .folder-option:active { background: var(--track); }
+.folder-option svg { flex-shrink: 0; color: var(--text-muted); }
+.folder-picker-footer {
+  border-top: 1px solid var(--border);
+  padding: 4px 0 8px;
+}
+.folder-new-btn {
+  color: var(--text-faint) !important;
+  font-size: 14px !important;
+}
+.folder-new-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px 8px;
+}
+.folder-new-row.hidden { display: none; }
+.folder-new-input {
+  flex: 1;
+  background: var(--track);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+}
+.folder-new-input:focus { border-color: var(--text-muted); }
+.folder-new-confirm {
+  background: var(--text-secondary);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
 /* ---- STATS ---- */
 .stats-grid {
   display: grid;

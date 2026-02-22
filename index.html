@@ -359,8 +359,28 @@
       </svg>
     </button>
   </div>
-  <div class="overlay-body" id="bookmarks-list">
-    <p class="bookmarks-empty" id="bookmarks-empty">Aucun favori pour le moment. Appuyez sur le signet pendant la lecture pour en ajouter.</p>
+  <div class="overlay-body" id="bookmarks-list"></div>
+</div>
+
+<!-- ====== FOLDER PICKER SHEET ====== -->
+<div id="folder-picker-wrap" class="folder-picker-wrap hidden">
+  <div class="folder-picker-backdrop" id="folder-picker-backdrop"></div>
+  <div class="folder-picker-sheet">
+    <div class="folder-picker-handle"></div>
+    <div class="folder-picker-header">Ajouter aux favoris</div>
+    <div id="folder-picker-list" class="folder-picker-list"></div>
+    <div class="folder-picker-footer">
+      <div id="folder-new-row" class="folder-new-row hidden">
+        <input type="text" id="folder-new-input" class="folder-new-input" placeholder="Nom du dossier..." maxlength="40" autocomplete="off">
+        <button id="folder-new-confirm" class="folder-new-confirm">Créer</button>
+      </div>
+      <button id="folder-new-btn" class="folder-option folder-new-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Nouveau dossier</span>
+      </button>
+    </div>
   </div>
 </div>
 
