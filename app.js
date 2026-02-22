@@ -1216,7 +1216,7 @@
     $("tafsir-header-title").textContent = "Tafsir";
     $("tafsir-ayah-ref").textContent = info.ref;
 
-    fetch("https://quranenc.com/api/v1/translation/aya/french_mokhtasar/" + info.surah + "/" + info.aya)
+    fetch("https://quranenc.com/api/v1/translation/aya/french_rashid/" + info.surah + "/" + info.aya)
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
@@ -1225,34 +1225,47 @@
         $("tafsir-loading").classList.add("hidden");
         $("tafsir-content").classList.remove("hidden");
 
-        // API can return { result: { translation, footnotes } } or { translation, footnotes }
         var entry = data.result && typeof data.result === "object" ? data.result : data;
         var text = entry.translation || entry.text || "";
 
-        // Clean HTML tags
+        // Strip leading verse number (e.g. "255 Allah…" → "Allah…")
         var div = document.createElement("div");
         div.innerHTML = text;
-        var clean = div.textContent || div.innerText || text;
+        var clean = (div.textContent || div.innerText || text).replace(/^\d+\s+/, "").trim();
 
-        // Footnotes
+        // Footnotes — parse each [N] item as a separate note
         var footnotes = entry.footnotes || "";
+        var fnHtml = "";
         if (footnotes && typeof footnotes === "string") {
           var fnDiv = document.createElement("div");
           fnDiv.innerHTML = footnotes;
-          var fnClean = fnDiv.textContent || fnDiv.innerText || footnotes;
-          if (fnClean.trim()) clean += "\n\n" + fnClean.trim();
+          var fnClean = (fnDiv.textContent || fnDiv.innerText || footnotes).trim();
+          if (fnClean) {
+            // Split on newlines, each line is one note
+            var notes = fnClean.split(/\n+/).filter(Boolean);
+            fnHtml = '<div class="tafsir-notes-header">Notes</div>'
+              + notes.map(function (n) {
+                  // Bold the [N] reference number
+                  var noteLine = n.replace(/^\[(\d+)\]\s*/, function(_, num) {
+                    return '<span class="tafsir-note-num">[' + num + ']</span> ';
+                  });
+                  return '<p class="tafsir-note">' + noteLine + '</p>';
+                }).join("");
+          }
         }
 
-        if (!clean.trim()) {
+        if (!clean) {
           $("tafsir-content").classList.add("hidden");
           $("tafsir-error").classList.remove("hidden");
           return;
         }
 
-        var paragraphs = clean.split(/\n+/).filter(Boolean);
-        $("tafsir-text").innerHTML = paragraphs.map(function (p) {
-          return "<p>" + p.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</p>";
-        }).join("");
+        // Main translation text — highlight inline [N] references
+        var mainHtml = '<p class="tafsir-translation">'
+          + clean.replace(/\[(\d+)\]/g, '<sup class="tafsir-ref">[$1]</sup>')
+          + '</p>';
+
+        $("tafsir-text").innerHTML = mainHtml + fnHtml;
       })
       .catch(function () {
         $("tafsir-loading").classList.add("hidden");

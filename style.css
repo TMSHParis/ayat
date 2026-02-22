@@ -1501,6 +1501,43 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 .tafsir-text p:last-child {
   margin-bottom: 0;
 }
+.tafsir-translation {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.85;
+  margin: 0 0 16px !important;
+}
+sup.tafsir-ref {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 1px;
+}
+.tafsir-notes-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 4px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+p.tafsir-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 10px !important;
+}
+p.tafsir-note:last-child { margin-bottom: 0 !important; }
+.tafsir-note-num {
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 12px;
+}
 .tafsir-source {
   font-size: 10px;
   color: var(--text-faint);
