@@ -1029,7 +1029,7 @@
     var PAGE_ICON = '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>';
     var FOLDER_ICON = '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>';
 
-    listEl.appendChild(makeOption(PAGE_ICON, "Sans dossier", function () {
+    listEl.appendChild(makeOption(PAGE_ICON, "Général", function () {
       addBookmarkToFolder(ayah, null);
       hideFolderPicker();
     }));
@@ -1129,7 +1129,7 @@
 
     var ungrouped = bookmarks.filter(function (b) { return !b.folderId; });
     if (ungrouped.length > 0) {
-      appendSectionHeader(PAGE_SVG, "Sans dossier");
+      appendSectionHeader(PAGE_SVG, "Général");
       ungrouped.slice().reverse().forEach(function (b) {
         list.appendChild(createBookmarkItem(b));
       });

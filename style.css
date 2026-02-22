@@ -909,7 +909,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 .folder-new-input:focus { border-color: var(--text-muted); }
 .folder-new-confirm {
   background: var(--text-secondary);
-  color: var(--bg);
+  color: var(--bg-solid);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
