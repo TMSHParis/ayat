@@ -1698,7 +1698,7 @@
     var val = localStorage.getItem(PRAYER_METHOD_KEY);
     if (val === "sounnah") return "sounnah";
     var num = parseInt(val, 10);
-    return isNaN(num) ? "sounnah" : num;
+    return isNaN(num) ? 12 : num;
   }
   function setPrayerMethod(id) {
     localStorage.setItem(PRAYER_METHOD_KEY, String(id));
