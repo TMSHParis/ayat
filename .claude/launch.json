@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Qurani (serveur local)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", ".", "--no-clipboard"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "Ayat (Next.js)",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/kam/claude/ayat && npm run dev"],
+      "port": 3001,
+      "autoPort": true
+    }
+  ]
+}

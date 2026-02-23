@@ -958,6 +958,12 @@
 
   function onTouchEnd(e) {
     if (touchStartX === null) return;
+    // Ignore touches that originate from nav buttons (play/pause, arrows)
+    if (e.target.closest && e.target.closest(".nav-arrows")) {
+      touchStartX = null;
+      touchStartY = null;
+      return;
+    }
     var dx = e.changedTouches[0].clientX - touchStartX;
     var dy = e.changedTouches[0].clientY - touchStartY;
     touchStartX = null;
@@ -1903,6 +1909,17 @@
     hifzSurahIdx = surahIdx;
     hifzAyahIdx = ayahIdx;
     hifzLevel = 0;
+    // Populate surah select if needed
+    var select = $("hifz-surah-select");
+    if (select.options.length === 0) {
+      surahs.forEach(function (s, idx) {
+        var opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = s.surahNumber + ". " + (SURAH_NAMES_FR[s.surahNumber] || "") + " — " + s.surahNameAr;
+        select.appendChild(opt);
+      });
+    }
+    select.value = surahIdx;
     var text = surahs[surahIdx].ayahs[ayahIdx];
     hifzWords = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
     hifzHiddenSet = new Set();
@@ -1912,6 +1929,7 @@
 
   function renderHifz() {
     var container = $("hifz-words");
+    container.className = "hifz-words size-" + state.textSize;
     container.innerHTML = "";
     var surah = surahs[hifzSurahIdx];
     var isBasmala = hifzAyahIdx === 0 && surah.surahNumber !== 1 && surah.surahNumber !== 9;
@@ -1963,7 +1981,7 @@
   function hifzNextVerse() {
     var surah = surahs[hifzSurahIdx];
     if (hifzAyahIdx < surah.ayahs.length - 1) { hifzAyahIdx++; }
-    else if (hifzSurahIdx < surahs.length - 1) { hifzSurahIdx++; hifzAyahIdx = 0; }
+    else if (hifzSurahIdx < surahs.length - 1) { hifzSurahIdx++; hifzAyahIdx = 0; $("hifz-surah-select").value = hifzSurahIdx; }
     else return;
     hifzLevel = 0;
     hifzWords = surahs[hifzSurahIdx].ayahs[hifzAyahIdx].replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
@@ -1971,7 +1989,7 @@
   }
   function hifzPrevVerse() {
     if (hifzAyahIdx > 0) { hifzAyahIdx--; }
-    else if (hifzSurahIdx > 0) { hifzSurahIdx--; hifzAyahIdx = surahs[hifzSurahIdx].ayahs.length - 1; }
+    else if (hifzSurahIdx > 0) { hifzSurahIdx--; hifzAyahIdx = surahs[hifzSurahIdx].ayahs.length - 1; $("hifz-surah-select").value = hifzSurahIdx; }
     else return;
     hifzLevel = 0;
     hifzWords = surahs[hifzSurahIdx].ayahs[hifzAyahIdx].replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
@@ -2062,6 +2080,7 @@
   function recitLoadVerse() {
     var surah = surahs[recitSurahIdx];
     var text = surah.ayahs[recitAyahIdx];
+    $("recit-verse-area").className = "recit-verse-area size-" + state.textSize;
     recitWords = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
     recitWordsNorm = recitWords.map(function (w) { return normalizeArabic(w); });
     recitMatchedCount = 0;
@@ -2265,20 +2284,24 @@
   }
 
   function recitGoNextVerse() {
+    var wasListening = recitIsListening;
     if (recitIsListening) recitStopListening();
     var surah = surahs[recitSurahIdx];
     if (recitAyahIdx < surah.ayahs.length - 1) { recitAyahIdx++; }
     else if (recitSurahIdx < surahs.length - 1) { recitSurahIdx++; recitAyahIdx = 0; $("recit-surah-select").value = recitSurahIdx; }
     else { return; }
     recitLoadVerse();
+    if (wasListening) setTimeout(recitStartListening, 300);
   }
 
   function recitGoPrevVerse() {
+    var wasListening = recitIsListening;
     if (recitIsListening) recitStopListening();
     if (recitAyahIdx > 0) { recitAyahIdx--; }
     else if (recitSurahIdx > 0) { recitSurahIdx--; recitAyahIdx = surahs[recitSurahIdx].ayahs.length - 1; $("recit-surah-select").value = recitSurahIdx; }
     else { return; }
     recitLoadVerse();
+    if (wasListening) setTimeout(recitStartListening, 300);
   }
 
   function closeRecitOverlay() {
@@ -2491,16 +2514,27 @@
     $("hifz-next-verse").addEventListener("click", hifzNextVerse);
     $("hifz-prev-verse").addEventListener("click", hifzPrevVerse);
 
+    // ---- HIFZ SURAH SELECT ----
+    $("hifz-surah-select").addEventListener("change", function () {
+      hifzSurahIdx = parseInt(this.value, 10);
+      hifzAyahIdx = 0;
+      hifzLevel = 0;
+      hifzWords = surahs[hifzSurahIdx].ayahs[0].replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+      renderHifz();
+    });
+
     // ---- RECITATION VERIFICATION ----
     $("recit-close").addEventListener("click", closeRecitOverlay);
     $("recit-mic-btn").addEventListener("click", recitToggleListening);
     $("recit-prev-verse").addEventListener("click", recitGoPrevVerse);
     $("recit-next-verse").addEventListener("click", recitGoNextVerse);
     $("recit-surah-select").addEventListener("change", function () {
+      var wasListening = recitIsListening;
       if (recitIsListening) recitStopListening();
       recitSurahIdx = parseInt(this.value, 10);
       recitAyahIdx = 0;
       recitLoadVerse();
+      if (wasListening) setTimeout(recitStartListening, 300);
     });
 
     // ---- BOTTOM BAR ICONS ----
@@ -2617,6 +2651,25 @@
         $("settings-overlay").classList.add("hidden");
       }
     });
+
+    // ---- RECITER SELECT (SETTINGS) ----
+    var settingsReciterSelect = $("settings-reciter-select");
+    if (settingsReciterSelect) {
+      RECITERS.forEach(function (r) {
+        var opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = r.name + " — " + r.nameAr;
+        settingsReciterSelect.appendChild(opt);
+      });
+      settingsReciterSelect.value = getReciter();
+      settingsReciterSelect.addEventListener("change", function () {
+        setReciter(this.value);
+        // Sync reciter list in audio overlay if it's open
+        document.querySelectorAll("#reciter-list .reciter-btn").forEach(function (btn) {
+          btn.classList.toggle("active", btn.dataset.reciter === this.value);
+        }.bind(this));
+      });
+    }
 
     // ---- STATS (now inside settings panel) ----
     $("stats-bookmarks-link").addEventListener("click", function (e) {

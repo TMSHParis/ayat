@@ -182,6 +182,15 @@
         <span class="menu-item-label">Vérifier ma récitation</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
+      <a href="#" class="menu-item" id="menu-shazam">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Identifier un verset</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
       <a href="#" class="menu-item" id="menu-qibla">
         <span class="menu-item-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -282,6 +291,10 @@
         </div>
       </div>
       <div class="setting-hint" id="mode-hint">Texte pur — voyelles conservées, signes de waqf masqués.</div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Récitateur</div>
+      <select id="settings-reciter-select" class="recit-select"></select>
     </div>
     <div class="setting-group">
       <div class="setting-label">Rappels quotidiens</div>
@@ -643,16 +656,29 @@
     </button>
   </div>
   <div class="overlay-body hifz-body">
-    <div class="hifz-ref" id="hifz-ref"></div>
-    <div class="hifz-words" id="hifz-words" dir="rtl"></div>
-    <div class="hifz-controls">
-      <button class="hifz-ctrl-btn" id="hifz-prev-verse">Verset ←</button>
-      <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
-      <div class="hifz-level" id="hifz-level">0 / 4</div>
-      <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
-      <button class="hifz-ctrl-btn" id="hifz-next-verse">→ Verset</button>
+    <div class="hifz-nav">
+      <select id="hifz-surah-select" class="recit-select"></select>
+      <div class="hifz-verse-nav">
+        <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="recit-verse-label" id="hifz-ref"></span>
+        <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     </div>
-    <p class="hifz-hint">Augmentez le niveau pour masquer plus de mots. Appuyez sur un mot caché pour le révéler.</p>
+    <div class="hifz-scroll-area">
+      <div class="hifz-words" id="hifz-words" dir="rtl"></div>
+    </div>
+    <div class="hifz-footer">
+      <div class="hifz-controls">
+        <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
+        <div class="hifz-level" id="hifz-level">0 / 4</div>
+        <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
+      </div>
+      <p class="hifz-hint">Appuyez sur un mot caché pour le révéler.</p>
+    </div>
   </div>
 </div>
 
@@ -682,16 +708,19 @@
       </div>
     </div>
 
-    <!-- Verse text with word-by-word highlighting -->
-    <div class="recit-verse-area" id="recit-verse-area" dir="rtl"></div>
+    <!-- Scrollable content -->
+    <div class="recit-scroll-area">
+      <!-- Verse text with word-by-word highlighting -->
+      <div class="recit-verse-area" id="recit-verse-area" dir="rtl"></div>
 
-    <!-- Status indicator -->
-    <div class="recit-status" id="recit-status"></div>
+      <!-- Status indicator -->
+      <div class="recit-status" id="recit-status"></div>
 
-    <!-- Score card (shown after verse complete) -->
-    <div class="recit-score-card hidden" id="recit-score-card">
-      <div class="recit-score" id="recit-score">0%</div>
-      <div class="recit-score-detail" id="recit-score-detail"></div>
+      <!-- Score card (shown after verse complete) -->
+      <div class="recit-score-card hidden" id="recit-score-card">
+        <div class="recit-score" id="recit-score">0%</div>
+        <div class="recit-score-detail" id="recit-score-detail"></div>
+      </div>
     </div>
 
     <!-- Controls -->
