@@ -1751,8 +1751,11 @@
   function fetchPrayerTimesSounnah(lat, lon) {
     var ts = Math.floor(Date.now() / 1000);
     var url = "https://api.institutsounnah.com/prayer-times?latitude=" + lat + "&longitude=" + lon + "&timestamp=" + ts;
-    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
-      if (!data.times || !data.times.length) throw new Error("err");
+    fetch(url).then(function (r) {
+      if (!r.ok) throw new Error("http_" + r.status);
+      return r.json();
+    }).then(function (data) {
+      if (!data.times || !data.times.length) throw new Error("empty");
       // Map API response to internal format
       var nameMap = { "Fajr": "Fajr", "Chourouq": "Sunrise", "Dhohr": "Dhuhr", "Assr": "Asr", "Maghrib": "Maghrib", "'Ish\u00e2": "Isha", "Moiti\u00e9 de la nuit": "Midnight", "Dernier tiers de la nuit": "LastThird" };
       var timings = {};
@@ -1766,10 +1769,13 @@
       renderPrayerTimes();
       startPrayerCountdown();
       savePrayerTimesToBridge();
-    }).catch(function () {
+    }).catch(function (err) {
       $("prayer-loading").classList.add("hidden");
       $("prayer-error").classList.remove("hidden");
-      $("prayer-error-msg").textContent = "Impossible de charger les horaires.";
+      var msg = (err && err.message && err.message.indexOf("http_") === 0)
+        ? "Institut Sounnah temporairement indisponible. Choisissez une autre méthode ci-dessous."
+        : "Impossible de charger les horaires Institut Sounnah.";
+      $("prayer-error-msg").textContent = msg;
     });
   }
 
@@ -1988,18 +1994,22 @@
   var recitLastTranscript = "";
   var recitAutoAdvance = true;
   var recitIsNative = false;
+  var recitIsWeb = false;
+  var recitWebRecognition = null;
 
-  function recitCheckNative() {
+  function recitCheckSupport() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition) {
       recitIsNative = true;
+    } else if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      recitIsWeb = true;
     }
   }
 
   function openRecitOverlay() {
-    recitCheckNative();
+    recitCheckSupport();
     $("recit-overlay").classList.remove("hidden");
 
-    if (!recitIsNative) {
+    if (!recitIsNative && !recitIsWeb) {
       $("recit-fallback").classList.remove("hidden");
       $("recit-verse-area").classList.add("hidden");
       $("recit-status").classList.add("hidden");
@@ -2036,7 +2046,7 @@
     recitAyahIdx = ayahIdx;
     select.value = surahIdx;
     recitLoadVerse();
-    recitRequestPermissions();
+    if (recitIsNative) recitRequestPermissions();
   }
 
   async function recitRequestPermissions() {
@@ -2171,22 +2181,51 @@
   }
 
   async function recitStartListening() {
-    if (recitIsListening || !recitIsNative) return;
+    if (recitIsListening || (!recitIsNative && !recitIsWeb)) return;
     try {
-      var SR = window.Capacitor.Plugins.SpeechRecognition;
-      if (recitListener) { recitListener.remove(); recitListener = null; }
-
-      recitListener = await SR.addListener("partialResults", function (event) {
-        if (event.matches && event.matches.length > 0) {
-          var transcript = event.matches[0];
+      if (recitIsNative) {
+        // --- Capacitor (iOS native) ---
+        var SR = window.Capacitor.Plugins.SpeechRecognition;
+        if (recitListener) { recitListener.remove(); recitListener = null; }
+        recitListener = await SR.addListener("partialResults", function (event) {
+          if (event.matches && event.matches.length > 0) {
+            var transcript = event.matches[0];
+            if (transcript !== recitLastTranscript) {
+              recitLastTranscript = transcript;
+              recitProcessPartial(transcript);
+            }
+          }
+        });
+        await SR.start({ language: "ar-SA", partialResults: true, maxResults: 1, popup: false });
+      } else {
+        // --- Web Speech API (navigateur) ---
+        var WSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recitWebRecognition = new WSR();
+        recitWebRecognition.lang = "ar-SA";
+        recitWebRecognition.interimResults = true;
+        recitWebRecognition.continuous = true;
+        recitWebRecognition.onresult = function (event) {
+          var transcript = "";
+          for (var i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
           if (transcript !== recitLastTranscript) {
             recitLastTranscript = transcript;
             recitProcessPartial(transcript);
           }
-        }
-      });
-
-      await SR.start({ language: "ar-SA", partialResults: true, maxResults: 1, popup: false });
+        };
+        recitWebRecognition.onerror = function (e) {
+          console.error("Web SR error:", e.error);
+          if (e.error !== "aborted") showToast("Erreur micro : " + e.error);
+        };
+        recitWebRecognition.onend = function () {
+          // Auto-restart if still supposed to be listening (Chrome stops after silence)
+          if (recitIsListening) {
+            try { recitWebRecognition.start(); } catch(e) {}
+          }
+        };
+        recitWebRecognition.start();
+      }
       recitIsListening = true;
       $("recit-mic-btn").classList.add("recording");
       $("recit-mic-label").textContent = "Écoute en cours... Appuyez pour arrêter";
@@ -2199,12 +2238,17 @@
 
   async function recitStopListening() {
     if (!recitIsListening) return;
-    try {
-      var SR = window.Capacitor.Plugins.SpeechRecognition;
-      await SR.stop();
-    } catch (err) { console.error("Recit stop error:", err); }
     recitIsListening = false;
-    if (recitListener) { recitListener.remove(); recitListener = null; }
+    if (recitIsNative) {
+      try {
+        var SR = window.Capacitor.Plugins.SpeechRecognition;
+        await SR.stop();
+      } catch (err) { console.error("Recit stop error:", err); }
+      if (recitListener) { recitListener.remove(); recitListener = null; }
+    } else if (recitWebRecognition) {
+      try { recitWebRecognition.stop(); } catch (e) {}
+      recitWebRecognition = null;
+    }
     $("recit-mic-btn").classList.remove("recording");
     $("recit-mic-label").textContent = "Commencer la récitation";
     if (recitMatchedCount < recitWords.length && recitMatchedCount > 0) {
