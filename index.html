@@ -66,10 +66,9 @@
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
-      <button class="nav-btn" id="qibla-btn" aria-label="Direction de la Mecque">
+      <button class="nav-btn" id="audio-btn" aria-label="Écouter le verset">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
       </button>
       <button class="nav-btn" id="next-btn" aria-label="Verset suivant">
@@ -151,6 +150,46 @@
           </svg>
         </span>
         <span class="menu-item-label">Statistiques</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-prayer">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Horaires de prière</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-hifz">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Mémorisation</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-recitation">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+            <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Vérifier ma récitation</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-qibla">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Direction de la Qibla</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
       <a href="#" class="menu-item" id="menu-about">
@@ -531,6 +570,147 @@
       <div class="tafsir-text" id="tafsir-text"></div>
       <p class="tafsir-source">Traduction commentée — Rachid Maash</p>
     </div>
+  </div>
+</div>
+
+<!-- ====== AUDIO RECITER OVERLAY ====== -->
+<div id="audio-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Récitateur</h2>
+    <button class="close-btn" id="audio-overlay-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body">
+    <div class="setting-group">
+      <div class="setting-label">Choisir un récitateur</div>
+      <div id="reciter-list" class="reciter-list"></div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Lecture continue</div>
+      <div class="setting-buttons">
+        <button class="setting-btn" id="audio-auto-btn">Verset suivant auto</button>
+      </div>
+      <p class="setting-hint">Passe au verset suivant et continue la récitation.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PRAYER TIMES OVERLAY ====== -->
+<div id="prayer-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Horaires de prière</h2>
+    <button class="close-btn" id="prayer-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body">
+    <div id="prayer-loading" class="prayer-state">
+      <div class="spinner"></div>
+      <p class="prayer-state-text">Localisation en cours...</p>
+    </div>
+    <div id="prayer-error" class="prayer-state hidden">
+      <p class="prayer-state-text" id="prayer-error-msg">Impossible de charger.</p>
+      <button class="qibla-action-btn" id="prayer-retry">Réessayer</button>
+    </div>
+    <div id="prayer-content" class="hidden">
+      <div class="prayer-next-card">
+        <div class="prayer-next-label">Prochaine prière</div>
+        <div class="prayer-next-name" id="prayer-next-name">—</div>
+        <div class="prayer-countdown" id="prayer-countdown">—</div>
+      </div>
+      <div id="prayer-times-list" class="prayer-times-list"></div>
+      <div class="setting-group" style="margin-top:24px">
+        <div class="setting-label">Méthode de calcul</div>
+        <div class="setting-buttons" id="prayer-method-buttons"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== HIFZ (MEMORIZATION) OVERLAY ====== -->
+<div id="hifz-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Mémorisation</h2>
+    <button class="close-btn" id="hifz-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body hifz-body">
+    <div class="hifz-ref" id="hifz-ref"></div>
+    <div class="hifz-words" id="hifz-words" dir="rtl"></div>
+    <div class="hifz-controls">
+      <button class="hifz-ctrl-btn" id="hifz-prev-verse">Verset ←</button>
+      <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
+      <div class="hifz-level" id="hifz-level">0 / 4</div>
+      <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
+      <button class="hifz-ctrl-btn" id="hifz-next-verse">→ Verset</button>
+    </div>
+    <p class="hifz-hint">Augmentez le niveau pour masquer plus de mots. Appuyez sur un mot caché pour le révéler.</p>
+  </div>
+</div>
+
+<!-- ====== RECITATION VERIFICATION OVERLAY ====== -->
+<div id="recit-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Vérifier ma récitation</h2>
+    <button class="close-btn" id="recit-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body recit-body">
+
+    <!-- Surah selector -->
+    <div class="recit-nav">
+      <select id="recit-surah-select" class="recit-select"></select>
+      <div class="recit-verse-nav">
+        <button class="recit-nav-btn" id="recit-prev-verse" aria-label="Verset précédent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="recit-verse-label" id="recit-verse-label">Verset 1</span>
+        <button class="recit-nav-btn" id="recit-next-verse" aria-label="Verset suivant">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Verse text with word-by-word highlighting -->
+    <div class="recit-verse-area" id="recit-verse-area" dir="rtl"></div>
+
+    <!-- Status indicator -->
+    <div class="recit-status" id="recit-status"></div>
+
+    <!-- Score card (shown after verse complete) -->
+    <div class="recit-score-card hidden" id="recit-score-card">
+      <div class="recit-score" id="recit-score">0%</div>
+      <div class="recit-score-detail" id="recit-score-detail"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="recit-controls">
+      <button class="recit-mic-btn" id="recit-mic-btn">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <span class="recit-mic-label" id="recit-mic-label">Commencer la récitation</span>
+    </div>
+
+    <!-- Fallback for web -->
+    <div class="recit-fallback hidden" id="recit-fallback">
+      <p>La vérification de récitation en temps réel est disponible uniquement sur l'app iOS.</p>
+    </div>
+
   </div>
 </div>
 

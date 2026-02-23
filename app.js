@@ -605,6 +605,7 @@
   }
 
   function exitFreeReading() {
+    stopAudio();
     freeReadMode = false;
     freeReadSurahIdx = 0;
     freeReadAyahIdx = 0;
@@ -822,6 +823,16 @@
     var ayahEl = $("ayah-text");
     renderAyahText(ayahEl, ayah);
 
+    // Bridge: save current verse to shared UserDefaults (widgets)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedData) {
+      window.Capacitor.Plugins.SharedData.saveCurrentVerse({
+        surah: ayah.surahNumber,
+        ayah: ayah.ayahNumber,
+        text: ayah.text,
+        surahName: ayah.surahNameAr
+      });
+    }
+
     // Progress: today
     var todayPct = Math.min(
       (state.todayReadCount / Math.max(todayTarget, 1)) * 100,
@@ -897,6 +908,7 @@
 
   // ---- NAVIGATION ----
   function goNext() {
+    if (isAudioPlaying && !audioAutoNext) stopAudio();
     if (freeReadMode) { goNextFreeRead(); showDock(); return; }
     var newIndex = state.globalIndex + 1;
     if (newIndex > 0 && newIndex % totalAyat === 0) {
@@ -913,6 +925,7 @@
   }
 
   function goPrev() {
+    stopAudio();
     if (freeReadMode) { goPrevFreeRead(); showDock(); return; }
     if (state.globalIndex <= 0) return;
     state.globalIndex--;
@@ -1159,7 +1172,12 @@
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
       !$("search-overlay").classList.contains("hidden") ||
-      !$("qibla-overlay").classList.contains("hidden")
+      !$("qibla-overlay").classList.contains("hidden") ||
+      !$("menu-overlay").classList.contains("hidden") ||
+      !$("audio-overlay").classList.contains("hidden") ||
+      !$("prayer-overlay").classList.contains("hidden") ||
+      !$("hifz-overlay").classList.contains("hidden") ||
+      !$("recit-overlay").classList.contains("hidden")
     ) return;
     // Ignore clicks on buttons, links, and interactive elements
     var tag = e.target.tagName.toLowerCase();
@@ -1182,7 +1200,12 @@
       !$("surah-overlay").classList.contains("hidden") ||
       !$("bookmarks-overlay").classList.contains("hidden") ||
       !$("search-overlay").classList.contains("hidden") ||
-      !$("qibla-overlay").classList.contains("hidden")
+      !$("qibla-overlay").classList.contains("hidden") ||
+      !$("menu-overlay").classList.contains("hidden") ||
+      !$("audio-overlay").classList.contains("hidden") ||
+      !$("prayer-overlay").classList.contains("hidden") ||
+      !$("hifz-overlay").classList.contains("hidden") ||
+      !$("recit-overlay").classList.contains("hidden")
     ) return;
     if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === " ") {
       e.preventDefault();
@@ -1536,6 +1559,710 @@
     qiblaIsAligned = false;
   }
 
+  // ---- AUDIO PLAYER ----
+  var RECITERS = [
+    { id: "Alafasy_128kbps", name: "Mishary Al-Afasy", nameAr: "مشاري العفاسي" },
+    { id: "Husary_128kbps", name: "Al-Husary", nameAr: "محمود خليل الحصري" },
+    { id: "Abdul_Basit_Murattal_192kbps", name: "Abdul Basit", nameAr: "عبد الباسط عبد الصمد" },
+    { id: "Minshawy_Murattal_128kbps", name: "Al-Minshawi", nameAr: "محمد صديق المنشاوي" },
+    { id: "Saood_ash-Shuraym_128kbps", name: "Al-Shuraym", nameAr: "سعود الشريم" },
+  ];
+  var audioPlayer = null;
+  var isAudioPlaying = false;
+  var audioAutoNext = false;
+  var AUDIO_RECITER_KEY = "qurani-reciter";
+
+  function getReciter() {
+    return localStorage.getItem(AUDIO_RECITER_KEY) || "Alafasy_128kbps";
+  }
+  function setReciter(id) {
+    localStorage.setItem(AUDIO_RECITER_KEY, id);
+  }
+
+  function getAudioUrl(surahNum, ayahNum) {
+    if (ayahNum === 0) return "https://everyayah.com/data/" + getReciter() + "/001001.mp3";
+    var s = String(surahNum).padStart(3, "0");
+    var a = String(ayahNum).padStart(3, "0");
+    return "https://everyayah.com/data/" + getReciter() + "/" + s + a + ".mp3";
+  }
+
+  function getCurrentAyahInfo() {
+    return freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+  }
+
+  function playCurrentAyah() {
+    var ayah = getCurrentAyahInfo();
+    var url = getAudioUrl(ayah.surahNumber, ayah.ayahNumber);
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.removeEventListener("ended", onAudioEnded);
+    }
+    audioPlayer = new Audio(url);
+    audioPlayer.addEventListener("ended", onAudioEnded);
+    audioPlayer.addEventListener("error", function () {
+      isAudioPlaying = false;
+      updateAudioUI();
+      showToast("Audio non disponible");
+    });
+    audioPlayer.play().then(function () {
+      isAudioPlaying = true;
+      updateAudioUI();
+    }).catch(function () {
+      isAudioPlaying = false;
+      updateAudioUI();
+    });
+  }
+
+  function pauseAudio() {
+    if (audioPlayer) { audioPlayer.pause(); }
+    isAudioPlaying = false;
+    updateAudioUI();
+  }
+
+  function toggleAudio() {
+    if (isAudioPlaying) pauseAudio();
+    else playCurrentAyah();
+  }
+
+  function onAudioEnded() {
+    isAudioPlaying = false;
+    if (audioAutoNext) {
+      goNext();
+      setTimeout(playCurrentAyah, 300);
+    } else {
+      updateAudioUI();
+    }
+  }
+
+  function stopAudio() {
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.removeEventListener("ended", onAudioEnded);
+      audioPlayer = null;
+    }
+    isAudioPlaying = false;
+    updateAudioUI();
+  }
+
+  function updateAudioUI() {
+    var btn = $("audio-btn");
+    if (!btn) return;
+    var svg = btn.querySelector("svg");
+    if (isAudioPlaying) {
+      btn.classList.add("audio-playing");
+      if (svg) svg.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>';
+    } else {
+      btn.classList.remove("audio-playing");
+      if (svg) svg.innerHTML = '<polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>';
+    }
+    var autoBtn = $("audio-auto-btn");
+    if (autoBtn) autoBtn.classList.toggle("active", audioAutoNext);
+  }
+
+  function renderReciterList() {
+    var list = $("reciter-list");
+    if (!list) return;
+    list.innerHTML = "";
+    var current = getReciter();
+    RECITERS.forEach(function (r) {
+      var item = document.createElement("div");
+      item.className = "reciter-item" + (r.id === current ? " active" : "");
+      item.innerHTML = '<div><div class="reciter-item-name">' + r.name + '</div>' +
+        '<div class="reciter-item-name-ar">' + r.nameAr + '</div></div>' +
+        '<span class="reciter-item-check">✓</span>';
+      item.addEventListener("click", function () {
+        setReciter(r.id);
+        if (isAudioPlaying) { stopAudio(); playCurrentAyah(); }
+        renderReciterList();
+      });
+      list.appendChild(item);
+    });
+  }
+
+  // ---- PRAYER TIMES ----
+  var PRAYER_METHODS = [
+    { id: "sounnah", name: "Institut Sounnah" },
+    { id: 12, name: "UOIF (France)" },
+    { id: 3, name: "MWL (Ligue Mondiale)" },
+    { id: 2, name: "ISNA (Amérique)" },
+    { id: 5, name: "Égypte" },
+    { id: 4, name: "Umm Al-Qura" },
+  ];
+  var PRAYER_NAMES = { Fajr: "Fajr", Sunrise: "Shourouq", Dhuhr: "Dhuhr", Asr: "Asr", Maghrib: "Maghrib", Isha: "Isha", Midnight: "Moiti\u00e9 de la nuit", LastThird: "Dernier tiers" };
+  var PRAYER_NAMES_AR = { Fajr: "\u0627\u0644\u0641\u062C\u0631", Sunrise: "\u0627\u0644\u0634\u0631\u0648\u0642", Dhuhr: "\u0627\u0644\u0638\u0647\u0631", Asr: "\u0627\u0644\u0639\u0635\u0631", Maghrib: "\u0627\u0644\u0645\u063A\u0631\u0628", Isha: "\u0627\u0644\u0639\u0634\u0627\u0621", Midnight: "\u0645\u0646\u062A\u0635\u0641 \u0627\u0644\u0644\u064A\u0644", LastThird: "\u0627\u0644\u062B\u0644\u062B \u0627\u0644\u0623\u062E\u064A\u0631" };
+  var PRAYER_METHOD_KEY = "qurani-prayer-method";
+  var prayerTimesCache = null;
+  var prayerCountdownInterval = null;
+
+  function getPrayerMethod() {
+    var val = localStorage.getItem(PRAYER_METHOD_KEY);
+    if (val === "sounnah") return "sounnah";
+    var num = parseInt(val, 10);
+    return isNaN(num) ? "sounnah" : num;
+  }
+  function setPrayerMethod(id) {
+    localStorage.setItem(PRAYER_METHOD_KEY, String(id));
+  }
+
+  function openPrayerOverlay() {
+    $("prayer-overlay").classList.remove("hidden");
+    $("prayer-loading").classList.remove("hidden");
+    $("prayer-error").classList.add("hidden");
+    $("prayer-content").classList.add("hidden");
+    renderPrayerMethodButtons();
+    if (!navigator.geolocation) {
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-error").classList.remove("hidden");
+      $("prayer-error-msg").textContent = "Géolocalisation non disponible.";
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      fetchPrayerTimes(pos.coords.latitude, pos.coords.longitude);
+    }, function (err) {
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-error").classList.remove("hidden");
+      $("prayer-error-msg").textContent = err.code === 1
+        ? "Autorisez la géolocalisation pour les horaires."
+        : "Impossible d'obtenir votre position.";
+    }, { timeout: 12000, enableHighAccuracy: false });
+  }
+
+  function fetchPrayerTimes(lat, lon) {
+    if (getPrayerMethod() === "sounnah") {
+      return fetchPrayerTimesSounnah(lat, lon);
+    }
+    var ts = Math.floor(Date.now() / 1000);
+    var url = "https://api.aladhan.com/v1/timings/" + ts + "?latitude=" + lat + "&longitude=" + lon + "&method=" + getPrayerMethod();
+    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.code !== 200 || !data.data) throw new Error("err");
+      prayerTimesCache = data.data.timings;
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-content").classList.remove("hidden");
+      renderPrayerTimes();
+      startPrayerCountdown();
+      savePrayerTimesToBridge();
+    }).catch(function () {
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-error").classList.remove("hidden");
+      $("prayer-error-msg").textContent = "Impossible de charger les horaires.";
+    });
+  }
+
+  function fetchPrayerTimesSounnah(lat, lon) {
+    var ts = Math.floor(Date.now() / 1000);
+    var url = "https://api.institutsounnah.com/prayer-times?latitude=" + lat + "&longitude=" + lon + "&timestamp=" + ts;
+    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.times || !data.times.length) throw new Error("err");
+      // Map API response to internal format
+      var nameMap = { "Fajr": "Fajr", "Chourouq": "Sunrise", "Dhohr": "Dhuhr", "Assr": "Asr", "Maghrib": "Maghrib", "'Ish\u00e2": "Isha", "Moiti\u00e9 de la nuit": "Midnight", "Dernier tiers de la nuit": "LastThird" };
+      var timings = {};
+      data.times.forEach(function (entry) {
+        var key = nameMap[entry.french_name];
+        if (key) timings[key] = entry.time;
+      });
+      prayerTimesCache = timings;
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-content").classList.remove("hidden");
+      renderPrayerTimes();
+      startPrayerCountdown();
+      savePrayerTimesToBridge();
+    }).catch(function () {
+      $("prayer-loading").classList.add("hidden");
+      $("prayer-error").classList.remove("hidden");
+      $("prayer-error-msg").textContent = "Impossible de charger les horaires.";
+    });
+  }
+
+  function savePrayerTimesToBridge() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedData && prayerTimesCache) {
+      var t = prayerTimesCache;
+      window.Capacitor.Plugins.SharedData.savePrayerTimes({
+        fajr: t.Fajr || "", sunrise: t.Sunrise || "", dhuhr: t.Dhuhr || "",
+        asr: t.Asr || "", maghrib: t.Maghrib || "", isha: t.Isha || "",
+        midnight: t.Midnight || "", lastThird: t.LastThird || "",
+        date: "", nextPrayer: "", nextTime: "",
+        method: getPrayerMethod(), city: ""
+      });
+    }
+  }
+
+  function renderPrayerTimes() {
+    if (!prayerTimesCache) return;
+    var prayers = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    var isSounnah = getPrayerMethod() === "sounnah";
+    // Add night info lines for Institut Sounnah method
+    if (isSounnah && prayerTimesCache.Midnight) prayers.push("Midnight");
+    if (isSounnah && prayerTimesCache.LastThird) prayers.push("LastThird");
+    var listEl = $("prayer-times-list");
+    listEl.innerHTML = "";
+    var now = new Date();
+    var nextPrayer = null;
+    var infoKeys = { Midnight: true, LastThird: true };
+    prayers.forEach(function (key) {
+      var time = prayerTimesCache[key];
+      if (!time) return;
+      var isInfo = !!infoKeys[key];
+      var parts = time.split(":");
+      var pDate = new Date(); pDate.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      // Midnight/LastThird are after midnight, treat as next day for comparison
+      if (isInfo && parseInt(parts[0], 10) < 12) {
+        pDate.setDate(pDate.getDate() + 1);
+      }
+      var isPast = pDate < now;
+      // Info lines don't participate in "next prayer" countdown
+      var isNext = !isInfo && !isPast && !nextPrayer;
+      if (isNext) nextPrayer = { key: key, date: pDate };
+      var item = document.createElement("div");
+      item.className = "prayer-time-item" + (isNext ? " prayer-next" : "") + (isPast && !isInfo ? " prayer-past" : "") + (isInfo ? " prayer-info" : "");
+      item.innerHTML = '<div class="prayer-time-name"><span class="prayer-name-fr">' + PRAYER_NAMES[key] +
+        '</span><span class="prayer-name-ar">' + PRAYER_NAMES_AR[key] + '</span></div>' +
+        '<div class="prayer-time-value">' + time.substring(0, 5) + '</div>';
+      listEl.appendChild(item);
+    });
+    if (nextPrayer) {
+      $("prayer-next-name").textContent = PRAYER_NAMES[nextPrayer.key];
+      var diff = nextPrayer.date - now;
+      var h = Math.floor(diff / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      $("prayer-countdown").textContent = "dans " + (h > 0 ? h + "h " : "") + m + "min";
+    } else {
+      $("prayer-next-name").textContent = "Fajr (demain)";
+      $("prayer-countdown").textContent = "";
+    }
+  }
+
+  function startPrayerCountdown() {
+    if (prayerCountdownInterval) clearInterval(prayerCountdownInterval);
+    prayerCountdownInterval = setInterval(renderPrayerTimes, 60000);
+  }
+
+  function closePrayerOverlay() {
+    $("prayer-overlay").classList.add("hidden");
+    if (prayerCountdownInterval) { clearInterval(prayerCountdownInterval); prayerCountdownInterval = null; }
+  }
+
+  function renderPrayerMethodButtons() {
+    var container = $("prayer-method-buttons");
+    if (!container) return;
+    container.innerHTML = "";
+    var current = getPrayerMethod();
+    PRAYER_METHODS.forEach(function (m) {
+      var btn = document.createElement("button");
+      btn.className = "setting-btn" + (m.id === current ? " active" : "");
+      btn.textContent = m.name;
+      btn.addEventListener("click", function () {
+        setPrayerMethod(m.id);
+        renderPrayerMethodButtons();
+        openPrayerOverlay();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  // ---- HIFZ (MEMORIZATION) ----
+  var HIFZ_KEY = "qurani-hifz";
+  var hifzMode = false;
+  var hifzLevel = 0;
+  var hifzSurahIdx = 0;
+  var hifzAyahIdx = 0;
+  var hifzWords = [];
+  var hifzHiddenSet = new Set();
+
+  function loadHifzData() {
+    try { var raw = localStorage.getItem(HIFZ_KEY); return raw ? JSON.parse(raw) : {}; }
+    catch (e) { return {}; }
+  }
+  function saveHifzData(data) { localStorage.setItem(HIFZ_KEY, JSON.stringify(data)); }
+
+  function openHifzFromCurrent() {
+    var ayah = getCurrentAyahInfo();
+    // Find the surah array index from surahNumber
+    var surahIdx = 0;
+    for (var i = 0; i < surahs.length; i++) {
+      if (surahs[i].surahNumber === ayah.surahNumber) { surahIdx = i; break; }
+    }
+    // Find ayah index in the surah
+    var ayahIdx = 0;
+    if (ayah.isBasmala) { ayahIdx = 0; }
+    else if (ayah.surahNumber === 1 || ayah.surahNumber === 9) {
+      ayahIdx = ayah.ayahNumber - 1;
+    } else {
+      ayahIdx = ayah.ayahNumber; // index 0 is basmala
+    }
+    enterHifzMode(surahIdx, ayahIdx);
+  }
+
+  function enterHifzMode(surahIdx, ayahIdx) {
+    hifzMode = true;
+    hifzSurahIdx = surahIdx;
+    hifzAyahIdx = ayahIdx;
+    hifzLevel = 0;
+    var text = surahs[surahIdx].ayahs[ayahIdx];
+    hifzWords = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+    hifzHiddenSet = new Set();
+    renderHifz();
+    $("hifz-overlay").classList.remove("hidden");
+  }
+
+  function renderHifz() {
+    var container = $("hifz-words");
+    container.innerHTML = "";
+    var surah = surahs[hifzSurahIdx];
+    var isBasmala = hifzAyahIdx === 0 && surah.surahNumber !== 1 && surah.surahNumber !== 9;
+    var displayNum = isBasmala ? "Basmala" : (surah.surahNumber === 1 || surah.surahNumber === 9 ? hifzAyahIdx + 1 : hifzAyahIdx);
+    var nameFr = SURAH_NAMES_FR[surah.surahNumber] || "Sourate " + surah.surahNumber;
+    $("hifz-ref").textContent = nameFr + " — " + (isBasmala ? "Basmala" : "Verset " + displayNum);
+    $("hifz-level").textContent = hifzLevel + " / 4";
+
+    var total = hifzWords.length;
+    var hideCount = Math.round(total * (hifzLevel * 0.25));
+    // Build deterministic hide set based on level
+    hifzHiddenSet = new Set();
+    if (hideCount > 0 && total > 0) {
+      var step = total / hideCount;
+      for (var i = 0; i < hideCount; i++) {
+        hifzHiddenSet.add(Math.min(Math.floor(i * step), total - 1));
+      }
+    }
+
+    hifzWords.forEach(function (word, idx) {
+      var span = document.createElement("span");
+      var isHidden = hifzHiddenSet.has(idx);
+      if (isHidden) {
+        span.className = "hifz-word hifz-hidden";
+        span.textContent = word;
+        span.addEventListener("click", function () {
+          span.className = "hifz-word hifz-revealed";
+        });
+      } else {
+        span.className = "hifz-word";
+        span.textContent = word;
+      }
+      container.appendChild(span);
+      container.appendChild(document.createTextNode(" "));
+    });
+
+    // Save best level
+    var key = surah.surahNumber + ":" + hifzAyahIdx;
+    var data = loadHifzData();
+    if (hifzLevel > (data[key] || 0)) { data[key] = hifzLevel; saveHifzData(data); }
+  }
+
+  function hifzNextLevel() {
+    if (hifzLevel < 4) { hifzLevel++; renderHifz(); }
+  }
+  function hifzPrevLevel() {
+    if (hifzLevel > 0) { hifzLevel--; renderHifz(); }
+  }
+  function hifzNextVerse() {
+    var surah = surahs[hifzSurahIdx];
+    if (hifzAyahIdx < surah.ayahs.length - 1) { hifzAyahIdx++; }
+    else if (hifzSurahIdx < surahs.length - 1) { hifzSurahIdx++; hifzAyahIdx = 0; }
+    else return;
+    hifzLevel = 0;
+    hifzWords = surahs[hifzSurahIdx].ayahs[hifzAyahIdx].replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+    renderHifz();
+  }
+  function hifzPrevVerse() {
+    if (hifzAyahIdx > 0) { hifzAyahIdx--; }
+    else if (hifzSurahIdx > 0) { hifzSurahIdx--; hifzAyahIdx = surahs[hifzSurahIdx].ayahs.length - 1; }
+    else return;
+    hifzLevel = 0;
+    hifzWords = surahs[hifzSurahIdx].ayahs[hifzAyahIdx].replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+    renderHifz();
+  }
+  function closeHifzOverlay() {
+    hifzMode = false;
+    $("hifz-overlay").classList.add("hidden");
+  }
+
+  // ---- RECITATION VERIFICATION (REAL-TIME) ----
+  var recitSurahIdx = 0;
+  var recitAyahIdx = 0;
+  var recitIsListening = false;
+  var recitWords = [];
+  var recitWordsNorm = [];
+  var recitMatchedCount = 0;
+  var recitWordStates = [];
+  var recitListener = null;
+  var recitLastTranscript = "";
+  var recitAutoAdvance = true;
+  var recitIsNative = false;
+
+  function recitCheckNative() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition) {
+      recitIsNative = true;
+    }
+  }
+
+  function openRecitOverlay() {
+    recitCheckNative();
+    $("recit-overlay").classList.remove("hidden");
+
+    if (!recitIsNative) {
+      $("recit-fallback").classList.remove("hidden");
+      $("recit-verse-area").classList.add("hidden");
+      $("recit-status").classList.add("hidden");
+      $("recit-mic-btn").parentElement.classList.add("hidden");
+      return;
+    }
+
+    $("recit-fallback").classList.add("hidden");
+    $("recit-verse-area").classList.remove("hidden");
+    $("recit-status").classList.remove("hidden");
+    $("recit-mic-btn").parentElement.classList.remove("hidden");
+
+    var select = $("recit-surah-select");
+    if (select.options.length === 0) {
+      surahs.forEach(function (s, idx) {
+        var opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = s.surahNumber + ". " + (SURAH_NAMES_FR[s.surahNumber] || "") + " — " + s.surahNameAr;
+        select.appendChild(opt);
+      });
+    }
+
+    var ayah = getCurrentAyahInfo();
+    var surahIdx = 0;
+    for (var i = 0; i < surahs.length; i++) {
+      if (surahs[i].surahNumber === ayah.surahNumber) { surahIdx = i; break; }
+    }
+    var ayahIdx = 0;
+    if (ayah.isBasmala) { ayahIdx = 0; }
+    else if (ayah.surahNumber === 1 || ayah.surahNumber === 9) { ayahIdx = ayah.ayahNumber - 1; }
+    else { ayahIdx = ayah.ayahNumber; }
+
+    recitSurahIdx = surahIdx;
+    recitAyahIdx = ayahIdx;
+    select.value = surahIdx;
+    recitLoadVerse();
+    recitRequestPermissions();
+  }
+
+  async function recitRequestPermissions() {
+    try {
+      var SR = window.Capacitor.Plugins.SpeechRecognition;
+      var perm = await SR.checkPermissions();
+      if (perm.speechRecognition !== "granted" || perm.microphone !== "granted") {
+        await SR.requestPermissions();
+      }
+    } catch (err) { console.error("Recit permission error:", err); }
+  }
+
+  function recitLoadVerse() {
+    var surah = surahs[recitSurahIdx];
+    var text = surah.ayahs[recitAyahIdx];
+    recitWords = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+    recitWordsNorm = recitWords.map(function (w) { return normalizeArabic(w); });
+    recitMatchedCount = 0;
+    recitWordStates = recitWords.map(function () { return "pending"; });
+    recitLastTranscript = "";
+
+    var isBasmala = recitAyahIdx === 0 && surah.surahNumber !== 1 && surah.surahNumber !== 9;
+    var displayNum = isBasmala ? "Basmala" : (surah.surahNumber === 1 || surah.surahNumber === 9 ? recitAyahIdx + 1 : recitAyahIdx);
+    $("recit-verse-label").textContent = isBasmala ? "Basmala" : "Verset " + displayNum;
+    $("recit-score-card").classList.add("hidden");
+    $("recit-status").textContent = "";
+    recitRenderWords();
+  }
+
+  function recitRenderWords() {
+    var container = $("recit-verse-area");
+    container.innerHTML = "";
+    recitWords.forEach(function (word, idx) {
+      var span = document.createElement("span");
+      span.id = "recit-w-" + idx;
+      var state = recitWordStates[idx];
+      span.className = "recit-word" +
+        (state === "correct" ? " recit-word-correct" :
+         state === "error" ? " recit-word-error" :
+         state === "skipped" ? " recit-word-skipped" :
+         idx === recitMatchedCount ? " recit-word-active" : "");
+      span.textContent = word;
+      container.appendChild(span);
+      if (idx < recitWords.length - 1) container.appendChild(document.createTextNode(" "));
+    });
+  }
+
+  function recitUpdateWord(idx, newState) {
+    recitWordStates[idx] = newState;
+    var span = document.getElementById("recit-w-" + idx);
+    if (!span) return;
+    span.className = "recit-word" +
+      (newState === "correct" ? " recit-word-correct" :
+       newState === "error" ? " recit-word-error" :
+       newState === "skipped" ? " recit-word-skipped" : "");
+  }
+
+  function recitProcessPartial(transcript) {
+    var transcriptNorm = normalizeArabic(transcript);
+    var spokenWords = transcriptNorm.split(/\s+/).filter(Boolean);
+    var si = 0;
+    var startFrom = recitMatchedCount;
+
+    for (var matchIdx = 0; matchIdx < recitWords.length && si < spokenWords.length; matchIdx++) {
+      if (matchIdx < startFrom) { si++; continue; }
+
+      var expected = recitWordsNorm[matchIdx];
+      var spoken = spokenWords[si];
+      if (!spoken) break;
+
+      var dist = levenshtein(expected, spoken);
+      var maxLen = Math.max(expected.length, spoken.length);
+      var similarity = maxLen > 0 ? 1 - (dist / maxLen) : 0;
+
+      if (similarity >= 0.50) {
+        recitUpdateWord(matchIdx, "correct");
+        recitMatchedCount = matchIdx + 1;
+        si++;
+      } else {
+        // Look ahead: user might have skipped this word
+        if (matchIdx + 1 < recitWordsNorm.length) {
+          var skipDist = levenshtein(recitWordsNorm[matchIdx + 1], spoken);
+          var skipMax = Math.max(recitWordsNorm[matchIdx + 1].length, spoken.length);
+          if (skipMax > 0 && (1 - skipDist / skipMax) >= 0.50) {
+            recitUpdateWord(matchIdx, "error");
+            recitUpdateWord(matchIdx + 1, "correct");
+            recitMatchedCount = matchIdx + 2;
+            si++;
+            matchIdx++;
+            continue;
+          }
+        }
+        recitUpdateWord(matchIdx, "error");
+        recitMatchedCount = matchIdx + 1;
+        si++;
+      }
+    }
+
+    // Update active word indicator
+    if (recitMatchedCount < recitWords.length) {
+      var nextSpan = document.getElementById("recit-w-" + recitMatchedCount);
+      if (nextSpan && recitWordStates[recitMatchedCount] === "pending") {
+        nextSpan.className = "recit-word recit-word-active";
+      }
+    }
+
+    // Check verse complete
+    if (recitMatchedCount >= recitWords.length) {
+      recitOnVerseComplete();
+    }
+  }
+
+  function recitOnVerseComplete() {
+    if (recitIsListening) recitStopListening();
+    var correct = 0;
+    recitWordStates.forEach(function (s) { if (s === "correct") correct++; });
+    var total = recitWords.length;
+    var score = total > 0 ? Math.round((correct / total) * 100) : 0;
+    $("recit-score").textContent = score + "%";
+    $("recit-score-detail").textContent = correct + " / " + total + " mots corrects";
+    $("recit-score-card").classList.remove("hidden");
+    $("recit-status").textContent = "Verset terminé";
+
+    if (recitAutoAdvance) {
+      setTimeout(function () {
+        if (!$("recit-overlay").classList.contains("hidden")) {
+          recitGoNextVerse();
+          recitStartListening();
+        }
+      }, 2500);
+    }
+  }
+
+  async function recitStartListening() {
+    if (recitIsListening || !recitIsNative) return;
+    try {
+      var SR = window.Capacitor.Plugins.SpeechRecognition;
+      if (recitListener) { recitListener.remove(); recitListener = null; }
+
+      recitListener = await SR.addListener("partialResults", function (event) {
+        if (event.matches && event.matches.length > 0) {
+          var transcript = event.matches[0];
+          if (transcript !== recitLastTranscript) {
+            recitLastTranscript = transcript;
+            recitProcessPartial(transcript);
+          }
+        }
+      });
+
+      await SR.start({ language: "ar-SA", partialResults: true, maxResults: 1, popup: false });
+      recitIsListening = true;
+      $("recit-mic-btn").classList.add("recording");
+      $("recit-mic-label").textContent = "Écoute en cours... Appuyez pour arrêter";
+      $("recit-status").textContent = "Récitez le verset...";
+    } catch (err) {
+      console.error("Recit start error:", err);
+      showToast("Erreur reconnaissance vocale");
+    }
+  }
+
+  async function recitStopListening() {
+    if (!recitIsListening) return;
+    try {
+      var SR = window.Capacitor.Plugins.SpeechRecognition;
+      await SR.stop();
+    } catch (err) { console.error("Recit stop error:", err); }
+    recitIsListening = false;
+    if (recitListener) { recitListener.remove(); recitListener = null; }
+    $("recit-mic-btn").classList.remove("recording");
+    $("recit-mic-label").textContent = "Commencer la récitation";
+    if (recitMatchedCount < recitWords.length && recitMatchedCount > 0) {
+      $("recit-status").textContent = "En pause — appuyez pour reprendre";
+    }
+  }
+
+  function recitToggleListening() {
+    if (recitIsListening) { recitStopListening(); }
+    else {
+      if (recitMatchedCount >= recitWords.length) recitLoadVerse();
+      recitStartListening();
+    }
+  }
+
+  function recitGoNextVerse() {
+    if (recitIsListening) recitStopListening();
+    var surah = surahs[recitSurahIdx];
+    if (recitAyahIdx < surah.ayahs.length - 1) { recitAyahIdx++; }
+    else if (recitSurahIdx < surahs.length - 1) { recitSurahIdx++; recitAyahIdx = 0; $("recit-surah-select").value = recitSurahIdx; }
+    else { return; }
+    recitLoadVerse();
+  }
+
+  function recitGoPrevVerse() {
+    if (recitIsListening) recitStopListening();
+    if (recitAyahIdx > 0) { recitAyahIdx--; }
+    else if (recitSurahIdx > 0) { recitSurahIdx--; recitAyahIdx = surahs[recitSurahIdx].ayahs.length - 1; $("recit-surah-select").value = recitSurahIdx; }
+    else { return; }
+    recitLoadVerse();
+  }
+
+  function closeRecitOverlay() {
+    if (recitIsListening) recitStopListening();
+    $("recit-overlay").classList.add("hidden");
+  }
+
+  function normalizeArabic(text) {
+    return text
+      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0615\u0616\u0617\u0618\u0619\u061A]/g, "")
+      .replace(/[\u0622\u0623\u0625]/g, "\u0627")
+      .replace(/\u0649/g, "\u064A")
+      .replace(/\u0629/g, "\u0647")
+      .replace(/\s+/g, " ").trim();
+  }
+
+  function levenshtein(a, b) {
+    var m = a.length, n = b.length;
+    var dp = [];
+    for (var i = 0; i <= m; i++) {
+      dp[i] = [i];
+      for (var j = 1; j <= n; j++) {
+        dp[i][j] = i === 0 ? j : Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+    }
+    return dp[m][n];
+  }
+
   // ---- INIT ----
   async function init() {
     try {
@@ -1614,12 +2341,62 @@
       $("goal-reached").classList.add("hidden");
     });
 
-    // ---- HAMBURGER → opens settings panel directly ----
+    // ---- HAMBURGER → opens MENU overlay ----
     $("menu-btn").addEventListener("click", function () {
-      render();
-      updateReminderUI();
-      renderStats();
+      $("menu-overlay").classList.remove("hidden");
+    });
+    $("menu-close").addEventListener("click", function () {
+      $("menu-overlay").classList.add("hidden");
+    });
+    $("menu-settings").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      render(); updateReminderUI(); renderStats();
       $("settings-overlay").classList.remove("hidden");
+    });
+    $("menu-browse").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      $("surah-overlay").classList.remove("hidden");
+    });
+    $("menu-stats").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      render(); renderStats();
+      $("settings-overlay").classList.remove("hidden");
+    });
+    $("menu-about").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      render();
+      $("settings-overlay").classList.remove("hidden");
+    });
+    $("menu-help").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      render();
+      $("settings-overlay").classList.remove("hidden");
+    });
+    // New menu items
+    $("menu-prayer").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      openPrayerOverlay();
+    });
+    $("menu-hifz").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      openHifzFromCurrent();
+    });
+    $("menu-recitation").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      openRecitOverlay();
+    });
+    $("menu-qibla").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      openQiblaOverlay();
     });
 
     // ---- BACK BUTTON (free reading) ----
@@ -1638,8 +2415,51 @@
       setTimeout(function () { $("search-input").focus(); }, 100);
     });
 
+    // ---- AUDIO ----
+    $("audio-btn").addEventListener("click", toggleAudio);
+    // Long press on audio button → reciter picker
+    (function () {
+      var lt = null;
+      $("audio-btn").addEventListener("touchstart", function () {
+        lt = setTimeout(function () { lt = "fired"; renderReciterList(); $("audio-overlay").classList.remove("hidden"); }, 600);
+      }, { passive: true });
+      $("audio-btn").addEventListener("touchend", function (e) {
+        if (lt === "fired") { e.preventDefault(); }
+        if (lt !== "fired") clearTimeout(lt);
+        lt = null;
+      });
+      $("audio-btn").addEventListener("touchmove", function () { if (lt !== "fired") clearTimeout(lt); }, { passive: true });
+    })();
+    $("audio-overlay-close").addEventListener("click", function () { $("audio-overlay").classList.add("hidden"); });
+    $("audio-auto-btn").addEventListener("click", function () {
+      audioAutoNext = !audioAutoNext;
+      updateAudioUI();
+    });
+
+    // ---- PRAYER ----
+    $("prayer-close").addEventListener("click", closePrayerOverlay);
+    $("prayer-retry").addEventListener("click", openPrayerOverlay);
+
+    // ---- HIFZ ----
+    $("hifz-close").addEventListener("click", closeHifzOverlay);
+    $("hifz-next-level").addEventListener("click", hifzNextLevel);
+    $("hifz-prev-level").addEventListener("click", hifzPrevLevel);
+    $("hifz-next-verse").addEventListener("click", hifzNextVerse);
+    $("hifz-prev-verse").addEventListener("click", hifzPrevVerse);
+
+    // ---- RECITATION VERIFICATION ----
+    $("recit-close").addEventListener("click", closeRecitOverlay);
+    $("recit-mic-btn").addEventListener("click", recitToggleListening);
+    $("recit-prev-verse").addEventListener("click", recitGoPrevVerse);
+    $("recit-next-verse").addEventListener("click", recitGoNextVerse);
+    $("recit-surah-select").addEventListener("change", function () {
+      if (recitIsListening) recitStopListening();
+      recitSurahIdx = parseInt(this.value, 10);
+      recitAyahIdx = 0;
+      recitLoadVerse();
+    });
+
     // ---- BOTTOM BAR ICONS ----
-    $("qibla-btn").addEventListener("click", openQiblaOverlay);
     $("qibla-close").addEventListener("click", closeQiblaOverlay);
     $("qibla-retry").addEventListener("click", openQiblaOverlay);
     $("qibla-orient-btn").addEventListener("click", function () {

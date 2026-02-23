@@ -45,6 +45,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Qurani utilise le microphone pour vérifier votre récitation du Coran.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Qurani utilise la reconnaissance vocale pour vérifier votre récitation du Coran en temps réel.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Qurani utilise votre position pour la direction de la Qibla et les horaires de prière.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

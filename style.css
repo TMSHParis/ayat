@@ -1547,5 +1547,136 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
   border-top: 1px solid var(--glass-border);
 }
 
+/* ---- AUDIO PLAYER ---- */
+.nav-btn.audio-playing { color: #f59e0b; }
+.nav-btn.audio-playing svg { fill: #f59e0b; stroke: none; }
+.reciter-list { display: flex; flex-direction: column; gap: 2px; }
+.reciter-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px; border-radius: 12px; cursor: pointer; transition: background .15s;
+}
+.reciter-item:active { background: var(--track); }
+.reciter-item.active { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+.reciter-item-name { font-size: 14px; color: var(--text); }
+.reciter-item-name-ar { font-size: 13px; color: var(--text-faint); font-family: "Amiri", serif; direction: rtl; }
+.reciter-item-check { color: #f59e0b; font-size: 16px; display: none; }
+.reciter-item.active .reciter-item-check { display: block; }
+
+/* ---- PRAYER TIMES ---- */
+.prayer-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 60px 20px;
+}
+.prayer-state-text { font-size: 13px; color: var(--text-muted); }
+.prayer-next-card {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px;
+}
+.prayer-next-label {
+  font-size: 10px; color: var(--text-faint); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.prayer-next-name { font-size: 28px; font-weight: 200; color: var(--text); letter-spacing: -0.5px; }
+.prayer-countdown { font-size: 14px; color: #f59e0b; margin-top: 4px; }
+.prayer-times-list { display: flex; flex-direction: column; }
+.prayer-time-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.prayer-time-item:last-child { border-bottom: none; }
+.prayer-time-item.prayer-past { opacity: 0.35; }
+.prayer-time-item.prayer-next .prayer-time-value { color: #f59e0b; font-weight: 500; }
+.prayer-time-name { display: flex; align-items: baseline; gap: 8px; }
+.prayer-name-fr { font-size: 15px; color: var(--text); }
+.prayer-name-ar { font-size: 13px; color: var(--text-faint); font-family: "Amiri", serif; }
+.prayer-time-value { font-size: 16px; color: var(--text-secondary); font-weight: 300; font-variant-numeric: tabular-nums; }
+.prayer-time-item.prayer-info { margin-top: 8px; border-top: 1px dashed var(--border); opacity: 0.6; }
+.prayer-time-item.prayer-info .prayer-name-fr { font-size: 13px; }
+.prayer-time-item.prayer-info .prayer-name-ar { font-size: 11px; }
+.prayer-time-item.prayer-info .prayer-time-value { font-size: 14px; }
+
+/* ---- HIFZ (MEMORIZATION) ---- */
+.hifz-body { padding: 24px; display: flex; flex-direction: column; align-items: center; }
+.hifz-ref { font-size: 11px; color: var(--text-faint); text-align: center; margin-bottom: 24px; letter-spacing: 0.3px; }
+.hifz-words {
+  font-family: "Amiri Quran", "Amiri", serif; font-size: 28px; line-height: 2.2;
+  text-align: center; color: var(--text); max-width: 600px; word-spacing: 8px;
+  margin-bottom: 28px; min-height: 120px;
+}
+.hifz-word { display: inline; transition: color .3s, background .3s; }
+.hifz-hidden {
+  display: inline-block;
+  filter: blur(7px); -webkit-filter: blur(7px);
+  cursor: pointer; user-select: none;
+  transition: filter .3s, -webkit-filter .3s;
+}
+.hifz-revealed { color: #10b981; }
+.hifz-controls {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+  justify-content: center;
+}
+.hifz-level { font-size: 14px; color: var(--text-muted); min-width: 40px; text-align: center; }
+.hifz-ctrl-btn {
+  font-size: 13px; padding: 10px 16px; border-radius: 50px;
+  border: 1px solid var(--btn-border); background: none;
+  color: var(--text-muted); cursor: pointer; transition: all .2s;
+}
+.hifz-ctrl-btn:active { border-color: var(--text-faint); color: var(--text-secondary); }
+.hifz-ctrl-primary { border-color: var(--btn-active-border); color: var(--btn-active-text); }
+.hifz-ctrl-primary:active { background: var(--btn-active-border); color: #fff; }
+.hifz-hint { font-size: 10px; color: var(--text-faint); text-align: center; line-height: 1.6; max-width: 300px; }
+
+/* ---- RECITATION VERIFICATION ---- */
+.recit-body { padding: 16px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.recit-nav { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.recit-select {
+  width: 100%; max-width: 400px; padding: 10px 14px; border-radius: 12px;
+  border: 1px solid var(--glass-border); background: var(--glass-bg);
+  color: var(--text); font-size: 14px; font-family: inherit;
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+.recit-verse-nav { display: flex; align-items: center; gap: 16px; }
+.recit-nav-btn {
+  background: none; border: 1px solid var(--btn-border); border-radius: 50%;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); cursor: pointer; transition: all .2s;
+}
+.recit-nav-btn:active { border-color: var(--text-faint); color: var(--text-secondary); }
+.recit-verse-label { font-size: 12px; color: var(--text-muted); min-width: 80px; text-align: center; letter-spacing: 0.3px; }
+.recit-verse-area {
+  font-family: "Amiri Quran", "Amiri", serif; font-size: 28px; line-height: 2.4;
+  text-align: center; color: var(--text); max-width: 600px; width: 100%;
+  word-spacing: 8px; min-height: 120px; padding: 12px 0;
+}
+.recit-word { display: inline; transition: color .3s; color: var(--text-muted); }
+.recit-word-active { color: var(--text); text-decoration: underline; text-underline-offset: 8px; text-decoration-color: var(--btn-border); }
+.recit-word-correct { color: #10b981; }
+.recit-word-error { color: #ef4444; text-decoration-line: underline; text-decoration-style: wavy; text-underline-offset: 6px; text-decoration-color: #ef4444; }
+.recit-word-skipped { color: #f59e0b; opacity: 0.7; }
+.recit-status { font-size: 12px; color: var(--text-faint); text-align: center; min-height: 18px; letter-spacing: 0.2px; }
+.recit-score-card {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: 16px; padding: 16px 24px; text-align: center; width: 100%; max-width: 260px;
+}
+.recit-score { font-size: 36px; font-weight: 200; color: var(--text); letter-spacing: -1px; }
+.recit-score-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.recit-controls { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.recit-mic-btn {
+  width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--btn-border);
+  background: none; color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .3s;
+}
+.recit-mic-btn.recording { border-color: #ef4444; color: #ef4444; animation: pulse-record 1.5s ease-in-out infinite; }
+@keyframes pulse-record {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35); }
+  50% { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+}
+.recit-mic-label { font-size: 11px; color: var(--text-faint); letter-spacing: 0.3px; }
+.recit-fallback { text-align: center; padding: 40px 20px; }
+.recit-fallback p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
 /* ---- HIDDEN ---- */
 .hidden { display: none !important; }
