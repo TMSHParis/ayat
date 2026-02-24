@@ -3572,15 +3572,18 @@
       });
     });
 
-    $("reset-btn").addEventListener("click", function () {
-      if (confirm("Tout réinitialiser ? Cette action est irréversible.")) {
-        state = defaultState();
-        goalDismissed = false;
-        saveState();
-        render();
-        $("settings-overlay").classList.add("hidden");
-      }
-    });
+    // reset-btn removed from settings HTML (kept for safety)
+    if ($("reset-btn")) {
+      $("reset-btn").addEventListener("click", function () {
+        if (confirm("Tout réinitialiser ? Cette action est irréversible.")) {
+          state = defaultState();
+          goalDismissed = false;
+          saveState();
+          render();
+          $("settings-overlay").classList.add("hidden");
+        }
+      });
+    }
 
     // ---- RECITER SELECT (SETTINGS) ----
     var settingsReciterSelect = $("settings-reciter-select");
