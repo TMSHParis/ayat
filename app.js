@@ -3525,10 +3525,6 @@
       e.preventDefault();
       _fromMenu(openHifzFromCurrent);
     });
-    $("menu-recitation").addEventListener("click", function (e) {
-      e.preventDefault();
-      _fromMenu(openRecitOverlay);
-    });
     $("menu-shazam").addEventListener("click", function (e) {
       e.preventDefault();
       _fromMenu(openShazamOverlay);
@@ -3603,19 +3599,6 @@
       renderHifz();
     });
 
-    // ---- RECITATION VERIFICATION ----
-    $("recit-close").addEventListener("click", closeRecitOverlay);
-    $("recit-mic-btn").addEventListener("click", recitToggleListening);
-    $("recit-prev-verse").addEventListener("click", recitGoPrevVerse);
-    $("recit-next-verse").addEventListener("click", recitGoNextVerse);
-    $("recit-surah-select").addEventListener("change", function () {
-      var wasListening = recitIsListening;
-      if (recitIsListening) recitStopListening();
-      recitSurahIdx = parseInt(this.value, 10);
-      recitAyahIdx = 0;
-      recitLoadVerse();
-      if (wasListening) setTimeout(recitStartListening, 300);
-    });
 
     // ---- SHAZAM ----
     $("shazam-close").addEventListener("click", closeShazamOverlay);

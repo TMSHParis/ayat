@@ -180,17 +180,6 @@
         <span class="menu-item-label">Mémorisation</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
-      <a href="#" class="menu-item" id="menu-recitation">
-        <span class="menu-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-            <path d="M19 10v2a7 7 0 01-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-        </span>
-        <span class="menu-item-label">Vérifier ma récitation</span>
-        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
       <a href="#" class="menu-item" id="menu-shazam">
         <span class="menu-item-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -738,69 +727,6 @@
   </div>
 </div>
 
-<!-- ====== RECITATION VERIFICATION OVERLAY ====== -->
-<div id="recit-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Vérifier ma récitation</h2>
-    <button class="close-btn" id="recit-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body recit-body">
-
-    <!-- Surah selector -->
-    <div class="recit-nav">
-      <div class="recit-verse-nav">
-        <button class="recit-nav-btn" id="recit-prev-verse" aria-label="Verset précédent">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="recit-verse-label" id="recit-verse-label">Verset 1</span>
-        <button class="recit-nav-btn" id="recit-next-verse" aria-label="Verset suivant">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-      <select id="recit-surah-select" class="recit-select"></select>
-    </div>
-
-    <!-- Scrollable content -->
-    <div class="recit-scroll-area">
-      <!-- Verse text with word-by-word highlighting -->
-      <div class="recit-verse-area" id="recit-verse-area" dir="rtl"></div>
-
-      <!-- Live ASR transcript -->
-      <div class="recit-transcript" id="recit-transcript" dir="rtl"></div>
-
-      <!-- Status indicator -->
-      <div class="recit-status" id="recit-status"></div>
-
-      <!-- Score card (shown after verse complete) -->
-      <div class="recit-score-card hidden" id="recit-score-card">
-        <div class="recit-score" id="recit-score">0%</div>
-        <div class="recit-score-detail" id="recit-score-detail"></div>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div class="recit-controls">
-      <button class="recit-mic-btn" id="recit-mic-btn">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
-        </svg>
-      </button>
-      <span class="recit-mic-label" id="recit-mic-label">Commencer la récitation</span>
-    </div>
-
-    <!-- Fallback for web -->
-    <div class="recit-fallback hidden" id="recit-fallback">
-      <p>La vérification de récitation en temps réel est disponible uniquement sur l'app iOS.</p>
-    </div>
-
-  </div>
-</div>
 
 <!-- ===== SHAZAM OVERLAY ===== -->
 <div id="shazam-overlay" class="overlay hidden">
