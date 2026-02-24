@@ -2293,6 +2293,7 @@
     listEl.innerHTML = "";
     var now = new Date();
     var nextPrayer = null;
+    var prevPrayer = null;
     var infoKeys = { Midnight: true, LastThird: true };
     prayers.forEach(function (key) {
       var time = prayerTimesCache[key];
@@ -2308,6 +2309,7 @@
       // Info lines don't participate in "next prayer" countdown
       var isNext = !isInfo && !isPast && !nextPrayer;
       if (isNext) nextPrayer = { key: key, date: pDate };
+      if (!isInfo && isPast) prevPrayer = { key: key, date: pDate };
       var item = document.createElement("div");
       item.className = "prayer-time-item" + (isNext ? " prayer-next" : "") + (isPast && !isInfo ? " prayer-past" : "") + (isInfo ? " prayer-info" : "");
       item.innerHTML = '<div class="prayer-time-name"><span class="prayer-name-fr">' + PRAYER_NAMES[key] +
@@ -2324,6 +2326,30 @@
     } else {
       $("prayer-next-name").textContent = "Fajr (demain)";
       $("prayer-countdown").textContent = "";
+    }
+    // ---- Progress bar between prev and next prayer ----
+    var fillEl = $("prayer-progress-fill");
+    var prevLbl = $("prayer-progress-prev");
+    var nextLbl = $("prayer-progress-next");
+    if (fillEl) {
+      if (nextPrayer && prevPrayer) {
+        var total = nextPrayer.date - prevPrayer.date;
+        var elapsed = now - prevPrayer.date;
+        var pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+        fillEl.style.width = pct + "%";
+        if (prevLbl) prevLbl.textContent = PRAYER_NAMES[prevPrayer.key];
+        if (nextLbl) nextLbl.textContent = PRAYER_NAMES[nextPrayer.key];
+      } else if (!prevPrayer && nextPrayer) {
+        // Before Fajr — no previous prayer today
+        fillEl.style.width = "0%";
+        if (prevLbl) prevLbl.textContent = "";
+        if (nextLbl) nextLbl.textContent = PRAYER_NAMES[nextPrayer.key];
+      } else {
+        // After Isha
+        fillEl.style.width = "100%";
+        if (prevLbl) prevLbl.textContent = prevPrayer ? PRAYER_NAMES[prevPrayer.key] : "";
+        if (nextLbl) nextLbl.textContent = "Fajr";
+      }
     }
   }
 
@@ -3299,6 +3325,12 @@
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
       $("surah-overlay").classList.remove("hidden");
+    });
+    $("menu-bookmarks").addEventListener("click", function (e) {
+      e.preventDefault();
+      $("menu-overlay").classList.add("hidden");
+      renderBookmarksList();
+      $("bookmarks-overlay").classList.remove("hidden");
     });
     $("menu-stats").addEventListener("click", function (e) {
       e.preventDefault();

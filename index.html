@@ -143,6 +143,15 @@
         <span class="menu-item-label">Parcourir les sourates</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
+      <a href="#" class="menu-item" id="menu-bookmarks">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Favoris</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
       <a href="#" class="menu-item" id="menu-stats">
         <span class="menu-item-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -669,6 +678,13 @@
         <div class="prayer-next-label">Prochaine prière</div>
         <div class="prayer-next-name" id="prayer-next-name">—</div>
         <div class="prayer-countdown" id="prayer-countdown">—</div>
+        <div class="prayer-progress-bar">
+          <div class="prayer-progress-fill" id="prayer-progress-fill"></div>
+        </div>
+        <div class="prayer-progress-labels">
+          <span id="prayer-progress-prev">—</span>
+          <span id="prayer-progress-next">—</span>
+        </div>
       </div>
       <div id="prayer-times-list" class="prayer-times-list"></div>
     </div>
