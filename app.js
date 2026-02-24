@@ -3993,6 +3993,9 @@
     $("shazam-retry").addEventListener("click", function () {
       shazamSetState("idle");
     });
+    $("shazam-new").addEventListener("click", function () {
+      shazamSetState("idle");
+    });
 
     // ---- BOTTOM BAR ICONS ----
     $("qibla-close").addEventListener("click", closeQiblaOverlay);
