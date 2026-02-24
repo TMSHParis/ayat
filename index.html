@@ -180,6 +180,16 @@
         <span class="menu-item-label">Mémorisation</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
+      <a href="#" class="menu-item" id="menu-listen">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 18v-6a9 9 0 0118 0v6"/>
+            <path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Écouter le Coran</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
       <a href="#" class="menu-item" id="menu-shazam">
         <span class="menu-item-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -727,6 +737,51 @@
   </div>
 </div>
 
+
+<!-- ===== LISTEN OVERLAY ===== -->
+<div id="listen-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Écouter le Coran</h2>
+    <button class="close-btn" id="listen-close" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="overlay-body listen-body">
+
+    <!-- Reciter strip (horizontal scroll) -->
+    <div class="listen-reciter-strip" id="listen-reciter-strip"></div>
+
+    <!-- Surah list (scrollable) -->
+    <div class="listen-surah-list" id="listen-surah-list"></div>
+
+    <!-- Fixed bottom player bar -->
+    <div class="listen-player-bar">
+      <div class="listen-player-info">
+        <div class="listen-player-surah-ar" id="listen-player-surah-ar">—</div>
+        <div class="listen-player-meta" id="listen-player-meta">Choisir une sourate</div>
+      </div>
+      <div class="listen-player-progress" id="listen-player-progress">
+        <div class="listen-player-progress-fill" id="listen-player-progress-fill"></div>
+      </div>
+      <div class="listen-player-controls">
+        <button class="listen-ctrl-btn" id="listen-prev-btn" aria-label="Précédente">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="6" x2="9" y2="18"/></svg>
+        </button>
+        <button class="listen-ctrl-btn listen-ctrl-play" id="listen-play-btn" aria-label="Lecture">
+          <svg id="listen-play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+        <button class="listen-ctrl-btn" id="listen-next-btn" aria-label="Suivante">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/><line x1="15" y1="6" x2="15" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ===== SHAZAM OVERLAY ===== -->
 <div id="shazam-overlay" class="overlay hidden">

@@ -1,9 +1,10 @@
 // Vercel serverless proxy — forwards audio to HuggingFace Inference API
 // The HF_TOKEN is stored as an environment variable on Vercel (never exposed to the client)
+// Body format: JSON { audio: "<base64-encoded WAV>" }  (base64 required for Capacitor iOS compatibility)
 
 export const config = {
   api: {
-    bodyParser: false, // raw binary audio — skip Vercel's body parser
+    bodyParser: false, // we parse manually to handle large base64 payloads
   },
 };
 
@@ -21,18 +22,30 @@ export default async function handler(req, res) {
   const token = process.env.HF_TOKEN;
   if (!token) return res.status(500).json({ error: "HF_TOKEN not configured on server" });
 
-  // Collect raw body (WAV audio blob)
+  // Collect raw body
   const chunks = [];
   await new Promise((resolve, reject) => {
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", resolve);
     req.on("error", reject);
   });
-  const body = Buffer.concat(chunks);
+  const rawBody = Buffer.concat(chunks);
 
-  if (!body.length) return res.status(400).json({ error: "Empty audio body" });
+  if (!rawBody.length) return res.status(400).json({ error: "Empty body" });
 
-  // Forward to HuggingFace
+  // Decode base64 audio from JSON body { audio: "<base64>" }
+  let audioBuffer;
+  try {
+    const json = JSON.parse(rawBody.toString("utf8"));
+    if (!json.audio) return res.status(400).json({ error: "Missing audio field in JSON body" });
+    audioBuffer = Buffer.from(json.audio, "base64");
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid JSON body: " + e.message });
+  }
+
+  if (!audioBuffer.length) return res.status(400).json({ error: "Empty audio after base64 decode" });
+
+  // Forward WAV binary to HuggingFace Inference API
   try {
     let hfResp = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
       method: "POST",
@@ -40,7 +53,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "audio/wav",
       },
-      body,
+      body: audioBuffer,
     });
 
     // If model is loading, wait and retry once
@@ -54,7 +67,7 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "audio/wav",
         },
-        body,
+        body: audioBuffer,
       });
     }
 
