@@ -8,7 +8,10 @@ export const config = {
   },
 };
 
-const HF_MODEL = "tarteel-ai/whisper-base-ar-quran";
+// Switched to openai/whisper-large-v3 (multilingual, supports Arabic)
+// Old tarteel-ai/whisper-base-ar-quran is no longer available on HF serverless inference
+const HF_MODEL = "openai/whisper-large-v3";
+const HF_BASE  = "https://router.huggingface.co/hf-inference/models";
 
 export default async function handler(req, res) {
   // CORS — needed for Capacitor iOS app calling from a different origin
@@ -45,9 +48,9 @@ export default async function handler(req, res) {
 
   if (!audioBuffer.length) return res.status(400).json({ error: "Empty audio after base64 decode" });
 
-  // Forward WAV binary to HuggingFace Inference API
+  // Forward WAV binary to HuggingFace Inference API (new router endpoint)
   try {
-    let hfResp = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+    let hfResp = await fetch(`${HF_BASE}/${HF_MODEL}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -61,7 +64,7 @@ export default async function handler(req, res) {
       const data = await hfResp.json();
       const wait = Math.min((data.estimated_time || 20) * 1000, 30000);
       await new Promise((r) => setTimeout(r, wait));
-      hfResp = await fetch(`https://api-inference.huggingface.co/models/${HF_MODEL}`, {
+      hfResp = await fetch(`${HF_BASE}/${HF_MODEL}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,6 +72,13 @@ export default async function handler(req, res) {
         },
         body: audioBuffer,
       });
+    }
+
+    // Handle non-JSON responses (e.g. HTML error pages)
+    const contentType = hfResp.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      const text = await hfResp.text();
+      return res.status(hfResp.status).json({ error: "HF returned non-JSON: " + text.substring(0, 200) });
     }
 
     const result = await hfResp.json();
