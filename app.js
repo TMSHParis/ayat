@@ -3563,11 +3563,14 @@
     }
 
     // ---- STATS (now inside settings panel) ----
-    $("stats-bookmarks-link").addEventListener("click", function (e) {
-      e.preventDefault();
-      renderBookmarksList();
-      $("bookmarks-overlay").classList.remove("hidden");
-    });
+    // stats-bookmarks-link removed from HTML (bookmarks now inline in settings)
+    if ($("stats-bookmarks-link")) {
+      $("stats-bookmarks-link").addEventListener("click", function (e) {
+        e.preventDefault();
+        renderBookmarksList();
+        $("bookmarks-overlay").classList.remove("hidden");
+      });
+    }
 
     // ---- BOOKMARKS ----
     $("bookmarks-close").addEventListener("click", function () {
