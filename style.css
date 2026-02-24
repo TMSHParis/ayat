@@ -2324,14 +2324,6 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
   padding: 20px 16px 24px; margin-bottom: 16px;
   position: relative;
 }
-.shazam-ornament {
-  font-family: "Amiri Quran", "Amiri", serif;
-  font-size: 28px; color: var(--text-faint);
-  line-height: 1; display: block; text-align: center;
-  user-select: none;
-}
-.shazam-ornament:first-child { margin-bottom: 4px; }
-.shazam-ornament:last-child { margin-top: 4px; }
 .shazam-result-text {
   font-size: 26px; line-height: 2.1; color: var(--text);
   font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Traditional Arabic", serif;

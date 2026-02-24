@@ -3325,6 +3325,7 @@
       status.textContent = "";
     } else if (state === "result") {
       btnWrap.classList.add("hidden");
+      scrollBg.classList.remove("hidden");
       result.classList.remove("hidden");
       status.textContent = "";
     } else if (state === "error") {
@@ -3650,7 +3651,7 @@
     $("shazam-result-num").textContent = "Sourate " + surahNum;
     $("shazam-result-verse-num").textContent = "Verset " + verseNum;
     $("shazam-result-pct").textContent = pct + "%";
-    $("shazam-result-text").textContent = verseText;
+    $("shazam-result-text").textContent = "\uFD3F " + verseText + " \uFD3E";
 
     // Update nav button visibility
     $("shazam-prev").style.visibility = shazamResultAyah > 0 ? "visible" : "hidden";
@@ -3671,7 +3672,7 @@
 
     setTimeout(function () {
       verseEl.textContent = "Verset " + (newAyah + 1);
-      textEl.textContent = surah.ayahs[newAyah];
+      textEl.textContent = "\uFD3F " + surah.ayahs[newAyah] + " \uFD3E";
       textEl.style.transform = dir > 0 ? "translateX(12px)" : "translateX(-12px)";
 
       // Trigger reflow then animate in
