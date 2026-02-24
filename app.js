@@ -1397,6 +1397,7 @@
   var ALIGN_THRESHOLD = 10; // degrees
   var qiblaBearing = null;
   var qiblaCurrentRot = 0; // tracks accumulated rotation for smooth wraparound
+  var qiblaCompassRot = 0; // tracks compass face rotation for smooth wraparound
   var qiblaHasAbsolute = false; // prefer absolute orientation when available
   var qiblaOrientListeners = [];
   var qiblaIsAligned = false;
@@ -1427,6 +1428,15 @@
     var needle = $("qibla-needle");
     if (!needle) return;
     needle.style.transform = "translateX(-50%) rotate(" + qiblaCurrentRot + "deg)";
+  }
+
+  // Rotate compass face so N/E/S/W reflect real cardinal directions
+  function setCompassRotation(targetDeg) {
+    var diff = ((targetDeg - qiblaCompassRot) % 360 + 540) % 360 - 180;
+    qiblaCompassRot += diff;
+    var compass = $("qibla-compass");
+    if (!compass) return;
+    compass.style.transform = "rotate(" + qiblaCompassRot + "deg)";
   }
 
   function updateAlignedState(rotationDeg) {
@@ -1489,12 +1499,20 @@
 
     // Switch to live mode (no CSS transition delay)
     var needle = $("qibla-needle");
+    var compass = $("qibla-compass");
     if (needle && !needle.classList.contains("live")) {
       needle.classList.add("live");
+      if (compass) compass.classList.add("live");
+      // In live mode, needle stays fixed at qiblaBearing relative to compass face
+      // (compass face rotates, so visually the needle shows correct direction)
+      setNeedleRotation(qiblaBearing);
     }
 
+    // Rotate compass face so N always points to geographic north
+    setCompassRotation(-heading);
+
+    // Check alignment (phone pointing toward Ka'ba)
     var rotation = qiblaBearing - heading;
-    setNeedleRotation(rotation);
     updateAlignedState(rotation);
 
     // Show live badge once
@@ -1534,8 +1552,14 @@
     if (compass) compass.classList.remove("aligned");
     qiblaBearing = null;
     qiblaCurrentRot = 0;
+    qiblaCompassRot = 0;
     qiblaIsAligned = false;
     stopQiblaOrientation();
+    var compassEl = $("qibla-compass");
+    if (compassEl) {
+      compassEl.style.transform = "";
+      compassEl.classList.remove("live");
+    }
 
     if (!navigator.geolocation) {
       $("qibla-loading").classList.add("hidden");
@@ -1580,7 +1604,13 @@
     stopQiblaOrientation();
     qiblaBearing = null;
     qiblaCurrentRot = 0;
+    qiblaCompassRot = 0;
     qiblaIsAligned = false;
+    var compassEl = $("qibla-compass");
+    if (compassEl) {
+      compassEl.style.transform = "";
+      compassEl.classList.remove("live");
+    }
   }
 
   // ---- AUDIO PLAYER ----
