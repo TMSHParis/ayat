@@ -712,18 +712,6 @@
     </button>
   </div>
   <div class="overlay-body hifz-body">
-    <div class="hifz-nav">
-      <select id="hifz-surah-select" class="recit-select"></select>
-      <div class="hifz-verse-nav">
-        <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="recit-verse-label" id="hifz-ref"></span>
-        <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-      </div>
-    </div>
     <div class="hifz-scroll-area">
       <div class="hifz-words" id="hifz-words" dir="rtl"></div>
     </div>
@@ -734,6 +722,18 @@
         <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
       </div>
       <p class="hifz-hint">Appuyez sur un mot caché pour le révéler.</p>
+      <div class="hifz-nav">
+        <div class="hifz-verse-nav">
+          <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="recit-verse-label" id="hifz-ref"></span>
+          <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <select id="hifz-surah-select" class="recit-select"></select>
+      </div>
     </div>
   </div>
 </div>

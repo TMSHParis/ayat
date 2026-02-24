@@ -357,6 +357,16 @@
     else render();
   }
 
+  // ---- OVERLAY NAVIGATION STACK ----
+  var _overlayHistory = [];
+  function _closeBack(id, cleanup) {
+    if (cleanup) cleanup();
+    $(id).classList.add("hidden");
+    if (_overlayHistory.length > 0) {
+      $(_overlayHistory.pop()).classList.remove("hidden");
+    }
+  }
+
   // ---- FREE READING (ephemeral, not persisted) ----
   var freeReadMode = false;
   var freeReadSurahIdx = 0;
@@ -2359,8 +2369,9 @@
   }
 
   function closePrayerOverlay() {
-    $("prayer-overlay").classList.add("hidden");
-    if (prayerCountdownInterval) { clearInterval(prayerCountdownInterval); prayerCountdownInterval = null; }
+    _closeBack("prayer-overlay", function() {
+      if (prayerCountdownInterval) { clearInterval(prayerCountdownInterval); prayerCountdownInterval = null; }
+    });
   }
 
   function renderPrayerMethodButtons() {
@@ -2396,6 +2407,53 @@
       var info2 = $("prayer-mosque-row");
       if (info2) info2.classList.add("hidden");
     }
+  }
+
+  // ---- HELPERS: coloring in hifz / recit ----
+  // Build word char offsets from raw text (whitespace-separated)
+  function _buildWordOffsets(fullText) {
+    var words = []; var offsets = [];
+    var i = 0; var n = fullText.length;
+    while (i < n) {
+      while (i < n && /\s/.test(fullText[i])) i++;
+      if (i >= n) break;
+      var start = i;
+      while (i < n && !/\s/.test(fullText[i])) i++;
+      words.push(fullText.slice(start, i));
+      offsets.push(start);
+    }
+    return { words: words, offsets: offsets };
+  }
+
+  // Fill a span with tajwid-colored sub-spans for chars [charOffset, charOffset+wordLen)
+  function _applyColorSegmentsToSpan(span, wordText, allSegments, charOffset) {
+    var wordEnd = charOffset + wordText.length;
+    var pos = 0; var added = false;
+    allSegments.forEach(function (seg) {
+      var segStart = pos; var segEnd = pos + seg.chars.length;
+      pos = segEnd;
+      if (segEnd <= charOffset || segStart >= wordEnd) return;
+      var oStart = Math.max(segStart, charOffset);
+      var oEnd   = Math.min(segEnd, wordEnd);
+      var chars  = seg.chars.substring(oStart - segStart, oEnd - segStart);
+      if (!chars) return;
+      var s = document.createElement("span");
+      s.textContent = chars;
+      if (seg.rule) s.className = "tajwid-" + seg.rule;
+      span.appendChild(s); added = true;
+    });
+    if (!added) span.textContent = wordText;
+  }
+
+  // Get all segments for a verse (or null if colors are off)
+  function _getHifzColorSegments(surahNum, ayahIdx, fullText) {
+    var useColors = (state.readingMode === "tajwid") ||
+                   (state.readingMode === "minimal" && state.minimalColors);
+    if (!useColors) return null;
+    var ayahNumber = ayahIdx + 1;
+    var key = surahNum + ":" + ayahNumber;
+    var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
+    return getSegmentsForAyah(key, fullText, overlays);
   }
 
   // ---- HIFZ (MEMORIZATION) ----
@@ -2476,6 +2534,11 @@
       }
     }
 
+    // Compute color segments for visible words (respects reading mode settings)
+    var fullText = surah.ayahs[hifzAyahIdx];
+    var allSegments = _getHifzColorSegments(surah.surahNumber, hifzAyahIdx, fullText);
+    var wordOffsets = _buildWordOffsets(fullText).offsets;
+
     hifzWords.forEach(function (word, idx) {
       var span = document.createElement("span");
       var isHidden = hifzHiddenSet.has(idx);
@@ -2487,7 +2550,11 @@
         });
       } else {
         span.className = "hifz-word";
-        span.textContent = word;
+        if (allSegments && wordOffsets[idx] !== undefined) {
+          _applyColorSegmentsToSpan(span, word, allSegments, wordOffsets[idx]);
+        } else {
+          span.textContent = word;
+        }
       }
       container.appendChild(span);
       container.appendChild(document.createTextNode(" "));
@@ -2523,8 +2590,7 @@
     renderHifz();
   }
   function closeHifzOverlay() {
-    hifzMode = false;
-    $("hifz-overlay").classList.add("hidden");
+    _closeBack("hifz-overlay", function() { hifzMode = false; });
   }
 
   // ---- RECITATION VERIFICATION (REAL-TIME) ----
@@ -2625,16 +2691,27 @@
   function recitRenderWords() {
     var container = $("recit-verse-area");
     container.innerHTML = "";
+    // Color segments from reading mode settings (for pending words)
+    var surah = surahs[recitSurahIdx];
+    var fullText = surah.ayahs[recitAyahIdx];
+    var allSegments = _getHifzColorSegments(surah.surahNumber, recitAyahIdx, fullText);
+    var wordOffsets = _buildWordOffsets(fullText).offsets;
+
     recitWords.forEach(function (word, idx) {
       var span = document.createElement("span");
       span.id = "recit-w-" + idx;
-      var state = recitWordStates[idx];
-      span.className = "recit-word" +
-        (state === "correct" ? " recit-word-correct" :
-         state === "error" ? " recit-word-error" :
-         state === "skipped" ? " recit-word-skipped" :
-         idx === recitMatchedCount ? " recit-word-active" : "");
-      span.textContent = word;
+      var wState = recitWordStates[idx];
+      var stateClass = wState === "correct" ? " recit-word-correct" :
+                       wState === "error"   ? " recit-word-error" :
+                       wState === "skipped" ? " recit-word-skipped" :
+                       idx === recitMatchedCount ? " recit-word-active" : "";
+      span.className = "recit-word" + stateClass;
+      // Apply color segments only to pending/active words (not already matched)
+      if (!stateClass && allSegments && wordOffsets[idx] !== undefined) {
+        _applyColorSegmentsToSpan(span, word, allSegments, wordOffsets[idx]);
+      } else {
+        span.textContent = word;
+      }
       container.appendChild(span);
       if (idx < recitWords.length - 1) container.appendChild(document.createTextNode(" "));
     });
@@ -2832,8 +2909,9 @@
   }
 
   function closeRecitOverlay() {
-    if (recitIsListening) recitStopListening();
-    $("recit-overlay").classList.add("hidden");
+    _closeBack("recit-overlay", function() {
+      if (recitIsListening) recitStopListening();
+    });
   }
 
   // ===========================================================
@@ -3315,74 +3393,60 @@
     $("menu-close").addEventListener("click", function () {
       $("menu-overlay").classList.add("hidden");
     });
+    // Helper: open an overlay from the menu (pushes menu to history for back-navigation)
+    function _fromMenu(fn) {
+      $("menu-overlay").classList.add("hidden");
+      _overlayHistory.push("menu-overlay");
+      fn();
+    }
     $("menu-settings").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      render(); updateReminderUI();
-      $("settings-overlay").classList.remove("hidden");
+      _fromMenu(function() { render(); updateReminderUI(); $("settings-overlay").classList.remove("hidden"); });
     });
     $("menu-browse").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      $("surah-overlay").classList.remove("hidden");
+      _fromMenu(function() { $("surah-overlay").classList.remove("hidden"); });
     });
     $("menu-bookmarks").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      renderBookmarksList();
-      $("bookmarks-overlay").classList.remove("hidden");
+      _fromMenu(function() { renderBookmarksList(); $("bookmarks-overlay").classList.remove("hidden"); });
     });
     $("menu-stats").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      renderStats();
-      $("stats-overlay").classList.remove("hidden");
-    });
-    $("stats-close").addEventListener("click", function () {
-      $("stats-overlay").classList.add("hidden");
+      _fromMenu(function() { renderStats(); $("stats-overlay").classList.remove("hidden"); });
     });
     $("menu-about").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      $("about-overlay").classList.remove("hidden");
-    });
-    $("about-close").addEventListener("click", function () {
-      $("about-overlay").classList.add("hidden");
+      _fromMenu(function() { $("about-overlay").classList.remove("hidden"); });
     });
     $("menu-help").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      $("help-overlay").classList.remove("hidden");
+      _fromMenu(function() { $("help-overlay").classList.remove("hidden"); });
     });
-    $("help-close").addEventListener("click", function () {
-      $("help-overlay").classList.add("hidden");
-    });
-    // New menu items
     $("menu-prayer").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      openPrayerOverlay();
+      _fromMenu(openPrayerOverlay);
     });
     $("menu-hifz").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      openHifzFromCurrent();
+      _fromMenu(openHifzFromCurrent);
     });
     $("menu-recitation").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      openRecitOverlay();
+      _fromMenu(openRecitOverlay);
     });
     $("menu-shazam").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      openShazamOverlay();
+      _fromMenu(openShazamOverlay);
     });
     $("menu-qibla").addEventListener("click", function (e) {
       e.preventDefault();
-      $("menu-overlay").classList.add("hidden");
-      openQiblaOverlay();
+      _fromMenu(openQiblaOverlay);
     });
+    // Close buttons → retour au menu (ou écran précédent)
+    $("stats-close").addEventListener("click", function () { _closeBack("stats-overlay"); });
+    $("about-close").addEventListener("click", function () { _closeBack("about-overlay"); });
+    $("help-close").addEventListener("click", function () { _closeBack("help-overlay"); });
 
     // ---- BACK BUTTON (free reading) ----
     $("back-btn").addEventListener("click", function () {
@@ -3500,15 +3564,8 @@
     initDockAutoHide();
 
     // ---- OVERLAY CLOSE BUTTONS ----
-    function closeOverlay(overlayId) {
-      $(overlayId).classList.add("hidden");
-    }
-    // openOverlayFromMenu kept for surah overlay (opened from search, stats-link, etc.)
-    function openOverlayFromMenu(overlayId) {
-      $(overlayId).classList.remove("hidden");
-    }
     $("settings-close").addEventListener("click", function () {
-      closeOverlay("settings-overlay");
+      _closeBack("settings-overlay");
     });
 
     document.querySelectorAll("#goal-buttons .setting-btn").forEach(function (btn) {
@@ -3616,7 +3673,7 @@
 
     // ---- BOOKMARKS ----
     $("bookmarks-close").addEventListener("click", function () {
-      $("bookmarks-overlay").classList.add("hidden");
+      _closeBack("bookmarks-overlay");
     });
 
     // ---- FOLDER PICKER ----
@@ -3819,7 +3876,7 @@
       $("surah-overlay").classList.remove("hidden");
     });
     $("surah-close").addEventListener("click", function () {
-      closeOverlay("surah-overlay");
+      _closeBack("surah-overlay");
     });
 
     // ---- QURAN SEARCH ----
@@ -3925,10 +3982,10 @@
     }
 
     $("search-close").addEventListener("click", function () {
-      closeOverlay("search-overlay");
+      $("search-overlay").classList.add("hidden");
     });
     $("search-browse-btn").addEventListener("click", function () {
-      closeOverlay("search-overlay");
+      $("search-overlay").classList.add("hidden");
       $("surah-overlay").classList.remove("hidden");
     });
     $("search-input").addEventListener("input", function () {
