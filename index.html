@@ -862,23 +862,31 @@
 
     <!-- Result card -->
     <div class="shazam-result hidden" id="shazam-result">
-      <div class="shazam-result-badge">
-        <span class="shazam-result-num" id="shazam-result-num"></span>
-        <span class="shazam-result-pct" id="shazam-result-pct"></span>
-      </div>
+      <!-- Surah header -->
       <p class="shazam-result-surah-fr" id="shazam-result-surah-fr"></p>
       <p class="shazam-result-surah-ar" id="shazam-result-surah-ar"></p>
+      <div class="shazam-result-meta">
+        <span class="shazam-result-num" id="shazam-result-num"></span>
+        <span class="shazam-result-dot">·</span>
+        <span class="shazam-result-pct" id="shazam-result-pct"></span>
+      </div>
+      <!-- Verse navigation -->
       <div class="shazam-result-verse-row">
         <button class="shazam-nav-btn" id="shazam-prev" aria-label="Verset précédent">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <p class="shazam-result-verse-num" id="shazam-result-verse-num"></p>
         <button class="shazam-nav-btn" id="shazam-next" aria-label="Verset suivant">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
-      <div class="shazam-result-divider"></div>
-      <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
+      <!-- Verse text (hero) -->
+      <div class="shazam-result-verse-wrap">
+        <span class="shazam-ornament">﴿</span>
+        <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
+        <span class="shazam-ornament">﴾</span>
+      </div>
+      <!-- Action -->
       <button class="shazam-goto" id="shazam-goto">
         <span>Aller à ce verset</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>

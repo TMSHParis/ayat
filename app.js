@@ -3298,6 +3298,7 @@
     scrollBg.classList.add("hidden");
     timer.classList.add("hidden");
     found.classList.add("hidden");
+    found.classList.remove("playing");
     result.classList.add("hidden");
     error.classList.add("hidden");
 
@@ -3318,6 +3319,9 @@
     } else if (state === "found") {
       btnWrap.classList.add("hidden");
       found.classList.remove("hidden");
+      found.classList.remove("playing");
+      void found.offsetWidth; // force reflow to restart animations
+      found.classList.add("playing");
       status.textContent = "";
     } else if (state === "result") {
       btnWrap.classList.add("hidden");
