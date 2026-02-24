@@ -140,25 +140,7 @@
             <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
           </svg>
         </span>
-        <span class="menu-item-label">Parcourir les sourates</span>
-        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-      <a href="#" class="menu-item" id="menu-bookmarks">
-        <span class="menu-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-          </svg>
-        </span>
-        <span class="menu-item-label">Favoris</span>
-        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </a>
-      <a href="#" class="menu-item" id="menu-stats">
-        <span class="menu-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-          </svg>
-        </span>
-        <span class="menu-item-label">Statistiques</span>
+        <span class="menu-item-label">Sourates</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
       <a href="#" class="menu-item" id="menu-prayer">
@@ -196,7 +178,7 @@
             <path d="M12 1a3 3 0 00-3 3v4a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><circle cx="12" cy="21" r="2"/><path d="M12 13v6"/>
           </svg>
         </span>
-        <span class="menu-item-label">Identifier un verset</span>
+        <span class="menu-item-label">Ayati</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
       <a href="#" class="menu-item" id="menu-qibla">
@@ -206,7 +188,25 @@
             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
           </svg>
         </span>
-        <span class="menu-item-label">Direction de la Qibla</span>
+        <span class="menu-item-label">Qibla</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-bookmarks">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Favoris</span>
+        <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#" class="menu-item" id="menu-stats">
+        <span class="menu-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <span class="menu-item-label">Statistiques</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
       <a href="#" class="menu-item" id="menu-about">
@@ -714,27 +714,33 @@
     </button>
   </div>
   <div class="overlay-body hifz-body">
-    <div class="hifz-scroll-area">
+    <!-- Choix de sourate en haut -->
+    <div class="hifz-top">
+      <select id="hifz-surah-select" class="hifz-surah-select"></select>
+    </div>
+
+    <!-- Verset centré -->
+    <div class="hifz-center">
       <div class="hifz-words" id="hifz-words" dir="rtl"></div>
     </div>
-    <div class="hifz-footer">
-      <div class="hifz-controls">
-        <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
-        <div class="hifz-level" id="hifz-level">0 / 4</div>
-        <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
-      </div>
-      <p class="hifz-hint">Appuyez sur un mot caché pour le révéler.</p>
-      <div class="hifz-nav">
-        <div class="hifz-verse-nav">
-          <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <span class="recit-verse-label" id="hifz-ref"></span>
-          <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-        <select id="hifz-surah-select" class="recit-select"></select>
+
+    <!-- Contrôles +/- sous le verset -->
+    <div class="hifz-controls">
+      <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
+      <div class="hifz-level" id="hifz-level">0 / 4</div>
+      <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
+    </div>
+
+    <!-- Navigation en bas -->
+    <div class="hifz-bottom">
+      <div class="hifz-verse-nav">
+        <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="hifz-ref" id="hifz-ref"></span>
+        <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -797,7 +803,7 @@
 <!-- ===== SHAZAM OVERLAY ===== -->
 <div id="shazam-overlay" class="overlay hidden">
   <div class="overlay-header">
-    <h2>Identifier un verset</h2>
+    <h2>Ayati</h2>
     <button class="close-btn" id="shazam-close" aria-label="Fermer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>

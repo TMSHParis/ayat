@@ -2591,15 +2591,29 @@
         span.className = "hifz-word hifz-hidden";
         span.textContent = word;
         span.addEventListener("click", function () {
-          span.className = "hifz-word hifz-revealed";
+          if (span.classList.contains("hifz-hidden")) {
+            // Reveal hidden word
+            span.classList.remove("hifz-hidden");
+            span.classList.add("hifz-revealed");
+          } else {
+            // Toggle back to hidden
+            span.classList.remove("hifz-revealed");
+            span.classList.add("hifz-hidden");
+          }
         });
       } else {
         span.className = "hifz-word";
-        if (allSegments && wordOffsets[idx] !== undefined) {
-          _applyColorSegmentsToSpan(span, word, allSegments, wordOffsets[idx]);
-        } else {
-          span.textContent = word;
-        }
+        span.textContent = word;
+        // Visible words can also be manually hidden by tapping
+        span.addEventListener("click", function () {
+          if (span.classList.contains("hifz-hidden")) {
+            span.classList.remove("hifz-hidden");
+            span.classList.add("hifz-revealed");
+          } else {
+            span.classList.remove("hifz-revealed");
+            span.classList.add("hifz-hidden");
+          }
+        });
       }
       container.appendChild(span);
       container.appendChild(document.createTextNode(" "));

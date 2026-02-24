@@ -1895,10 +1895,26 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 .prayer-mosque-change:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
 
 /* ---- HIFZ (MEMORIZATION) ---- */
-.hifz-body { padding: 0; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-.hifz-scroll-area {
+.hifz-body {
+  padding: 0; display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+.hifz-top {
+  flex-shrink: 0; padding: 16px 20px 8px;
+  display: flex; justify-content: center;
+}
+.hifz-surah-select {
+  font-size: 14px; color: var(--text); background: var(--track);
+  border: 1px solid var(--btn-border); border-radius: 12px;
+  padding: 10px 16px; width: 100%; max-width: 400px;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  cursor: pointer;
+}
+.hifz-center {
   flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 24px 20px; display: flex; justify-content: center;
+  padding: 20px 20px 12px;
+  display: flex; align-items: center; justify-content: center;
 }
 .hifz-words {
   font-family: "Amiri Quran", "Amiri", serif; font-size: 28px; line-height: 2.2;
@@ -1907,26 +1923,19 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 .hifz-words.size-S { font-size: 22px; line-height: 2.0; }
 .hifz-words.size-M { font-size: 28px; line-height: 2.2; }
 .hifz-words.size-L { font-size: 36px; line-height: 2.4; }
-.hifz-word { display: inline; transition: color .3s; }
+.hifz-word { display: inline; transition: color .3s; cursor: pointer; }
 .hifz-hidden {
   display: inline-block; filter: blur(7px); -webkit-filter: blur(7px);
-  cursor: pointer; user-select: none; transition: filter .3s, -webkit-filter .3s;
+  user-select: none; transition: filter .3s, -webkit-filter .3s, color .3s;
 }
 .hifz-revealed { color: #10b981; filter: none; -webkit-filter: none; }
-.hifz-footer {
-  border-top: 1px solid var(--border); padding: 12px 16px 20px;
-  flex-shrink: 0; background: var(--bg); display: flex; flex-direction: column;
-  align-items: center; gap: 10px;
+.hifz-controls {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  gap: 14px; padding: 8px 16px 12px;
 }
-.hifz-nav {
-  width: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center;
-  padding-top: 8px; border-top: 1px solid var(--border);
-}
-.hifz-verse-nav { display: flex; align-items: center; gap: 16px; }
-.hifz-controls { display: flex; align-items: center; gap: 14px; }
 .hifz-level { font-size: 14px; color: var(--text-muted); min-width: 40px; text-align: center; }
 .hifz-ctrl-btn {
-  font-size: 20px; width: 48px; height: 48px; border-radius: 50%;
+  font-size: 20px; width: 44px; height: 44px; border-radius: 50%;
   border: 1px solid var(--btn-border); background: none;
   color: var(--text-muted); cursor: pointer; transition: all .2s;
   display: flex; align-items: center; justify-content: center;
@@ -1934,7 +1943,13 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 .hifz-ctrl-btn:active { border-color: var(--text-faint); color: var(--text-secondary); }
 .hifz-ctrl-primary { border-color: var(--btn-active-border); color: var(--btn-active-text); }
 .hifz-ctrl-primary:active { background: var(--btn-active-border); color: #fff; }
-.hifz-hint { font-size: 10px; color: var(--text-faint); text-align: center; line-height: 1.6; max-width: 300px; margin: 0; }
+.hifz-bottom {
+  flex-shrink: 0; border-top: 1px solid var(--border);
+  padding: 12px 16px 20px; background: var(--bg);
+  display: flex; justify-content: center;
+}
+.hifz-verse-nav { display: flex; align-items: center; gap: 16px; }
+.hifz-ref { font-size: 14px; color: var(--text-muted); text-align: center; min-width: 140px; }
 
 /* ---- RECITATION VERIFICATION ---- */
 .recit-body { padding: 0; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
