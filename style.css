@@ -37,6 +37,7 @@
   --btn-border: #e0e0e0;
   --btn-active-border: #222222;
   --btn-active-text: #222222;
+  --accent: #10b981;
   /* Liquid Glass tokens */
   --glass-bg:        rgba(252, 252, 252, 0.68);
   --glass-border:    rgba(255, 255, 255, 0.60);
@@ -46,6 +47,7 @@
 }
 
 body.sepia {
+  --accent: #0d9668;
   --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(251,191,36,.07) 0%, transparent 65%),
         radial-gradient(ellipse 70% 45% at 85% 100%, rgba(180,120,50,.06) 0%, transparent 65%),
         #fdf8f2;
@@ -68,6 +70,7 @@ body.sepia {
 }
 
 body.dark {
+  --accent: #34d399;
   --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(245,158,11,.06) 0%, transparent 65%),
         radial-gradient(ellipse 70% 45% at 85% 100%, rgba(249,115,22,.04) 0%, transparent 65%),
         #101010;
