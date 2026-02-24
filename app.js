@@ -4431,6 +4431,14 @@
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js").catch(function () {});
+
+      // Auto-reload when a new service worker takes over (ensures users always get latest version)
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
     }
   }
 

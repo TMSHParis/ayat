@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v42";
+const CACHE_NAME = "qurani-v43";
 
 const PRECACHE = [
   "./",
@@ -28,12 +28,27 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-        )
+      .then((keys) => {
+        const oldKeys = keys.filter((k) => k !== CACHE_NAME);
+        const hadOldCache = oldKeys.length > 0;
+        return Promise.all(oldKeys.map((k) => caches.delete(k))).then(
+          () => hadOldCache
+        );
+      })
+      .then((hadOldCache) =>
+        self.clients.claim().then(() => {
+          if (hadOldCache) {
+            // Force reload all open tabs so they pick up the new version
+            return self.clients
+              .matchAll({ type: "window" })
+              .then((clients) => {
+                clients.forEach((client) => {
+                  client.navigate(client.url).catch(() => {});
+                });
+              });
+          }
+        })
       )
-      .then(() => self.clients.claim())
   );
 });
 
