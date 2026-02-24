@@ -1084,30 +1084,36 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
+  padding: 8px 0;
 }
 .stat-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 14px;
-  padding: 16px 12px;
+  border-radius: 18px;
+  padding: 28px 12px 22px;
   text-align: center;
 }
 .stat-value {
-  font-size: 22px;
+  font-size: 32px;
   font-weight: 200;
   color: var(--text-secondary);
-  margin-bottom: 4px;
-  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+  line-height: 1;
 }
 .stat-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-faint);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
+/* about overlay */
+.about-body p { margin: 0 0 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.about-body .sub-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+.about-body .highlight { color: var(--text-primary); font-weight: 500; }
+.about-body .divider { border: none; border-top: 1px solid var(--glass-border); margin: 20px 0; }
 .stats-links {
   margin-top: 24px;
   text-align: center;

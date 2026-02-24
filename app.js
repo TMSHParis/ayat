@@ -3292,7 +3292,7 @@
     $("menu-settings").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render(); updateReminderUI(); renderStats(); renderBookmarksList();
+      render(); updateReminderUI();
       $("settings-overlay").classList.remove("hidden");
     });
     $("menu-browse").addEventListener("click", function (e) {
@@ -3303,20 +3303,27 @@
     $("menu-stats").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render(); renderStats(); renderBookmarksList();
-      $("settings-overlay").classList.remove("hidden");
+      renderStats();
+      $("stats-overlay").classList.remove("hidden");
+    });
+    $("stats-close").addEventListener("click", function () {
+      $("stats-overlay").classList.add("hidden");
     });
     $("menu-about").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render();
-      $("settings-overlay").classList.remove("hidden");
+      $("about-overlay").classList.remove("hidden");
+    });
+    $("about-close").addEventListener("click", function () {
+      $("about-overlay").classList.add("hidden");
     });
     $("menu-help").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render();
-      $("settings-overlay").classList.remove("hidden");
+      $("help-overlay").classList.remove("hidden");
+    });
+    $("help-close").addEventListener("click", function () {
+      $("help-overlay").classList.add("hidden");
     });
     // New menu items
     $("menu-prayer").addEventListener("click", function (e) {
