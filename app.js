@@ -3485,11 +3485,8 @@
         return;
       }
 
-      // Show what the ASR detected (helps user understand results)
+      // Log transcription for debugging (hidden from user)
       console.log("[Shazam] Transcription brute:", transcription);
-      var transcriptEl = $("shazam-transcript");
-      transcriptEl.textContent = "« " + transcription.trim() + " »";
-      transcriptEl.classList.remove("hidden");
 
       shazamMatchVerse(transcription);
 
