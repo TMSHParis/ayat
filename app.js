@@ -1074,7 +1074,13 @@
   }
 
   function renderBookmarksList() {
-    var list = $("bookmarks-list");
+    _renderBookmarksInto($("bookmarks-list"));
+    var sl = $("settings-bookmarks-list");
+    if (sl) _renderBookmarksInto(sl);
+  }
+
+  function _renderBookmarksInto(list) {
+    if (!list) return;
     var bookmarks = loadBookmarks();
     var folders = loadFolders();
     list.innerHTML = "";
@@ -3286,7 +3292,7 @@
     $("menu-settings").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render(); updateReminderUI(); renderStats();
+      render(); updateReminderUI(); renderStats(); renderBookmarksList();
       $("settings-overlay").classList.remove("hidden");
     });
     $("menu-browse").addEventListener("click", function (e) {
@@ -3297,7 +3303,7 @@
     $("menu-stats").addEventListener("click", function (e) {
       e.preventDefault();
       $("menu-overlay").classList.add("hidden");
-      render(); renderStats();
+      render(); renderStats(); renderBookmarksList();
       $("settings-overlay").classList.remove("hidden");
     });
     $("menu-about").addEventListener("click", function (e) {
