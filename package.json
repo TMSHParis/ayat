@@ -4,7 +4,7 @@
   "description": "Qurani — Lecture du Coran en 30 jours",
   "scripts": {
     "build": "rm -rf www && mkdir -p www/fonts www/icons && cp index.html style.css app.js quran.json quran-fr.json quran-tajwid.json manifest.json OneSignalSDKWorker.js sw.js privacy.html support.html www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/",
-    "cap:sync": "npm run build && npx cap sync"
+    "cap:sync": "npm run build && npx cap sync && sed -i '' 's/swift-tools-version: 5.9/swift-tools-version: 6.0/' ios/App/CapApp-SPM/Package.swift && echo '✅ Package.swift patched (swift-tools-version 5.9 → 6.0)'"
   },
   "repository": {
     "type": "git",

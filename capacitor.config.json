@@ -1,5 +1,10 @@
 {
   "appId": "com.tmshparis.qurani",
   "appName": "Qurani",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }

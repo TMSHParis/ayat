@@ -185,7 +185,7 @@
       <a href="#" class="menu-item" id="menu-shazam">
         <span class="menu-item-icon">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            <path d="M12 1a3 3 0 00-3 3v4a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><circle cx="12" cy="21" r="2"/><path d="M12 13v6"/>
           </svg>
         </span>
         <span class="menu-item-label">Identifier un verset</span>
@@ -622,6 +622,9 @@
     </button>
   </div>
   <div class="overlay-body">
+    <!-- City search bar -->
+    <div id="prayer-location-bar" class="prayer-location-bar"></div>
+
     <div id="prayer-loading" class="prayer-state">
       <div class="spinner"></div>
       <p class="prayer-state-text">Localisation en cours...</p>
@@ -630,6 +633,9 @@
       <p class="prayer-state-text" id="prayer-error-msg">Impossible de charger.</p>
       <button class="qibla-action-btn" id="prayer-retry">Réessayer</button>
     </div>
+    <!-- Mawaqit mosque selector (shown when searching nearby mosques) -->
+    <div id="prayer-mosque-selector" class="mosque-selector hidden"></div>
+
     <div id="prayer-content" class="hidden">
       <div class="prayer-next-card">
         <div class="prayer-next-label">Prochaine prière</div>
@@ -641,6 +647,12 @@
     <div class="setting-group" id="prayer-method-section" style="margin-top:24px">
       <div class="setting-label">Méthode de calcul</div>
       <div class="setting-buttons" id="prayer-method-buttons"></div>
+      <!-- Mawaqit mosque info row -->
+      <div id="prayer-mosque-row" class="prayer-mosque-row hidden">
+        <span class="prayer-mosque-label">Mosquée :</span>
+        <span id="prayer-mosque-name" class="prayer-mosque-name"></span>
+        <button class="prayer-mosque-change" id="prayer-mosque-change">Changer</button>
+      </div>
     </div>
   </div>
 </div>
@@ -738,6 +750,55 @@
     <!-- Fallback for web -->
     <div class="recit-fallback hidden" id="recit-fallback">
       <p>La vérification de récitation en temps réel est disponible uniquement sur l'app iOS.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== SHAZAM OVERLAY ===== -->
+<div id="shazam-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <h2>Identifier un verset</h2>
+    <button class="overlay-close" id="shazam-close">&times;</button>
+  </div>
+  <div class="overlay-body shazam-body">
+
+    <!-- Status text -->
+    <p class="shazam-status" id="shazam-status">Appuyez pour écouter la récitation</p>
+
+    <!-- Big Shazam-style button -->
+    <div class="shazam-btn-wrap">
+      <div class="shazam-rings" id="shazam-rings">
+        <span class="shazam-ring"></span>
+        <span class="shazam-ring"></span>
+        <span class="shazam-ring"></span>
+      </div>
+      <button class="shazam-btn" id="shazam-btn" aria-label="Écouter">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Timer -->
+    <p class="shazam-timer hidden" id="shazam-timer">15s</p>
+
+    <!-- Result card (hidden by default) -->
+    <div class="shazam-result hidden" id="shazam-result">
+      <div class="shazam-result-header">
+        <span class="shazam-result-surah" id="shazam-result-surah"></span>
+        <span class="shazam-result-verse" id="shazam-result-verse"></span>
+      </div>
+      <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
+      <button class="shazam-goto" id="shazam-goto">Aller à ce verset →</button>
+    </div>
+
+    <!-- Error state -->
+    <div class="shazam-error hidden" id="shazam-error">
+      <p id="shazam-error-msg">Verset non identifié</p>
+      <button class="shazam-retry" id="shazam-retry">Réessayer</button>
     </div>
 
   </div>
