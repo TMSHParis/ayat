@@ -1587,10 +1587,10 @@
   // listenBase: mp3quran.net base URL for full-surah listening ({surah3}.mp3)
   // id: everyayah.com reciter ID for per-verse reading audio (null = listen-only)
   var RECITERS = [
-    { id: "Alafasy_128kbps",             name: "Mishary Al-Afasy",   nameAr: "مشاري العفاسي",        listenBase: "https://server8.mp3quran.net/afasy" },
-    { id: "Husary_128kbps",              name: "Al-Husary",          nameAr: "محمود خليل الحصري",     listenBase: "https://server8.mp3quran.net/husary" },
-    { id: "Abdul_Basit_Murattal_192kbps",name: "Abdul Basit",        nameAr: "عبد الباسط عبد الصمد", listenBase: "https://server11.mp3quran.net/basit" },
-    { id: "Minshawy_Murattal_128kbps",   name: "Al-Minshawi",        nameAr: "محمد صديق المنشاوي",   listenBase: "https://server8.mp3quran.net/minsh" },
+    { id: "Alafasy_128kbps",             name: "Mishary Al-Afasy",   nameAr: "مشاري العفاسي",        listenBase: "https://server8.mp3quran.net/afs" },
+    { id: "Husary_128kbps",              name: "Al-Husary",          nameAr: "محمود خليل الحصري",     listenBase: "https://server13.mp3quran.net/husr" },
+    { id: "Abdul_Basit_Murattal_192kbps",name: "Abdul Basit",        nameAr: "عبد الباسط عبد الصمد", listenBase: "https://server7.mp3quran.net/basit" },
+    { id: "Minshawy_Murattal_128kbps",   name: "Al-Minshawi",        nameAr: "محمد صديق المنشاوي",   listenBase: "https://server10.mp3quran.net/minsh" },
     { id: "Saood_ash-Shuraym_128kbps",   name: "Al-Shuraym",         nameAr: "سعود الشريم",          listenBase: "https://server7.mp3quran.net/shur" },
     { id: "Muhammad_Ayyoub_128kbps",     name: "Muhammad Ayyub",     nameAr: "محمد أيوب",            listenBase: "https://server8.mp3quran.net/ayyub" },
     { id: null,                          name: "Hisham Al-Harraz",   nameAr: "هشام الهراز",          listenBase: "https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi" },
@@ -1598,6 +1598,13 @@
     { id: null,                          name: "Mokhtar Al-Hajj",    nameAr: "مختار الحاج",          listenBase: "https://server16.mp3quran.net/mukhtar_haj/Rewayat-Hafs-A-n-Assem" },
     { id: null,                          name: "Nourein Muhammad",   nameAr: "نورين محمد صديق",      listenBase: "https://server16.mp3quran.net/nourin_siddig/Rewayat-Aldori-A-n-Abi-Amr" },
     { id: null,                          name: "Younes Asoliss",     nameAr: "يونس اسويلص",          listenBase: "https://server16.mp3quran.net/souilass/Rewayat-Warsh-A-n-Nafi" },
+    { id: null,                          name: "Abdulrahman Al-Sudais", nameAr: "عبد الرحمن السديس",  listenBase: "https://server11.mp3quran.net/sds" },
+    { id: null,                          name: "Maher Al-Mueaqly",  nameAr: "ماهر المعيقلي",        listenBase: "https://server12.mp3quran.net/maher" },
+    { id: null,                          name: "Nasser Al-Qatami",  nameAr: "ناصر القطامي",         listenBase: "https://server6.mp3quran.net/qtm" },
+    { id: null,                          name: "Ahmad Al-Ajmi",     nameAr: "أحمد العجمي",          listenBase: "https://server10.mp3quran.net/ajm" },
+    { id: null,                          name: "Yasser Al-Dosari",  nameAr: "ياسر الدوسري",         listenBase: "https://server11.mp3quran.net/yasser" },
+    { id: null,                          name: "Bandar Baleela",    nameAr: "بندر بليلة",           listenBase: "https://server6.mp3quran.net/balilah" },
+    { id: null,                          name: "Khalid Al-Jalil",   nameAr: "خالد الجليل",          listenBase: "https://server10.mp3quran.net/jleel" },
   ];
   var audioPlayer = null;
   var isAudioPlaying = false;
@@ -3010,6 +3017,7 @@
   var listenSurahIdx   = 0;    // index into surahs[]
   var listenAudio      = null;
   var listenIsPlaying  = false;
+  var listenSeeking    = false;
 
   function listenGetUrl(reciterIdx, surahNum) {
     var r = RECITERS[reciterIdx];
@@ -3017,9 +3025,16 @@
     return r.listenBase + "/" + String(surahNum).padStart(3, "0") + ".mp3";
   }
 
+  function listenFormatTime(sec) {
+    if (!sec || !isFinite(sec)) return "0:00";
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
   function openListenOverlay() {
     $("listen-overlay").classList.remove("hidden");
-    listenRenderReciters();
+    listenRenderReciterSelect();
     listenRenderSurahs();
     listenUpdatePlayerBar();
   }
@@ -3029,19 +3044,26 @@
     _closeBack("listen-overlay", null);
   }
 
-  function listenRenderReciters() {
-    var strip = $("listen-reciter-strip");
-    if (!strip) return;
-    strip.innerHTML = "";
+  function listenRenderReciterSelect() {
+    var sel = $("listen-reciter-select");
+    if (!sel) return;
+    sel.innerHTML = "";
+    // Group: reciters with per-verse audio (id != null)
+    var grpRead = document.createElement("optgroup");
+    grpRead.label = "Lecture & Écoute";
+    var grpListen = document.createElement("optgroup");
+    grpListen.label = "Écoute uniquement";
     RECITERS.forEach(function (r, idx) {
-      var btn = document.createElement("button");
-      btn.className = "listen-reciter-btn" + (idx === listenReciterIdx ? " active" : "");
-      btn.innerHTML = '<span class="listen-reciter-ar">' + r.nameAr + '</span>';
-      btn.addEventListener("click", function () {
-        listenSelectReciter(idx);
-      });
-      strip.appendChild(btn);
+      if (!r.listenBase) return;
+      var opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = r.name + " \u2013 " + r.nameAr;
+      if (idx === listenReciterIdx) opt.selected = true;
+      if (r.id) grpRead.appendChild(opt);
+      else grpListen.appendChild(opt);
     });
+    if (grpRead.children.length) sel.appendChild(grpRead);
+    if (grpListen.children.length) sel.appendChild(grpListen);
   }
 
   function listenRenderSurahs() {
@@ -3054,9 +3076,9 @@
       item.id = "listen-si-" + idx;
       var nameFr = SURAH_NAMES_FR[s.surahNumber] || "";
       item.innerHTML =
-        '<span class="listen-surah-num">' + s.surahNumber + '</span>' +
-        '<span class="listen-surah-ar">' + s.surahNameAr + '</span>' +
-        '<span class="listen-surah-fr">' + nameFr + '</span>';
+        '<span class="listen-surah-num-badge">' + s.surahNumber + '</span>' +
+        '<span class="listen-surah-fr">' + nameFr + '</span>' +
+        '<span class="listen-surah-ar">' + s.surahNameAr + '</span>';
       item.addEventListener("click", function () {
         listenSelectSurah(idx);
       });
@@ -3068,7 +3090,6 @@
     var wasPlaying = listenIsPlaying;
     listenPause();
     listenReciterIdx = idx;
-    listenRenderReciters();
     listenUpdatePlayerBar();
     if (wasPlaying) listenPlay();
   }
@@ -3076,7 +3097,6 @@
   function listenSelectSurah(idx) {
     listenPause();
     listenSurahIdx = idx;
-    // Update active class
     document.querySelectorAll(".listen-surah-item").forEach(function (el, i) {
       el.classList.toggle("active", i === idx);
     });
@@ -3087,12 +3107,14 @@
   function listenUpdatePlayerBar() {
     var surah = surahs[listenSurahIdx];
     var reciter = RECITERS[listenReciterIdx];
-    var surahAr = $("listen-player-surah-ar");
-    var meta    = $("listen-player-meta");
-    if (surahAr) surahAr.textContent = surah ? surah.surahNameAr : "—";
-    if (meta)    meta.textContent    = reciter ? reciter.nameAr : "—";
+    var elAr = $("listen-player-surah-ar");
+    var elFr = $("listen-player-surah-fr");
+    var elRec = $("listen-player-reciter");
+    if (elAr) elAr.textContent = surah ? surah.surahNameAr : "--";
+    if (elFr) elFr.textContent = surah ? (SURAH_NAMES_FR[surah.surahNumber] || "") : "Choisir une sourate";
+    if (elRec) elRec.textContent = reciter ? reciter.name : "";
     listenUpdatePlayIcon();
-    listenUpdateProgress(0);
+    listenSetProgress(0, 0);
   }
 
   function listenUpdatePlayIcon() {
@@ -3105,9 +3127,47 @@
     }
   }
 
-  function listenUpdateProgress(pct) {
-    var fill = $("listen-player-progress-fill");
-    if (fill) fill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+  function listenSetProgress(currentTime, duration) {
+    var pct = duration > 0 ? (currentTime / duration) * 100 : 0;
+    pct = Math.min(100, Math.max(0, pct));
+    var fill = $("listen-progress-fill");
+    var knob = $("listen-progress-knob");
+    var timeCur = $("listen-time-cur");
+    var timeDur = $("listen-time-dur");
+    if (fill) fill.style.width = pct + "%";
+    if (knob) knob.style.left = pct + "%";
+    if (timeCur) timeCur.textContent = listenFormatTime(currentTime);
+    if (timeDur) timeDur.textContent = listenFormatTime(duration);
+  }
+
+  function listenSeek(e) {
+    var bar = $("listen-progress-bar");
+    if (!bar || !listenAudio || !listenAudio.duration) return;
+    var rect = bar.getBoundingClientRect();
+    var x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    var pct = Math.max(0, Math.min(1, x / rect.width));
+    listenAudio.currentTime = pct * listenAudio.duration;
+    listenSetProgress(listenAudio.currentTime, listenAudio.duration);
+  }
+
+  function listenInitSeekEvents() {
+    var bar = $("listen-progress-bar");
+    if (!bar) return;
+    bar.addEventListener("click", listenSeek);
+    bar.addEventListener("touchstart", function (e) {
+      listenSeeking = true;
+      bar.classList.add("seeking");
+      listenSeek(e);
+    }, { passive: true });
+    document.addEventListener("touchmove", function (e) {
+      if (listenSeeking) listenSeek(e);
+    }, { passive: true });
+    document.addEventListener("touchend", function () {
+      if (listenSeeking) {
+        listenSeeking = false;
+        bar.classList.remove("seeking");
+      }
+    });
   }
 
   function listenPlay() {
@@ -3122,14 +3182,14 @@
     }
     listenAudio = new Audio(url);
     listenAudio.ontimeupdate = function () {
-      if (listenAudio.duration) {
-        listenUpdateProgress((listenAudio.currentTime / listenAudio.duration) * 100);
+      if (!listenSeeking && listenAudio.duration) {
+        listenSetProgress(listenAudio.currentTime, listenAudio.duration);
       }
     };
     listenAudio.onended = function () {
       listenIsPlaying = false;
       listenUpdatePlayIcon();
-      listenUpdateProgress(0);
+      listenSetProgress(0, 0);
       // Auto-advance to next surah
       if (listenSurahIdx < surahs.length - 1) {
         setTimeout(function () { listenSelectSurah(listenSurahIdx + 1); }, 600);
@@ -3143,7 +3203,6 @@
     listenAudio.play().then(function () {
       listenIsPlaying = true;
       listenUpdatePlayIcon();
-      // Scroll active surah into view
       var el = document.getElementById("listen-si-" + listenSurahIdx);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }).catch(function () {
@@ -3763,6 +3822,10 @@
     $("listen-play-btn").addEventListener("click", listenToggle);
     $("listen-prev-btn").addEventListener("click", listenPrevSurah);
     $("listen-next-btn").addEventListener("click", listenNextSurah);
+    $("listen-reciter-select").addEventListener("change", function () {
+      listenSelectReciter(parseInt(this.value, 10));
+    });
+    listenInitSeekEvents();
 
     // ---- SHAZAM ----
     $("shazam-close").addEventListener("click", closeShazamOverlay);

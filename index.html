@@ -750,32 +750,40 @@
   </div>
   <div class="overlay-body listen-body">
 
-    <!-- Reciter strip (horizontal scroll) -->
-    <div class="listen-reciter-strip" id="listen-reciter-strip"></div>
+    <!-- Reciter dropdown -->
+    <div class="listen-reciter-wrap">
+      <select id="listen-reciter-select" class="listen-reciter-select" aria-label="Récitateur"></select>
+    </div>
 
     <!-- Surah list (scrollable) -->
     <div class="listen-surah-list" id="listen-surah-list"></div>
 
-    <!-- Fixed bottom player bar -->
-    <div class="listen-player-bar">
+    <!-- Apple Music-style player bar -->
+    <div class="listen-player-bar" id="listen-player-bar">
       <div class="listen-player-info">
-        <div class="listen-player-surah-ar" id="listen-player-surah-ar">—</div>
-        <div class="listen-player-meta" id="listen-player-meta">Choisir une sourate</div>
+        <div class="listen-player-surah-ar" id="listen-player-surah-ar">--</div>
+        <div class="listen-player-surah-fr" id="listen-player-surah-fr">Choisir une sourate</div>
+        <div class="listen-player-reciter" id="listen-player-reciter"></div>
       </div>
-      <div class="listen-player-progress" id="listen-player-progress">
-        <div class="listen-player-progress-fill" id="listen-player-progress-fill"></div>
+      <div class="listen-progress-wrap">
+        <span class="listen-time" id="listen-time-cur">0:00</span>
+        <div class="listen-progress-bar" id="listen-progress-bar">
+          <div class="listen-progress-fill" id="listen-progress-fill"></div>
+          <div class="listen-progress-knob" id="listen-progress-knob"></div>
+        </div>
+        <span class="listen-time" id="listen-time-dur">0:00</span>
       </div>
       <div class="listen-player-controls">
         <button class="listen-ctrl-btn" id="listen-prev-btn" aria-label="Précédente">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="6" x2="9" y2="18"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
         </button>
         <button class="listen-ctrl-btn listen-ctrl-play" id="listen-play-btn" aria-label="Lecture">
-          <svg id="listen-play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <svg id="listen-play-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
         </button>
         <button class="listen-ctrl-btn" id="listen-next-btn" aria-label="Suivante">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/><line x1="15" y1="6" x2="15" y2="18"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
         </button>
       </div>
     </div>
