@@ -20,6 +20,12 @@
   font-weight: 700;
   font-display: swap;
 }
+@font-face {
+  font-family: "Aref Ruqaa";
+  src: url("fonts/ArefRuqaa-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
 
 /* ---- THEME VARIABLES ---- */
 :root {
@@ -1431,7 +1437,7 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 .qibla-float-word {
   position: absolute;
   left: var(--x, 50%); top: var(--y, 50%);
-  font-family: "Amiri Quran", "Amiri", serif;
+  font-family: "Aref Ruqaa", serif;
   font-size: var(--size, 60px);
   color: var(--text);
   opacity: 0.08;
