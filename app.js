@@ -3281,6 +3281,7 @@
   function shazamSetState(state) {
     var btn = $("shazam-btn");
     var rings = $("shazam-rings");
+    var waves = $("shazam-waves");
     var status = $("shazam-status");
     var timer = $("shazam-timer");
     var result = $("shazam-result");
@@ -3289,6 +3290,8 @@
 
     btn.className = "shazam-btn";
     rings.className = "shazam-rings";
+    waves.classList.add("hidden");
+    waves.classList.remove("active");
     timer.classList.add("hidden");
     result.classList.add("hidden");
     error.classList.add("hidden");
@@ -3302,6 +3305,8 @@
     } else if (state === "listening") {
       btn.classList.add("listening");
       rings.classList.add("active");
+      waves.classList.remove("hidden");
+      waves.classList.add("active");
       timer.classList.remove("hidden");
       status.textContent = "Écoute en cours…";
     } else if (state === "analyzing") {
@@ -3309,7 +3314,7 @@
       status.textContent = "Analyse en cours…";
     } else if (state === "result") {
       result.classList.remove("hidden");
-      status.textContent = "Verset identifié !";
+      status.textContent = "";
     } else if (state === "error") {
       error.classList.remove("hidden");
       status.textContent = "";
@@ -3610,14 +3615,18 @@
     shazamResultAyah = ayahIdx;
 
     var surah = surahs[surahIdx];
-    var surahNameFr = SURAH_NAMES_FR[surahIdx] || "";
+    var surahNum = surah.surahNumber;
+    var surahNameFr = SURAH_NAMES_FR[surahNum] || "";
     var surahNameAr = surah.surahNameAr || "";
     var verseNum = ayahIdx + 1;
     var verseText = surah.ayahs[ayahIdx];
-
-    $("shazam-result-surah").textContent = surahNameFr + " — " + surahNameAr;
     var pct = Math.round(score * 100);
-    $("shazam-result-verse").textContent = "Verset " + verseNum + " (" + pct + "%)";
+
+    $("shazam-result-surah-fr").textContent = surahNameFr;
+    $("shazam-result-surah-ar").textContent = surahNameAr;
+    $("shazam-result-num").textContent = "Sourate " + surahNum;
+    $("shazam-result-verse-num").textContent = "Verset " + verseNum;
+    $("shazam-result-pct").textContent = pct + "%";
     $("shazam-result-text").textContent = verseText;
 
     shazamSetState("result");

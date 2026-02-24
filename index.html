@@ -806,15 +806,27 @@
     <!-- Status text -->
     <p class="shazam-status" id="shazam-status">Appuyez pour écouter la récitation</p>
 
-    <!-- Big Shazam-style button -->
+    <!-- Sound wave bars (visible during recording) -->
+    <div class="shazam-waves hidden" id="shazam-waves">
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+      <span class="shazam-wave-bar"></span>
+    </div>
+
+    <!-- Microphone button -->
     <div class="shazam-btn-wrap">
       <div class="shazam-rings" id="shazam-rings">
         <span class="shazam-ring"></span>
         <span class="shazam-ring"></span>
-        <span class="shazam-ring"></span>
       </div>
       <button class="shazam-btn" id="shazam-btn" aria-label="Écouter">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
           <path d="M19 10v2a7 7 0 01-14 0v-2"/>
           <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
@@ -825,17 +837,21 @@
     <!-- Timer -->
     <p class="shazam-timer hidden" id="shazam-timer">15s</p>
 
-    <!-- Transcription preview (shows what ASR detected) -->
+    <!-- Transcription preview -->
     <p class="shazam-transcript hidden" id="shazam-transcript" dir="rtl"></p>
 
-    <!-- Result card (hidden by default) -->
+    <!-- Result card -->
     <div class="shazam-result hidden" id="shazam-result">
-      <div class="shazam-result-header">
-        <span class="shazam-result-surah" id="shazam-result-surah"></span>
-        <span class="shazam-result-verse" id="shazam-result-verse"></span>
+      <div class="shazam-result-badge">
+        <span class="shazam-result-num" id="shazam-result-num"></span>
+        <span class="shazam-result-pct" id="shazam-result-pct"></span>
       </div>
+      <p class="shazam-result-surah-fr" id="shazam-result-surah-fr"></p>
+      <p class="shazam-result-surah-ar" id="shazam-result-surah-ar"></p>
+      <p class="shazam-result-verse-num" id="shazam-result-verse-num"></p>
+      <div class="shazam-result-divider"></div>
       <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
-      <button class="shazam-goto" id="shazam-goto">Aller à ce verset →</button>
+      <button class="shazam-goto" id="shazam-goto">Aller à ce verset</button>
     </div>
 
     <!-- Error state -->

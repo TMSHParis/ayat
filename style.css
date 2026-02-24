@@ -2081,108 +2081,167 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 .listen-ctrl-play:active { transform: scale(0.92); opacity: 0.9; }
 
 /* ---- SHAZAM ---- */
+/* ---- SHAZAM / IDENTIFIER UN VERSET ---- */
 .shazam-body {
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 30px 20px; gap: 20px; min-height: 60vh;
+  justify-content: center; padding: 30px 20px; gap: 16px; min-height: 60vh;
 }
 .shazam-status {
-  font-size: 14px; color: var(--text-muted); text-align: center;
-  letter-spacing: 0.3px; margin: 0;
+  font-size: 15px; color: var(--text-muted); text-align: center;
+  letter-spacing: 0.2px; margin: 0; font-weight: 400;
 }
+
+/* ---- Sound wave bars (recording animation) ---- */
+.shazam-waves {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px; margin: 4px 0;
+}
+.shazam-wave-bar {
+  width: 3px; height: 8px; border-radius: 3px;
+  background: var(--accent);
+  opacity: 0.35;
+  transition: opacity .3s;
+}
+.shazam-waves.active .shazam-wave-bar {
+  opacity: 1;
+  animation: shazam-wave 1.2s ease-in-out infinite;
+}
+.shazam-waves.active .shazam-wave-bar:nth-child(1) { animation-delay: 0.0s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(5) { animation-delay: 0.4s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(6) { animation-delay: 0.3s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(7) { animation-delay: 0.2s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(8) { animation-delay: 0.1s; }
+.shazam-waves.active .shazam-wave-bar:nth-child(9) { animation-delay: 0.0s; }
+@keyframes shazam-wave {
+  0%, 100% { height: 8px; }
+  50% { height: 40px; }
+}
+
+/* ---- Microphone button ---- */
 .shazam-btn-wrap {
-  position: relative; width: 140px; height: 140px;
+  position: relative; width: 120px; height: 120px;
   display: flex; align-items: center; justify-content: center;
 }
 .shazam-rings {
   position: absolute; inset: 0; pointer-events: none; opacity: 0;
-  transition: opacity .3s;
+  transition: opacity .4s;
 }
 .shazam-rings.active { opacity: 1; }
 .shazam-ring {
   position: absolute; inset: 0; border-radius: 50%;
-  border: 2px solid var(--accent, #10b981);
+  border: 1.5px solid var(--accent);
   opacity: 0;
 }
 .shazam-rings.active .shazam-ring {
   animation: shazam-pulse 2.4s ease-out infinite;
 }
-.shazam-rings.active .shazam-ring:nth-child(2) { animation-delay: 0.8s; }
-.shazam-rings.active .shazam-ring:nth-child(3) { animation-delay: 1.6s; }
+.shazam-rings.active .shazam-ring:nth-child(2) { animation-delay: 1.2s; }
 @keyframes shazam-pulse {
-  0% { transform: scale(0.7); opacity: 0.6; }
-  100% { transform: scale(1.3); opacity: 0; }
+  0% { transform: scale(0.75); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
 }
 .shazam-btn {
-  width: 100px; height: 100px; border-radius: 50%;
+  width: 88px; height: 88px; border-radius: 50%;
   border: 2px solid var(--btn-border);
-  background: var(--card-bg, rgba(255,255,255,.06));
-  color: var(--text-muted); cursor: pointer;
+  background: var(--overlay-bg);
+  color: var(--text); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all .3s; position: relative; z-index: 1;
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: all .3s ease; position: relative; z-index: 1;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
 }
-.shazam-btn:active { transform: scale(0.95); }
+.shazam-btn:active { transform: scale(0.93); }
 .shazam-btn.listening {
-  border-color: var(--accent, #10b981); color: var(--accent, #10b981);
-  box-shadow: 0 0 20px rgba(16,185,129,.25);
+  border-color: var(--accent); color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0,0,0,.06);
 }
 .shazam-btn.analyzing {
-  border-color: var(--accent, #10b981); color: var(--accent, #10b981);
-  animation: shazam-spin 1.2s linear infinite;
+  border-color: var(--accent); color: var(--accent);
+  animation: shazam-breathe 1.6s ease-in-out infinite;
 }
-@keyframes shazam-spin {
-  0% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
-  50% { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
-  100% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
+@keyframes shazam-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,.06); transform: scale(1); }
+  50% { box-shadow: 0 0 0 8px rgba(0,0,0,.03); transform: scale(1.04); }
 }
+
+/* ---- Timer ---- */
 .shazam-timer {
-  font-size: 28px; font-weight: 300; color: var(--accent, #10b981);
+  font-size: 32px; font-weight: 200; color: var(--text);
   margin: 0; font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
 }
+
+/* ---- Transcription preview ---- */
+.shazam-transcript {
+  text-align: center; font-size: 14px; color: var(--text-muted);
+  margin: 4px 16px 0; padding: 10px 16px;
+  background: var(--track); border-radius: 12px;
+  line-height: 1.8; font-family: "Scheherazade New", serif;
+  max-height: 70px; overflow-y: auto;
+  max-width: 340px; width: 100%;
+}
+
+/* ---- Result card ---- */
 .shazam-result {
   width: 100%; max-width: 340px;
-  background: var(--card-bg, rgba(255,255,255,.06));
-  border: 1px solid var(--btn-border);
-  border-radius: 16px; padding: 20px;
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  animation: shazam-fadein .4s ease;
+  background: var(--track);
+  border-radius: 20px; padding: 24px 20px;
+  text-align: center;
+  animation: shazam-fadein .5s cubic-bezier(.16,1,.3,1);
 }
 @keyframes shazam-fadein {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.shazam-result-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px;
+.shazam-result-badge {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-bottom: 14px;
 }
-.shazam-result-surah {
-  font-size: 16px; font-weight: 600; color: var(--text);
+.shazam-result-num {
+  font-size: 12px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500;
 }
-.shazam-result-verse {
-  font-size: 13px; color: var(--accent, #10b981);
-  background: rgba(16,185,129,.12); padding: 2px 10px;
-  border-radius: 20px;
+.shazam-result-pct {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--overlay-bg); padding: 2px 8px;
+  border-radius: 20px; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.shazam-result-surah-fr {
+  font-size: 22px; font-weight: 600; color: var(--text);
+  margin: 0 0 4px; line-height: 1.3;
+}
+.shazam-result-surah-ar {
+  font-size: 18px; color: var(--text-secondary);
+  font-family: "KFGQPC", "Scheherazade New", serif;
+  margin: 0 0 6px; line-height: 1.4;
+}
+.shazam-result-verse-num {
+  font-size: 13px; color: var(--accent); font-weight: 600;
+  margin: 0 0 14px; letter-spacing: 0.3px;
+}
+.shazam-result-divider {
+  height: 1px; background: var(--btn-border);
+  margin: 0 auto 16px; width: 60px;
 }
 .shazam-result-text {
   font-size: 22px; line-height: 2; color: var(--text);
   font-family: "KFGQPC", "Scheherazade New", serif;
-  text-align: right; margin: 12px 0 16px;
-  max-height: 150px; overflow-y: auto;
+  text-align: center; margin: 0 0 20px;
+  max-height: 140px; overflow-y: auto;
 }
 .shazam-goto {
-  width: 100%; padding: 12px; border: none; border-radius: 10px;
-  background: var(--accent, #10b981); color: #fff;
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: opacity .2s;
+  width: 100%; padding: 14px; border: none; border-radius: 14px;
+  background: var(--accent); color: var(--overlay-bg);
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  letter-spacing: 0.2px;
 }
-.shazam-goto:active { opacity: 0.8; }
-.shazam-transcript {
-  text-align: center; font-size: 13px; color: var(--text-muted);
-  margin: 8px 16px 0; padding: 10px 14px;
-  background: var(--btn-bg); border-radius: 10px;
-  line-height: 1.6; font-family: "Scheherazade New", serif;
-  max-height: 80px; overflow-y: auto;
-}
+.shazam-goto:active { opacity: 0.85; transform: scale(0.98); }
+
+/* ---- Error state ---- */
 .shazam-error {
   text-align: center; animation: shazam-fadein .4s ease;
 }
@@ -2190,12 +2249,12 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
   font-size: 14px; color: var(--text-muted); margin: 0 0 16px;
 }
 .shazam-retry {
-  padding: 10px 28px; border: 1px solid var(--btn-border);
-  border-radius: 10px; background: none;
-  color: var(--text); font-size: 13px; cursor: pointer;
-  transition: border-color .2s;
+  padding: 12px 32px; border: 1.5px solid var(--btn-border);
+  border-radius: 12px; background: none;
+  color: var(--text); font-size: 14px; cursor: pointer;
+  transition: border-color .2s, transform .15s; font-weight: 500;
 }
-.shazam-retry:active { border-color: var(--accent, #10b981); }
+.shazam-retry:active { border-color: var(--accent); transform: scale(0.97); }
 
 /* ---- HIDDEN ---- */
 .hidden { display: none !important; }
