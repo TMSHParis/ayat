@@ -350,6 +350,63 @@
       <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les données sont stockées localement sur votre appareil uniquement.</p>
     </div>
 
+    <!-- ---- ARTICLE HORAIRES ---- -->
+    <div class="settings-section-divider"></div>
+    <div class="settings-section-title">Horaires de prière</div>
+
+    <div class="article-card">
+      <div class="article-tag">Méthode de calcul</div>
+      <h2 class="article-title">Comment sont calculés les horaires ?</h2>
+      <p class="article-lead">Qurani propose deux méthodes : <strong>IslamSounnah</strong> pour un calcul local sans internet, et <strong>Mawaqit</strong> pour les horaires de votre mosquée.</p>
+    </div>
+
+    <div class="article-section-title">IslamSounnah</div>
+
+    <div class="article-block">
+      <p class="article-text">C'est la méthode par défaut. Le calcul se fait <strong>entièrement sur votre appareil</strong>, sans appel à un serveur. Les horaires sont disponibles même hors connexion.</p>
+    </div>
+
+    <div class="article-block article-block-highlight">
+      <div class="article-block-label">Pour la France</div>
+      <p class="article-text">Un algorithme spécial corrige l'heure de Fajr aux hautes latitudes. Sans correction, le calcul astronomique pur placerait Fajr à 2h du matin en été — ce qui est très difficile à pratiquer.</p>
+      <p class="article-text">La solution : une table de Fajr pré-calculée pour <strong>16 villes françaises de référence</strong>. Votre position GPS est comparée à ces villes, et le Fajr est interpolé selon la distance à chacune d'elles.</p>
+    </div>
+
+    <div class="article-cities-label">Les 16 villes de référence</div>
+    <div class="article-cities">
+      <span>Amiens</span><span>Besançon</span><span>Bordeaux</span><span>Clermont-Fd</span>
+      <span>Lille</span><span>Lyon</span><span>Marseille</span><span>Metz</span>
+      <span>Mulhouse</span><span>Orléans</span><span>Paris</span><span>Poitiers</span>
+      <span>Rouen</span><span>Strasbourg</span><span>Toulouse</span><span>Tours</span>
+    </div>
+
+    <div class="article-block">
+      <div class="article-block-label">Hors France</div>
+      <p class="article-text">Le calcul suit la méthode <strong>MWL (Muslim World League)</strong> : Fajr à 18° sous l'horizon, Isha à 17°. Le fuseau horaire est lu directement depuis votre appareil.</p>
+    </div>
+
+    <div class="article-prayers-grid">
+      <div class="article-prayer-row"><span class="apr-name">Fajr</span><span class="apr-rule">18° sous l'horizon</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Shourouq</span><span class="apr-rule">Lever du soleil</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Dhuhr</span><span class="apr-rule">Midi solaire vrai</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Asr</span><span class="apr-rule">Ombre = longueur × 1</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Maghrib</span><span class="apr-rule">Coucher du soleil</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Isha</span><span class="apr-rule">17° sous l'horizon</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Minuit</span><span class="apr-rule">Mi-chemin Maghrib → Fajr</span></div>
+      <div class="article-prayer-row"><span class="apr-name">Dernier tiers</span><span class="apr-rule">⅔ Maghrib → Fajr</span></div>
+    </div>
+
+    <div class="article-section-title" style="margin-top:28px;">Mawaqit</div>
+
+    <div class="article-block">
+      <p class="article-text">Mawaqit est une plateforme qui recense plus de <strong>35 000 mosquées</strong> dans le monde. En choisissant cette méthode, l'app recherche les mosquées proches de vous et vous laisse choisir la vôtre.</p>
+      <p class="article-text">Les horaires affichés sont ceux de la mosquée sélectionnée — avec ses propres réglages validés par son imam. Nécessite une connexion internet.</p>
+    </div>
+
+    <div class="article-source">
+      Source : <span class="article-source-name">islamsounnah.com</span> · Moteur <span class="article-source-name">PrayTimes.js v2.3</span>
+    </div>
+
     <!-- ---- AIDE ---- -->
     <div class="settings-section-divider"></div>
     <div class="settings-section-title">Aide</div>
