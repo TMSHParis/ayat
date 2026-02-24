@@ -803,6 +803,15 @@
   </div>
   <div class="overlay-body shazam-body">
 
+    <!-- Scrolling Arabic verses background (during listening/analyzing) -->
+    <div class="shazam-scroll-bg hidden" id="shazam-scroll-bg">
+      <div class="shazam-scroll-row" style="--dur:28s">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ۝ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ۝ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ۝ مَـٰلِكِ يَوْمِ ٱلدِّينِ ۝ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ</div>
+      <div class="shazam-scroll-row" style="--dur:34s;--delay:-10s">ٱللَّهُ لَآ إِلَـٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۝ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ ۝ لَّهُۥ مَا فِى ٱلسَّمَـٰوَاتِ وَمَا فِى ٱلْأَرْضِ</div>
+      <div class="shazam-scroll-row" style="--dur:24s;--delay:-5s">قُلْ هُوَ ٱللَّهُ أَحَدٌ ۝ ٱللَّهُ ٱلصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌ</div>
+      <div class="shazam-scroll-row" style="--dur:32s;--delay:-15s">وَإِلَـٰهُكُمْ إِلَـٰهٌ وَاحِدٌ ۖ لَّا إِلَـٰهَ إِلَّا هُوَ ٱلرَّحْمَـٰنُ ٱلرَّحِيمُ ۝ إِنَّ فِى خَلْقِ ٱلسَّمَـٰوَاتِ وَٱلْأَرْضِ وَٱخْتِلَـٰفِ ٱلَّيْلِ وَٱلنَّهَارِ</div>
+      <div class="shazam-scroll-row" style="--dur:26s;--delay:-8s">سُبْحَـٰنَ ٱلَّذِى أَسْرَىٰ بِعَبْدِهِۦ لَيْلًا مِّنَ ٱلْمَسْجِدِ ٱلْحَرَامِ إِلَى ٱلْمَسْجِدِ ٱلْأَقْصَا ٱلَّذِى بَـٰرَكْنَا حَوْلَهُۥ</div>
+    </div>
+
     <!-- Status text -->
     <p class="shazam-status" id="shazam-status">Appuyez pour écouter la récitation</p>
 
@@ -870,7 +879,10 @@
       </div>
       <div class="shazam-result-divider"></div>
       <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
-      <button class="shazam-goto" id="shazam-goto">Aller à ce verset</button>
+      <button class="shazam-goto" id="shazam-goto">
+        <span>Aller à ce verset</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
     </div>
 
     <!-- Error state -->

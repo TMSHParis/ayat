@@ -3283,26 +3283,23 @@
     var btn = $("shazam-btn");
     var rings = $("shazam-rings");
     var waves = $("shazam-waves");
+    var scrollBg = $("shazam-scroll-bg");
     var status = $("shazam-status");
     var timer = $("shazam-timer");
     var found = $("shazam-found");
     var result = $("shazam-result");
     var error = $("shazam-error");
-    var transcript = $("shazam-transcript");
 
     btn.className = "shazam-btn";
     rings.className = "shazam-rings";
     btnWrap.classList.remove("hidden");
     waves.classList.add("hidden");
     waves.classList.remove("active");
+    scrollBg.classList.add("hidden");
     timer.classList.add("hidden");
     found.classList.add("hidden");
     result.classList.add("hidden");
     error.classList.add("hidden");
-    if (state === "idle" || state === "listening") {
-      transcript.classList.add("hidden");
-      transcript.textContent = "";
-    }
 
     if (state === "idle") {
       status.textContent = "Appuyez pour écouter la récitation";
@@ -3311,10 +3308,12 @@
       rings.classList.add("active");
       waves.classList.remove("hidden");
       waves.classList.add("active");
+      scrollBg.classList.remove("hidden");
       timer.classList.remove("hidden");
       status.textContent = "Écoute en cours…";
     } else if (state === "analyzing") {
       btn.classList.add("analyzing");
+      scrollBg.classList.remove("hidden");
       status.textContent = "Analyse en cours…";
     } else if (state === "found") {
       btnWrap.classList.add("hidden");
