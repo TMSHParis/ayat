@@ -1434,7 +1434,7 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
   font-family: "Amiri Quran", "Amiri", serif;
   font-size: var(--size, 60px);
   color: var(--text);
-  opacity: 0.035;
+  opacity: 0.08;
   direction: rtl;
   white-space: nowrap;
   transform: translate(-50%, -50%);
