@@ -3279,20 +3279,24 @@
   }
 
   function shazamSetState(state) {
+    var btnWrap = $("shazam-btn-wrap");
     var btn = $("shazam-btn");
     var rings = $("shazam-rings");
     var waves = $("shazam-waves");
     var status = $("shazam-status");
     var timer = $("shazam-timer");
+    var found = $("shazam-found");
     var result = $("shazam-result");
     var error = $("shazam-error");
     var transcript = $("shazam-transcript");
 
     btn.className = "shazam-btn";
     rings.className = "shazam-rings";
+    btnWrap.classList.remove("hidden");
     waves.classList.add("hidden");
     waves.classList.remove("active");
     timer.classList.add("hidden");
+    found.classList.add("hidden");
     result.classList.add("hidden");
     error.classList.add("hidden");
     if (state === "idle" || state === "listening") {
@@ -3312,7 +3316,12 @@
     } else if (state === "analyzing") {
       btn.classList.add("analyzing");
       status.textContent = "Analyse en cours…";
+    } else if (state === "found") {
+      btnWrap.classList.add("hidden");
+      found.classList.remove("hidden");
+      status.textContent = "";
     } else if (state === "result") {
+      btnWrap.classList.add("hidden");
       result.classList.remove("hidden");
       status.textContent = "";
     } else if (state === "error") {
@@ -3610,17 +3619,31 @@
     }
   }
 
+  var shazamResultScore = 0;
+
   function shazamShowResult(surahIdx, ayahIdx, score) {
     shazamResultSurah = surahIdx;
     shazamResultAyah = ayahIdx;
+    shazamResultScore = score;
 
-    var surah = surahs[surahIdx];
+    // Step 1: Show "found" animation with checkmark
+    shazamSetState("found");
+
+    // Step 2: After animation, populate and show result card
+    setTimeout(function () {
+      shazamPopulateResult();
+      shazamSetState("result");
+    }, 1300);
+  }
+
+  function shazamPopulateResult() {
+    var surah = surahs[shazamResultSurah];
     var surahNum = surah.surahNumber;
     var surahNameFr = SURAH_NAMES_FR[surahNum] || "";
     var surahNameAr = surah.surahNameAr || "";
-    var verseNum = ayahIdx + 1;
-    var verseText = surah.ayahs[ayahIdx];
-    var pct = Math.round(score * 100);
+    var verseNum = shazamResultAyah + 1;
+    var verseText = surah.ayahs[shazamResultAyah];
+    var pct = Math.round(shazamResultScore * 100);
 
     $("shazam-result-surah-fr").textContent = surahNameFr;
     $("shazam-result-surah-ar").textContent = surahNameAr;
@@ -3629,7 +3652,37 @@
     $("shazam-result-pct").textContent = pct + "%";
     $("shazam-result-text").textContent = verseText;
 
-    shazamSetState("result");
+    // Update nav button visibility
+    $("shazam-prev").style.visibility = shazamResultAyah > 0 ? "visible" : "hidden";
+    $("shazam-next").style.visibility = shazamResultAyah < surah.ayahs.length - 1 ? "visible" : "hidden";
+  }
+
+  function shazamNavVerse(dir) {
+    var surah = surahs[shazamResultSurah];
+    var newAyah = shazamResultAyah + dir;
+    if (newAyah < 0 || newAyah >= surah.ayahs.length) return;
+    shazamResultAyah = newAyah;
+
+    // Animate text change
+    var textEl = $("shazam-result-text");
+    var verseEl = $("shazam-result-verse-num");
+    textEl.style.opacity = "0";
+    textEl.style.transform = dir > 0 ? "translateX(-12px)" : "translateX(12px)";
+
+    setTimeout(function () {
+      verseEl.textContent = "Verset " + (newAyah + 1);
+      textEl.textContent = surah.ayahs[newAyah];
+      textEl.style.transform = dir > 0 ? "translateX(12px)" : "translateX(-12px)";
+
+      // Trigger reflow then animate in
+      void textEl.offsetWidth;
+      textEl.style.opacity = "1";
+      textEl.style.transform = "translateX(0)";
+
+      // Update nav visibility
+      $("shazam-prev").style.visibility = newAyah > 0 ? "visible" : "hidden";
+      $("shazam-next").style.visibility = newAyah < surah.ayahs.length - 1 ? "visible" : "hidden";
+    }, 150);
   }
 
   function shazamShowError(msg) {
@@ -3904,6 +3957,8 @@
     $("shazam-close").addEventListener("click", closeShazamOverlay);
     $("shazam-btn").addEventListener("click", shazamToggle);
     $("shazam-goto").addEventListener("click", shazamGoToVerse);
+    $("shazam-prev").addEventListener("click", function () { shazamNavVerse(-1); });
+    $("shazam-next").addEventListener("click", function () { shazamNavVerse(1); });
     $("shazam-retry").addEventListener("click", function () {
       shazamSetState("idle");
     });

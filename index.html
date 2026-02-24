@@ -820,7 +820,7 @@
     </div>
 
     <!-- Microphone button -->
-    <div class="shazam-btn-wrap">
+    <div class="shazam-btn-wrap" id="shazam-btn-wrap">
       <div class="shazam-rings" id="shazam-rings">
         <span class="shazam-ring"></span>
         <span class="shazam-ring"></span>
@@ -840,6 +840,17 @@
     <!-- Transcription preview -->
     <p class="shazam-transcript hidden" id="shazam-transcript" dir="rtl"></p>
 
+    <!-- Found animation (checkmark) -->
+    <div class="shazam-found hidden" id="shazam-found">
+      <div class="shazam-found-circle">
+        <svg class="shazam-found-check" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path class="shazam-found-check-path" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M15 27l7 7 15-15"/>
+        </svg>
+      </div>
+      <p class="shazam-found-text">Verset trouvé</p>
+    </div>
+
     <!-- Result card -->
     <div class="shazam-result hidden" id="shazam-result">
       <div class="shazam-result-badge">
@@ -848,7 +859,15 @@
       </div>
       <p class="shazam-result-surah-fr" id="shazam-result-surah-fr"></p>
       <p class="shazam-result-surah-ar" id="shazam-result-surah-ar"></p>
-      <p class="shazam-result-verse-num" id="shazam-result-verse-num"></p>
+      <div class="shazam-result-verse-row">
+        <button class="shazam-nav-btn" id="shazam-prev" aria-label="Verset précédent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <p class="shazam-result-verse-num" id="shazam-result-verse-num"></p>
+        <button class="shazam-nav-btn" id="shazam-next" aria-label="Verset suivant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
       <div class="shazam-result-divider"></div>
       <p class="shazam-result-text" id="shazam-result-text" dir="rtl"></p>
       <button class="shazam-goto" id="shazam-goto">Aller à ce verset</button>
