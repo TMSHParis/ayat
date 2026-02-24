@@ -2998,8 +2998,7 @@
   // ============  SHAZAM — Identifier un verset  ==============
   // ===========================================================
 
-  var HF_TOKEN = ""; // User sets via localStorage or hardcoded
-  var HF_MODEL = "tarteel-ai/whisper-base-ar-quran";
+  var SHAZAM_PROXY = "https://ayat-theta.vercel.app/api/hf"; // Vercel proxy (token kept server-side)
   var SHAZAM_DURATION = 15; // seconds of recording
 
   var shazamIsRecording = false;
@@ -3012,13 +3011,6 @@
   var shazamResultSurah = -1;
   var shazamResultAyah = -1;
   var shazamNormalizedCache = null; // lazy cache of all normalized verses
-
-  function shazamGetToken() {
-    if (HF_TOKEN) return HF_TOKEN;
-    var stored = localStorage.getItem("hf_token");
-    if (stored) return stored;
-    return "";
-  }
 
   function shazamBuildCache() {
     if (shazamNormalizedCache) return;
@@ -3033,12 +3025,6 @@
   }
 
   function openShazamOverlay() {
-    var token = shazamGetToken();
-    if (!token) {
-      var t = prompt("Entrez votre token HuggingFace (gratuit sur huggingface.co/settings/tokens) :");
-      if (!t) return;
-      localStorage.setItem("hf_token", t.trim());
-    }
     shazamBuildCache();
     $("shazam-overlay").classList.remove("hidden");
     shazamSetState("idle");
@@ -3195,42 +3181,27 @@
 
   async function shazamAnalyze(wavBlob) {
     shazamSetState("analyzing");
-    var token = shazamGetToken();
-    if (!token) {
-      shazamShowError("Token HuggingFace manquant");
-      return;
-    }
-
     try {
-      var resp = await fetch("https://api-inference.huggingface.co/models/" + HF_MODEL, {
+      var resp = await fetch(SHAZAM_PROXY, {
         method: "POST",
-        headers: {
-          "Authorization": "Bearer " + token,
-          "Content-Type": "audio/wav"
-        },
+        headers: { "Content-Type": "audio/wav" },
         body: wavBlob
       });
 
+      // Proxy handles 503 retry internally, but show feedback if it takes time
       if (resp.status === 503) {
-        // Model is loading
-        var body = await resp.json();
-        var wait = (body.estimated_time || 20) * 1000;
-        $("shazam-status").textContent = "Chargement du modèle… (~" + Math.ceil(wait / 1000) + "s)";
-        await new Promise(function (r) { setTimeout(r, Math.min(wait, 30000)); });
-        // Retry once
-        resp = await fetch("https://api-inference.huggingface.co/models/" + HF_MODEL, {
+        $("shazam-status").textContent = "Chargement du modèle… veuillez patienter";
+        await new Promise(function (r) { setTimeout(r, 5000); });
+        resp = await fetch(SHAZAM_PROXY, {
           method: "POST",
-          headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "audio/wav"
-          },
+          headers: { "Content-Type": "audio/wav" },
           body: wavBlob
         });
       }
 
       if (!resp.ok) {
         var errText = await resp.text();
-        throw new Error("API " + resp.status + ": " + errText.substring(0, 100));
+        throw new Error("Erreur serveur " + resp.status + ": " + errText.substring(0, 100));
       }
 
       var data = await resp.json();
