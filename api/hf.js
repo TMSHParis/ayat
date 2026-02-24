@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     const payload = JSON.stringify({
       inputs: audioBase64,
       parameters: {
-        generate_kwargs: {
+        generation_parameters: {
           language: "<|ar|>",
           task: "transcribe",
         },
