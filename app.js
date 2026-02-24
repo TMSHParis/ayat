@@ -3248,15 +3248,22 @@
   var shazamResultAyah = -1;
   var shazamNormalizedCache = null; // lazy cache of all normalized verses
 
+  var shazamWordCache = null; // lazy cache of normalized verse words
+
   function shazamBuildCache() {
     if (shazamNormalizedCache) return;
     shazamNormalizedCache = [];
+    shazamWordCache = [];
     for (var s = 0; s < surahs.length; s++) {
-      var arr = [];
+      var arrNorm = [];
+      var arrWords = [];
       for (var a = 0; a < surahs[s].ayahs.length; a++) {
-        arr.push(normalizeArabic(surahs[s].ayahs[a]));
+        var norm = normalizeArabic(surahs[s].ayahs[a]);
+        arrNorm.push(norm);
+        arrWords.push(norm.split(/\s+/).filter(function (w) { return w.length > 1; }));
       }
-      shazamNormalizedCache.push(arr);
+      shazamNormalizedCache.push(arrNorm);
+      shazamWordCache.push(arrWords);
     }
   }
 
@@ -3278,12 +3285,17 @@
     var timer = $("shazam-timer");
     var result = $("shazam-result");
     var error = $("shazam-error");
+    var transcript = $("shazam-transcript");
 
     btn.className = "shazam-btn";
     rings.className = "shazam-rings";
     timer.classList.add("hidden");
     result.classList.add("hidden");
     error.classList.add("hidden");
+    if (state === "idle" || state === "listening") {
+      transcript.classList.add("hidden");
+      transcript.textContent = "";
+    }
 
     if (state === "idle") {
       status.textContent = "Appuyez pour écouter la récitation";
@@ -3459,6 +3471,12 @@
         return;
       }
 
+      // Show what the ASR detected (helps user understand results)
+      console.log("[Shazam] Transcription brute:", transcription);
+      var transcriptEl = $("shazam-transcript");
+      transcriptEl.textContent = "« " + transcription.trim() + " »";
+      transcriptEl.classList.remove("hidden");
+
       shazamMatchVerse(transcription);
 
     } catch (err) {
@@ -3468,74 +3486,119 @@
 
   function shazamMatchVerse(transcription) {
     var normTranscript = normalizeArabic(transcription);
+    var tWords = normTranscript.split(/\s+/).filter(function (w) { return w.length > 1; });
     var tLen = normTranscript.length;
 
-    if (tLen < 3) {
+    console.log("[Shazam] Normalisée:", normTranscript);
+    console.log("[Shazam] Mots:", tWords.length, "| Caractères:", tLen);
+
+    if (tLen < 5 || tWords.length < 1) {
       shazamShowError("Transcription trop courte. Réessayez plus longtemps.");
       return;
     }
 
+    $("shazam-status").textContent = "Recherche du verset…";
+
+    // Build transcript word set for fast lookup
+    var tWordSet = {};
+    for (var i = 0; i < tWords.length; i++) {
+      tWordSet[tWords[i]] = (tWordSet[tWords[i]] || 0) + 1;
+    }
+
+    // ---- STAGE 1: Fast word-overlap screening on ALL verses ----
+    var candidates = [];
+
+    for (var s = 0; s < shazamWordCache.length; s++) {
+      var surahWords = shazamWordCache[s];
+      for (var a = 0; a < surahWords.length; a++) {
+        var vWords = surahWords[a];
+        if (vWords.length < 1) continue;
+
+        // Count how many transcript words appear in the verse
+        var matchCount = 0;
+        for (var w = 0; w < tWords.length; w++) {
+          for (var v = 0; v < vWords.length; v++) {
+            if (tWords[w] === vWords[v]) { matchCount++; break; }
+          }
+        }
+
+        if (matchCount === 0) continue;
+
+        // Containment: what fraction of transcript words are in this verse
+        var containment = matchCount / tWords.length;
+        // Jaccard: overlap / union
+        var unionSize = tWords.length + vWords.length - matchCount;
+        var jaccard = unionSize > 0 ? matchCount / unionSize : 0;
+        // Pre-score: weighted blend
+        var preScore = containment * 0.6 + jaccard * 0.4;
+
+        candidates.push({ s: s, a: a, pre: preScore });
+      }
+    }
+
+    // Sort by pre-score and keep top 50
+    candidates.sort(function (a, b) { return b.pre - a.pre; });
+    candidates = candidates.slice(0, 50);
+
+    console.log("[Shazam] Stage 1:", candidates.length, "candidats | Top:", (candidates[0] ? candidates[0].pre.toFixed(3) : "N/A"));
+
+    // ---- STAGE 2: Levenshtein on top candidates ----
     var bestScore = -1;
     var bestSurah = -1;
     var bestAyah = -1;
 
-    for (var s = 0; s < shazamNormalizedCache.length; s++) {
-      var surahVerses = shazamNormalizedCache[s];
-      for (var a = 0; a < surahVerses.length; a++) {
-        var normVerse = surahVerses[a];
-        var vLen = normVerse.length;
+    for (var c = 0; c < candidates.length; c++) {
+      var cand = candidates[c];
+      var normVerse = shazamNormalizedCache[cand.s][cand.a];
+      var vLen = normVerse.length;
+      var dist, levScore;
 
-        // Length filter: skip if verse length is way off
-        if (vLen < tLen * 0.3 && tLen < vLen * 0.3) continue;
+      // Length filter: skip very mismatched lengths
+      if (vLen < tLen * 0.15 || tLen < vLen * 0.15) continue;
 
-        // For short transcriptions, use direct similarity
-        var dist;
-        if (tLen <= vLen * 1.3 && tLen >= vLen * 0.7) {
-          // Similar length — compare directly
-          dist = levenshtein(normTranscript, normVerse);
-          var score = 1 - (dist / Math.max(tLen, vLen));
-          if (score > bestScore) {
-            bestScore = score;
-            bestSurah = s;
-            bestAyah = a;
-          }
-        } else if (tLen < vLen) {
-          // Transcription is shorter — check if it's a substring of the verse
-          // Slide a window the size of the transcription over the verse
-          var windowSize = tLen;
-          for (var w = 0; w <= vLen - windowSize; w += Math.max(1, Math.floor(windowSize / 4))) {
-            var sub = normVerse.substring(w, w + windowSize);
-            dist = levenshtein(normTranscript, sub);
-            var score2 = 1 - (dist / windowSize);
-            if (score2 > bestScore) {
-              bestScore = score2;
-              bestSurah = s;
-              bestAyah = a;
-            }
-            if (bestScore > 0.95) break; // early exit
-          }
-        } else {
-          // Transcription is longer — may span multiple verses, compare verse as substring
-          var windowSize2 = vLen;
-          for (var w2 = 0; w2 <= tLen - windowSize2; w2 += Math.max(1, Math.floor(windowSize2 / 4))) {
-            var sub2 = normTranscript.substring(w2, w2 + windowSize2);
-            dist = levenshtein(sub2, normVerse);
-            var score3 = 1 - (dist / windowSize2);
-            if (score3 > bestScore) {
-              bestScore = score3;
-              bestSurah = s;
-              bestAyah = a;
-            }
-            if (bestScore > 0.95) break;
-          }
+      if (tLen <= vLen * 1.5 && tLen >= vLen * 0.5) {
+        // Similar length — direct Levenshtein
+        dist = levenshtein(normTranscript, normVerse);
+        levScore = 1 - (dist / Math.max(tLen, vLen));
+      } else if (tLen < vLen) {
+        // Transcript shorter than verse — slide window
+        var bestWin = 0;
+        var wSize = tLen;
+        var step = Math.max(1, Math.floor(wSize / 4));
+        for (var w = 0; w <= vLen - wSize; w += step) {
+          dist = levenshtein(normTranscript, normVerse.substring(w, w + wSize));
+          var ws = 1 - (dist / wSize);
+          if (ws > bestWin) bestWin = ws;
+          if (bestWin > 0.9) break;
         }
-
-        if (bestScore > 0.95) break; // perfect match, stop early
+        levScore = bestWin;
+      } else {
+        // Transcript longer than verse — slide verse window over transcript
+        var bestWin2 = 0;
+        var wSize2 = vLen;
+        var step2 = Math.max(1, Math.floor(wSize2 / 4));
+        for (var w2 = 0; w2 <= tLen - wSize2; w2 += step2) {
+          dist = levenshtein(normTranscript.substring(w2, w2 + wSize2), normVerse);
+          var ws2 = 1 - (dist / wSize2);
+          if (ws2 > bestWin2) bestWin2 = ws2;
+          if (bestWin2 > 0.9) break;
+        }
+        levScore = bestWin2;
       }
-      if (bestScore > 0.95) break;
+
+      // Final score: blend word-overlap pre-score with Levenshtein
+      var finalScore = levScore * 0.65 + cand.pre * 0.35;
+
+      if (finalScore > bestScore) {
+        bestScore = finalScore;
+        bestSurah = cand.s;
+        bestAyah = cand.a;
+      }
     }
 
-    if (bestScore >= 0.40 && bestSurah >= 0) {
+    console.log("[Shazam] Résultat: Surah", bestSurah + 1, "Ayah", bestAyah + 1, "Score:", bestScore.toFixed(3));
+
+    if (bestScore >= 0.30 && bestSurah >= 0) {
       shazamShowResult(bestSurah, bestAyah, bestScore);
     } else {
       shazamShowError("Verset non identifié (score: " + (bestScore * 100).toFixed(0) + "%). Réessayez avec un enregistrement plus long ou plus clair.");
@@ -3553,7 +3616,8 @@
     var verseText = surah.ayahs[ayahIdx];
 
     $("shazam-result-surah").textContent = surahNameFr + " — " + surahNameAr;
-    $("shazam-result-verse").textContent = "Verset " + verseNum;
+    var pct = Math.round(score * 100);
+    $("shazam-result-verse").textContent = "Verset " + verseNum + " (" + pct + "%)";
     $("shazam-result-text").textContent = verseText;
 
     shazamSetState("result");

@@ -48,15 +48,27 @@ export default async function handler(req, res) {
 
   if (!audioBuffer.length) return res.status(400).json({ error: "Empty audio after base64 decode" });
 
-  // Forward WAV binary to HuggingFace Inference API (new router endpoint)
+  // Forward audio to HuggingFace Inference API with Arabic language hint
+  // Using JSON payload with base64 audio + generate_kwargs for language=Arabic
   try {
+    const audioBase64 = audioBuffer.toString("base64");
+    const payload = JSON.stringify({
+      inputs: audioBase64,
+      parameters: {
+        generate_kwargs: {
+          language: "<|ar|>",
+          task: "transcribe",
+        },
+      },
+    });
+
     let hfResp = await fetch(`${HF_BASE}/${HF_MODEL}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "audio/wav",
+        "Content-Type": "application/json",
       },
-      body: audioBuffer,
+      body: payload,
     });
 
     // If model is loading, wait and retry once
@@ -64,6 +76,19 @@ export default async function handler(req, res) {
       const data = await hfResp.json();
       const wait = Math.min((data.estimated_time || 20) * 1000, 30000);
       await new Promise((r) => setTimeout(r, wait));
+      hfResp = await fetch(`${HF_BASE}/${HF_MODEL}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: payload,
+      });
+    }
+
+    // If JSON approach returned a client error (4xx), fallback to binary audio (no language hint)
+    if (hfResp.status >= 400 && hfResp.status < 500 && hfResp.status !== 429) {
+      console.log("JSON approach returned " + hfResp.status + ", falling back to binary audio");
       hfResp = await fetch(`${HF_BASE}/${HF_MODEL}`, {
         method: "POST",
         headers: {
