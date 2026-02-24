@@ -2600,6 +2600,7 @@
   var recitWords = [];
   var recitWordsNorm = [];
   var recitMatchedCount = 0;
+  var recitSpokenCount = 0;   // how many spoken words consumed in current ASR session
   var recitWordStates = [];
   var recitListener = null;
   var recitLastTranscript = "";
@@ -2607,6 +2608,7 @@
   var recitIsNative = false;
   var recitIsWeb = false;
   var recitWebRecognition = null;
+  var recitWatchdogTimer = null; // iOS auto-restart watchdog
 
   function recitCheckSupport() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition) {
@@ -2677,6 +2679,7 @@
     recitWords = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
     recitWordsNorm = recitWords.map(function (w) { return normalizeArabic(w); });
     recitMatchedCount = 0;
+    recitSpokenCount = 0;
     recitWordStates = recitWords.map(function () { return "pending"; });
     recitLastTranscript = "";
 
@@ -2728,51 +2731,79 @@
   }
 
   function recitProcessPartial(transcript) {
-    var transcriptNorm = normalizeArabic(transcript);
-    var spokenWords = transcriptNorm.split(/\s+/).filter(Boolean);
-    var si = 0;
-    var startFrom = recitMatchedCount;
+    var norm = normalizeArabic(transcript);
+    var spoken = norm.split(/\s+/).filter(Boolean);
+    if (!spoken.length) return;
 
-    for (var matchIdx = 0; matchIdx < recitWords.length && si < spokenWords.length; matchIdx++) {
-      if (matchIdx < startFrom) { si++; continue; }
+    // Show what ASR heard in real-time
+    var tEl = $("recit-transcript");
+    if (tEl) tEl.textContent = transcript;
 
-      var expected = recitWordsNorm[matchIdx];
-      var spoken = spokenWords[si];
-      if (!spoken) break;
+    // Helper: similarity between two normalized Arabic words
+    function getSim(a, b) {
+      if (!a || !b) return 0;
+      var dist = levenshtein(a, b);
+      var maxLen = Math.max(a.length, b.length);
+      return maxLen > 0 ? (1 - dist / maxLen) : 0;
+    }
+    // Adaptive threshold: short words need higher similarity to avoid false positives
+    function getThresh(word) {
+      return word.length <= 3 ? 0.80 : 0.65;
+    }
 
-      var dist = levenshtein(expected, spoken);
-      var maxLen = Math.max(expected.length, spoken.length);
-      var similarity = maxLen > 0 ? 1 - (dist / maxLen) : 0;
+    // If ASR produced fewer words than we've already consumed (re-evaluation),
+    // reset the spoken cursor to 0 — only try to advance, never downgrade
+    var si = (spoken.length < recitSpokenCount) ? 0 : recitSpokenCount;
+    var wi = recitMatchedCount;
+    var verseSkips = 0; // limit consecutive skipped verse words
 
-      if (similarity >= 0.50) {
-        recitUpdateWord(matchIdx, "correct");
-        recitMatchedCount = matchIdx + 1;
+    while (wi < recitWords.length && si < spoken.length) {
+      var expected = recitWordsNorm[wi];
+      var word = spoken[si];
+      var thresh = getThresh(expected);
+      var sim = getSim(expected, word);
+
+      if (sim >= thresh) {
+        // Good match
+        if (recitWordStates[wi] !== "correct") recitUpdateWord(wi, "correct");
+        recitMatchedCount = wi + 1;
+        recitSpokenCount = si + 1;
+        verseSkips = 0;
+        wi++;
         si++;
+
       } else {
-        // Look ahead: user might have skipped this word
-        if (matchIdx + 1 < recitWordsNorm.length) {
-          var skipDist = levenshtein(recitWordsNorm[matchIdx + 1], spoken);
-          var skipMax = Math.max(recitWordsNorm[matchIdx + 1].length, spoken.length);
-          if (skipMax > 0 && (1 - skipDist / skipMax) >= 0.50) {
-            recitUpdateWord(matchIdx, "error");
-            recitUpdateWord(matchIdx + 1, "correct");
-            recitMatchedCount = matchIdx + 2;
-            si++;
-            matchIdx++;
+        // Check: maybe next spoken word is a better match (current is noise/filler)
+        if (si + 1 < spoken.length) {
+          var simNextSpoken = getSim(expected, spoken[si + 1]);
+          if (simNextSpoken >= thresh && simNextSpoken > sim + 0.10) {
+            si++; // discard noisy spoken word, retry same verse word
             continue;
           }
         }
-        recitUpdateWord(matchIdx, "error");
-        recitMatchedCount = matchIdx + 1;
-        si++;
+
+        // Check: maybe next verse word matches (user skipped/mispronounced current)
+        if (verseSkips < 2 && wi + 1 < recitWordsNorm.length) {
+          var simNextVerse = getSim(recitWordsNorm[wi + 1], word);
+          if (simNextVerse >= thresh) {
+            if (recitWordStates[wi] !== "correct") recitUpdateWord(wi, "skipped");
+            verseSkips++;
+            wi++;
+            continue; // retry same spoken word against next verse word
+          }
+        }
+
+        // No match found — stop here; wait for more speech
+        verseSkips = 0;
+        break;
       }
     }
 
-    // Update active word indicator
+    // Highlight the next expected word
     if (recitMatchedCount < recitWords.length) {
-      var nextSpan = document.getElementById("recit-w-" + recitMatchedCount);
-      if (nextSpan && recitWordStates[recitMatchedCount] === "pending") {
-        nextSpan.className = "recit-word recit-word-active";
+      var activeSpan = document.getElementById("recit-w-" + recitMatchedCount);
+      if (activeSpan && recitWordStates[recitMatchedCount] === "pending") {
+        activeSpan.className = "recit-word recit-word-active";
       }
     }
 
@@ -2803,6 +2834,43 @@
     }
   }
 
+  // ---- iOS watchdog: auto-restart recognition after silence ----
+  function recitClearWatchdog() {
+    if (recitWatchdogTimer) { clearTimeout(recitWatchdogTimer); recitWatchdogTimer = null; }
+  }
+  function recitStartWatchdog() {
+    recitClearWatchdog();
+    if (!recitIsListening || !recitIsNative) return;
+    recitWatchdogTimer = setTimeout(async function () {
+      if (!recitIsListening || !recitIsNative) return;
+      // iOS recognition stopped due to silence — restart silently
+      console.log("Recit watchdog: restarting recognition after silence");
+      try {
+        var SR = window.Capacitor.Plugins.SpeechRecognition;
+        if (recitListener) { recitListener.remove(); recitListener = null; }
+        try { await SR.stop(); } catch (e) {}
+        recitSpokenCount = 0; // new session, transcript resets
+        recitLastTranscript = "";
+        await new Promise(function (r) { setTimeout(r, 250); });
+        recitListener = await SR.addListener("partialResults", function (event) {
+          if (!event.matches || !event.matches.length) return;
+          // Try all alternatives, use first that is non-empty
+          var best = event.matches[0];
+          for (var i = 0; i < event.matches.length; i++) {
+            if (event.matches[i] && event.matches[i].length > 0) { best = event.matches[i]; break; }
+          }
+          if (best && best !== recitLastTranscript) {
+            recitLastTranscript = best;
+            recitProcessPartial(best);
+            recitStartWatchdog(); // reset watchdog on any activity
+          }
+        });
+        await SR.start({ language: "ar-SA", partialResults: true, maxResults: 3, popup: false });
+        recitStartWatchdog();
+      } catch (e) { console.error("Watchdog restart error:", e); }
+    }, 8000); // restart after 8 s of inactivity
+  }
+
   async function recitStartListening() {
     if (recitIsListening || (!recitIsNative && !recitIsWeb)) return;
     try {
@@ -2810,18 +2878,24 @@
         // --- Capacitor (iOS native) ---
         var SR = window.Capacitor.Plugins.SpeechRecognition;
         if (recitListener) { recitListener.remove(); recitListener = null; }
+        recitSpokenCount = 0;   // new ASR session — transcript resets to ""
+        recitLastTranscript = "";
         recitListener = await SR.addListener("partialResults", function (event) {
-          if (event.matches && event.matches.length > 0) {
-            var transcript = event.matches[0];
-            if (transcript !== recitLastTranscript) {
-              recitLastTranscript = transcript;
-              recitProcessPartial(transcript);
-            }
+          if (!event.matches || !event.matches.length) return;
+          var best = event.matches[0];
+          for (var i = 0; i < event.matches.length; i++) {
+            if (event.matches[i] && event.matches[i].length > 0) { best = event.matches[i]; break; }
+          }
+          if (best && best !== recitLastTranscript) {
+            recitLastTranscript = best;
+            recitProcessPartial(best);
+            recitStartWatchdog(); // reset watchdog on speech activity
           }
         });
-        await SR.start({ language: "ar-SA", partialResults: true, maxResults: 1, popup: false });
+        await SR.start({ language: "ar-SA", partialResults: true, maxResults: 3, popup: false });
+        recitStartWatchdog(); // start watchdog to handle silence timeouts
       } else {
-        // --- Web Speech API (navigateur) ---
+        // --- Web Speech API (browser) ---
         var WSR = window.SpeechRecognition || window.webkitSpeechRecognition;
         recitWebRecognition = new WSR();
         recitWebRecognition.lang = "ar-SA";
@@ -2830,8 +2904,9 @@
         recitWebRecognition.onresult = function (event) {
           var transcript = "";
           for (var i = 0; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+            transcript += event.results[i][0].transcript + " ";
           }
+          transcript = transcript.trim();
           if (transcript !== recitLastTranscript) {
             recitLastTranscript = transcript;
             recitProcessPartial(transcript);
@@ -2842,9 +2917,11 @@
           if (e.error !== "aborted") showToast("Erreur micro : " + e.error);
         };
         recitWebRecognition.onend = function () {
-          // Auto-restart if still supposed to be listening (Chrome stops after silence)
+          // Auto-restart if still listening (browser stops after silence)
           if (recitIsListening) {
-            try { recitWebRecognition.start(); } catch(e) {}
+            recitIsListening = false; // reset flag so recitStartListening can proceed
+            recitWebRecognition = null;
+            setTimeout(recitStartListening, 300);
           }
         };
         recitWebRecognition.start();
@@ -2853,6 +2930,8 @@
       $("recit-mic-btn").classList.add("recording");
       $("recit-mic-label").textContent = "Écoute en cours... Appuyez pour arrêter";
       $("recit-status").textContent = "Récitez le verset...";
+      var tEl = $("recit-transcript");
+      if (tEl) tEl.textContent = "";
     } catch (err) {
       console.error("Recit start error:", err);
       showToast("Erreur reconnaissance vocale");
@@ -2862,6 +2941,7 @@
   async function recitStopListening() {
     if (!recitIsListening) return;
     recitIsListening = false;
+    recitClearWatchdog();
     if (recitIsNative) {
       try {
         var SR = window.Capacitor.Plugins.SpeechRecognition;
@@ -3289,10 +3369,24 @@
 
   function normalizeArabic(text) {
     return text
-      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0615\u0616\u0617\u0618\u0619\u061A]/g, "")
-      .replace(/[\u0622\u0623\u0625]/g, "\u0627")
+      // Remove all diacritics, Quranic marks and extended Arabic annotation signs
+      .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06ED\u0670]/g, "")
+      // Remove tatweel / kashida
+      .replace(/\u0640/g, "")
+      // Normalize all alef variants (madda, hamza above, hamza below, wasla, superscript) → plain alef
+      .replace(/[\u0622\u0623\u0625\u0671\u0672\u0673\u0675]/g, "\u0627")
+      // Standalone hamza → alef
+      .replace(/\u0621/g, "\u0627")
+      // Waw with hamza above → waw
+      .replace(/\u0624/g, "\u0648")
+      // Ya with hamza above → ya
+      .replace(/\u0626/g, "\u064A")
+      // Alef maqsura → ya
       .replace(/\u0649/g, "\u064A")
+      // Taa marbuta → ha
       .replace(/\u0629/g, "\u0647")
+      // Normalize lam-alef ligature variants
+      .replace(/[\uFEFB\uFEFC\uFEF5\uFEF6\uFEF7\uFEF8]/g, "\u0644\u0627")
       .replace(/\s+/g, " ").trim();
   }
 
