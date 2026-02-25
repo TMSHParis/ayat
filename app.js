@@ -886,17 +886,9 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === state.readingMode);
     });
-    var minimalColorGroup = $("minimal-color-group");
-    if (minimalColorGroup) {
-      minimalColorGroup.classList.toggle("hidden", state.readingMode !== "minimal");
-    }
     document.querySelectorAll("#minimal-color-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", (btn.dataset.minimalColors === "true") === !!state.minimalColors);
     });
-    var tajwidColorGroup = $("tajwid-color-group");
-    if (tajwidColorGroup) {
-      tajwidColorGroup.classList.toggle("hidden", state.readingMode !== "tajwid");
-    }
     document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", (btn.dataset.tajwidColors === "true") === !!state.tajwidColors);
     });
@@ -3347,7 +3339,7 @@
     error.classList.add("hidden");
 
     if (state === "idle") {
-      status.textContent = "Appuyez pour écouter la récitation";
+      status.textContent = "Récitez un verset ou laissez écouter une récitation pour retrouver la sourate et le verset";
     } else if (state === "listening") {
       btn.classList.add("listening");
       rings.classList.add("active");
@@ -4084,6 +4076,11 @@
     document.querySelectorAll("#mode-buttons .setting-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         setReadingMode(btn.dataset.mode);
+        // Show color sub-group for the selected mode
+        var minG = $("minimal-color-group");
+        var tajG = $("tajwid-color-group");
+        if (minG) minG.classList.toggle("hidden", btn.dataset.mode !== "minimal");
+        if (tajG) tajG.classList.toggle("hidden", btn.dataset.mode !== "tajwid");
       });
     });
 

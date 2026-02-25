@@ -284,7 +284,7 @@
         <button class="setting-btn active" data-mode="minimal">Minimal</button>
         <button class="setting-btn" data-mode="tajwid">Tajwid</button>
       </div>
-      <div id="minimal-color-group" class="setting-sub-group">
+      <div id="minimal-color-group" class="setting-sub-group hidden">
         <div class="setting-sub-label">Couleurs</div>
         <div class="setting-buttons" id="minimal-color-buttons">
           <button class="setting-btn active" data-minimal-colors="false">Sans couleurs</button>
@@ -412,6 +412,24 @@
     <div class="help-section">
       <div class="help-title">Horaires de prière</div>
       <div class="help-text">Accédez aux horaires depuis le menu. Choisissez IslamSounnah (hors connexion) ou Mawaqit (mosquée à proximité).</div>
+    </div>
+    <div class="help-section help-section-highlight">
+      <div class="help-title">Méthode de calcul IslamSounnah</div>
+      <div class="help-text">
+        La méthode <strong>IslamSounnah</strong> est spécialement conçue pour la France et les hautes latitudes. Elle fonctionne <strong>hors connexion</strong> et corrige les problèmes que rencontrent les méthodes classiques en été.
+      </div>
+      <div class="help-text" style="margin-top:8px">
+        <strong>Principe :</strong> En France, les signes astronomiques du Fajr et de l'Isha peuvent disparaître en été (le soleil ne descend pas assez sous l'horizon). IslamSounnah utilise alors une <strong>interpolation</strong> basée sur les derniers jours où le signe est observable, conformément à l'avis de nombreux savants.
+      </div>
+      <div class="help-text" style="margin-top:8px">
+        <strong>Angles utilisés :</strong> Fajr à −18° (aube astronomique), Isha à −17° (crépuscule astronomique). Quand ces angles ne sont plus atteignables, l'interpolation prend le relais pour garantir des horaires cohérents toute l'année.
+      </div>
+      <div class="help-text" style="margin-top:8px">
+        <strong>Asr :</strong> Calcul selon l'école de la majorité (ombre = 1× la taille de l'objet + ombre au zénith).
+      </div>
+      <div class="help-text" style="margin-top:8px">
+        <strong>Informations supplémentaires :</strong> L'application affiche aussi le milieu de la nuit et le dernier tiers de la nuit, deux repères importants pour la prière nocturne (Qiyam al-Layl).
+      </div>
     </div>
     <div class="help-section">
       <div class="help-title">Partage</div>
@@ -822,7 +840,7 @@
     </div>
 
     <!-- Status text -->
-    <p class="shazam-status" id="shazam-status">Appuyez pour écouter la récitation</p>
+    <p class="shazam-status" id="shazam-status">Récitez un verset ou laissez écouter une récitation pour retrouver la sourate et le verset</p>
 
     <!-- Sound wave bars (visible during recording) -->
     <div class="shazam-waves hidden" id="shazam-waves">
