@@ -938,7 +938,7 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   height: 100%; width: 0%;
   background: var(--accent);
   border-radius: 3px;
-  transition: width .3s ease;
+  transition: width 1s ease;
 }
 @keyframes splash-fadein {
   to { opacity: 1; transform: translateY(0); }

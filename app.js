@@ -3788,6 +3788,7 @@
     applyTheme();
 
     // Animate progress bar during load
+    var splashStart = Date.now();
     if (splashBar) splashBar.style.width = "30%";
 
     try {
@@ -3843,8 +3844,10 @@
 
     $("app").classList.remove("hidden");
 
-    // Hold splash for a moment so user can read the verse, then fade out
-    await new Promise(function (resolve) { setTimeout(resolve, 1200); });
+    // Ensure splash stays at least 3s total so user can read the verse
+    var elapsed = Date.now() - splashStart;
+    var remaining = Math.max(0, 3000 - elapsed);
+    await new Promise(function (resolve) { setTimeout(resolve, remaining); });
     if (splashEl) {
       splashEl.classList.add("splash-hide");
       // Remove from DOM after fade transition
