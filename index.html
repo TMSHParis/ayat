@@ -13,6 +13,18 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Apply theme instantly to prevent flash on splash screen
+    (function(){
+      try {
+        var s = JSON.parse(localStorage.getItem("qurani-app-state") || "{}");
+        var t = s.theme || "light";
+        if (t === "auto") t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "dark") document.documentElement.classList.add("dark");
+        else if (t === "sepia") document.documentElement.classList.add("sepia");
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body>
 

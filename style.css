@@ -52,7 +52,7 @@
   --glass-blur:      blur(28px) saturate(1.8);
 }
 
-body.sepia {
+body.sepia, html.sepia {
   --accent: #3d3425;
   --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(251,191,36,.07) 0%, transparent 65%),
         radial-gradient(ellipse 70% 45% at 85% 100%, rgba(180,120,50,.06) 0%, transparent 65%),
@@ -75,7 +75,7 @@ body.sepia {
   --glass-blur:      blur(28px) saturate(1.6);
 }
 
-body.dark {
+body.dark, html.dark {
   --accent: #e0e0e0;
   --bg: radial-gradient(ellipse 90% 55% at 15% 0%,  rgba(245,158,11,.06) 0%, transparent 65%),
         radial-gradient(ellipse 70% 45% at 85% 100%, rgba(249,115,22,.04) 0%, transparent 65%),
