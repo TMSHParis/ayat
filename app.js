@@ -3780,11 +3780,24 @@
 
   // ---- INIT ----
   async function init() {
+    var splashBar = $("splash-bar");
+    var splashEl = $("splash");
+
+    // Apply theme early so splash matches user's theme
+    state = loadState();
+    applyTheme();
+
+    // Animate progress bar during load
+    if (splashBar) splashBar.style.width = "30%";
+
     try {
       var results = await Promise.all([
         fetch("quran.json").then(function (r) { return r.json(); }),
         fetch("quran-fr.json").then(function (r) { return r.json(); })
       ]);
+
+      if (splashBar) splashBar.style.width = "70%";
+
       var rawSurahs = results[0];
       var rawSurahsFr = results[1];
 
@@ -3824,12 +3837,19 @@
       return;
     }
 
-    state = loadState();
-    applyTheme(); // apply theme before showing UI to avoid flash
+    if (splashBar) splashBar.style.width = "100%";
+
     applyMode();  // apply reading mode before showing UI
 
-    $("loading").classList.add("hidden");
     $("app").classList.remove("hidden");
+
+    // Hold splash for a moment so user can read the verse, then fade out
+    await new Promise(function (resolve) { setTimeout(resolve, 1200); });
+    if (splashEl) {
+      splashEl.classList.add("splash-hide");
+      // Remove from DOM after fade transition
+      setTimeout(function () { splashEl.remove(); }, 700);
+    }
 
     render();
 
