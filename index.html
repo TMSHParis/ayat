@@ -47,95 +47,393 @@
 </div>
 
 <!-- ====== MAIN APP ====== -->
-<div id="app" class="hidden">
+<div id="app" class="hidden app-dark-tabs">
 
-  <!-- Header -->
-  <header class="header">
-    <button class="menu-btn" id="menu-btn" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"/>
-        <line x1="3" y1="12" x2="21" y2="12"/>
-        <line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-    </button>
-    <button class="back-btn hidden" id="back-btn" aria-label="Retour">← Retour</button>
-    <span class="header-title" id="header-title">QURANI</span>
-    <div class="header-actions" id="header-actions">
-      <button class="action-btn" id="search-btn" aria-label="Rechercher">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  <!-- ====== TAB: ACCUEIL (Dashboard) ====== -->
+  <div id="tab-accueil" class="tab-panel">
+    <div class="dashboard">
+
+      <!-- Ambient sun/moon glow overlay -->
+      <div class="dash-ambient-glow" id="dash-ambient-glow"></div>
+
+      <!-- Compact Prayer Bar -->
+      <div class="dash-prayer-bar" id="dash-prayer-bar">
+        <div class="dash-prayer-timeline" id="dash-prayer-timeline"></div>
+        <div class="dash-prayer-info">
+          <div class="dash-prayer-left">
+            <div class="dash-day-name" id="dash-day-name"></div>
+            <div class="dash-prayer-countdown" id="dash-prayer-countdown"></div>
+          </div>
+          <button class="dash-prayer-expand" id="dash-prayer-expand" aria-label="Horaires">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ramadan / Invocations -->
+      <div class="dash-card dash-invocation-card">
+        <div class="dash-card-label-row">
+          <span class="dash-card-label" id="dash-card-label"></span>
+          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="dash-card-prompt">Avez-vous fait vos invocations de protection&nbsp;?</div>
+        <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+      </div>
+
+      <!-- Thin separator -->
+      <div class="dash-thin-line"></div>
+
+      <!-- Today's Verse -->
+      <div class="dash-verse-section" id="dash-reading-card">
+        <div class="dash-verse-header">
+          <span class="dash-verse-title">Versets du Jour</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="dash-verse-subtitle" id="dash-reading-subtitle"></div>
+      </div>
+
+      <!-- Emotion Wheel -->
+      <div class="dash-emotion" id="dash-emotion">
+        <div class="dash-emotion-question">Comment vous sentez-vous aujourd&rsquo;hui&nbsp;?</div>
+        <div class="dash-emotion-selected" id="dash-emotion-selected">Gratitude</div>
+        <div class="dash-emotion-radial">
+          <div class="dash-emotion-wheel" id="dash-emotion-wheel"></div>
+          <button class="dash-emotion-plus" id="dash-emotion-plus">
+            <span>+</span>
+          </button>
+          <div class="dash-emotion-stem"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ====== TAB: CORAN (existing reader) ====== -->
+  <div id="tab-coran" class="tab-panel hidden">
+
+    <!-- KHATM LANDING -->
+    <div id="khatm-landing">
+      <div id="khatm-hero">
+        <div id="khatm-hero-bg"></div>
+        <div id="khatm-hero-fade"></div>
+        <div id="khatm-hero-content">
+
+          <!-- Khatm ACTIF : grand titre + ··· inline -->
+          <div id="kh-active-header" class="hidden">
+            <h1 id="kh-days-title">45 jours jusqu'au khatm</h1>
+            <button id="khatm-hero-menu">···</button>
+          </div>
+
+          <!-- Khatm INACTIF : titre + sous-titre -->
+          <div id="kh-no-khatm">
+            <h1>Commencez votre Khatm</h1>
+            <p>Lisez le Coran du début à la fin, en continu.</p>
+          </div>
+
+          <!-- Bouton principal -->
+          <div id="khatm-hero-actions">
+            <button id="khatm-hero-btn">COMMENCER MON KHATM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dropdown style iOS (outside #khatm-hero to avoid overflow:hidden clip) -->
+      <div id="khatm-hero-dropdown">
+        <button id="kh-history-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Historique
+        </button>
+        <div class="kh-menu-sep"></div>
+        <button id="khatm-reset-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <span>Supprimer</span>
+        </button>
+      </div>
+      <!-- Progression du khatm -->
+      <div id="khatm-progress-card" class="hidden">
+        <div id="kp-inner">
+          <svg id="kp-svg" viewBox="0 0 44 44" width="44" height="44">
+            <circle class="kp-track" cx="22" cy="22" r="17"/>
+            <circle id="kp-arc" class="kp-arc" cx="22" cy="22" r="17"/>
+          </svg>
+          <div id="kp-text">
+            <span id="kp-pct-label">0% complété</span>
+            <span id="kp-loc-label">AL-FATIHA · 1</span>
+          </div>
+          <div id="kp-days-wrap">
+            <span id="kp-days-num">30</span>
+            <span id="kp-days-lbl">JOURS REST.</span>
+          </div>
+          <svg class="kp-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <div id="khatm-surah-wrap"></div>
+    </div>
+
+    <!-- CLASSIC READER (hidden behind landing) -->
+    <div id="coran-classic-wrap">
+    <header class="header">
+      <button class="menu-btn" id="menu-btn" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
+      <button class="back-btn hidden" id="back-btn" aria-label="Retour">&larr; Retour</button>
+      <span class="header-title" id="header-title">QURANI</span>
+      <div class="header-actions" id="header-actions">
+        <button class="action-btn" id="search-btn" aria-label="Rechercher">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+    <div class="ayah-container" id="ayah-container">
+      <p class="ayah-ref ayah-ref-clickable" id="ayah-ref" title="Voir les sourates"></p>
+      <div class="ayah-scroll" id="ayah-scroll">
+        <div class="ayah-scroll-inner">
+          <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
+        </div>
+      </div>
+      <div class="nav-arrows" id="nav-arrows">
+        <button class="nav-btn" id="share-btn" aria-label="Partager">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="prev-btn" aria-label="Verset pr&eacute;c&eacute;dent">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="audio-btn" aria-label="&Eacute;couter le verset">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="next-btn" aria-label="Verset suivant">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 6 15 12 9 18"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="bookmark-btn" aria-label="Signet">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+          </svg>
+        </button>
+      </div>
     </div>
+    <div class="goal-reached hidden" id="goal-reached">
+      <p>Objectif du jour atteint &#x2713;</p>
+      <button id="continue-btn">Continuer la lecture</button>
+    </div>
+    <div class="progress-section">
+      <div class="progress-row">
+        <div class="progress-labels">
+          <span>Versets du jour</span>
+          <span id="today-label">0/0</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill-today" id="today-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-labels">
+          <span>Lecture compl&egrave;te</span>
+          <span id="khatma-label">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill-khatma" id="khatma-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /coran-classic-wrap -->
+  </div>
+
+  <!-- ====== TAB: INVOCATION ====== -->
+  <div id="tab-invocation" class="tab-panel hidden">
+    <div class="dua-tab-scroll">
+      <h2 class="dua-tab-title">Invocations</h2>
+      <p class="dua-tab-subtitle">Les du&rsquo;as authentiques du Proph&egrave;te &#xFDFA;</p>
+      <div class="dua-grid" id="dua-grid"></div>
+    </div>
+  </div>
+
+  <!-- ====== TAB BAR ====== -->
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab-bar-btn active" data-tab="accueil">
+      <span class="tab-bar-label">ACCUEIL</span>
+      <span class="tab-bar-dot"></span>
+    </button>
+    <button class="tab-bar-btn" data-tab="coran">
+      <span class="tab-bar-label">QURAN</span>
+      <span class="tab-bar-dot"></span>
+    </button>
+    <button class="tab-bar-btn" data-tab="invocation">
+      <span class="tab-bar-label">DU&rsquo;A</span>
+      <span class="tab-bar-dot"></span>
+    </button>
+    <button class="tab-bar-btn" data-tab="ayati">
+      <span class="tab-bar-label">MOI</span>
+      <span class="tab-bar-dot"></span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ====== KHATM WIZARD ====== -->
+<div id="khatm-wizard" class="overlay hidden">
+  <!-- Step 1: Point de départ -->
+  <div id="kw-step-start" class="kw-step">
+    <button class="kw-close-btn" id="kw-close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 class="kw-title">D'où commencez-vous&nbsp;?</h2>
+    <div class="kw-opts">
+      <div class="kw-opt" id="kw-from-start">
+        <div class="kw-opt-inner">
+          <span class="kw-opt-name">Depuis le début</span>
+          <span class="kw-opt-desc">Un nouveau départ, à votre rythme</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="kw-opt" id="kw-from-specific">
+        <div class="kw-opt-inner">
+          <span class="kw-opt-name">Verset spécifique</span>
+          <span class="kw-opt-desc">Choisissez d'où vous souhaitez commencer</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1b: Verset spécifique -->
+  <div id="kw-step-ayah" class="kw-step hidden">
+    <button class="kw-back-btn" id="kw-ayah-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 class="kw-title">Sélectionner un verset</h2>
+    <div class="kw-manual">
+      <p class="kw-section-head">Saisir manuellement</p>
+      <div class="kw-field" id="kw-surah-row">
+        <span class="kw-field-label">SOURATE</span>
+        <div class="kw-field-right">
+          <span class="kw-field-val" id="kw-surah-display">Choisir une sourate</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+      <div class="kw-field hidden" id="kw-ayah-row">
+        <span class="kw-field-label">VERSET</span>
+        <input type="number" class="kw-num-input" id="kw-ayah-input" min="1" value="1" inputmode="numeric">
+      </div>
+    </div>
+    <button class="khatm-cta" id="kw-ayah-continue">CONTINUER</button>
+  </div>
+
+  <!-- Step 2: Objectif -->
+  <div id="kw-step-goal" class="kw-step hidden">
+    <button class="kw-back-btn" id="kw-goal-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 class="kw-title">Définissez votre objectif</h2>
+    <p class="kw-goal-sub" id="kw-goal-sub">Vous commencez depuis le début</p>
+    <div class="kw-goal-list">
+      <div class="kw-goal-opt" data-days="30">
+        <div class="kw-goal-inner"><span class="kw-goal-name">1 Juz</span><span class="kw-goal-info">20 PAGES · TERMINER EN 30 JOURS</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="kw-goal-opt" data-days="60">
+        <div class="kw-goal-inner"><span class="kw-goal-name">1 Hizb</span><span class="kw-goal-info">10 PAGES · TERMINER EN 60 JOURS</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="kw-goal-opt" data-days="80">
+        <div class="kw-goal-inner"><span class="kw-goal-name">3 Rub</span><span class="kw-goal-info">7,5 PAGES · TERMINER EN 80 JOURS</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="kw-goal-opt" data-days="120">
+        <div class="kw-goal-inner"><span class="kw-goal-name">2 Rub</span><span class="kw-goal-info">5 PAGES · TERMINER EN 120 JOURS</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="kw-goal-opt" data-days="240">
+        <div class="kw-goal-inner"><span class="kw-goal-name">1 Rub</span><span class="kw-goal-info">2,5 PAGES · TERMINER EN 240 JOURS</span></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Surah picker (bottom sheet) -->
+  <div id="kw-surah-picker" class="hidden">
+    <div id="kw-picker-handle"></div>
+    <div id="kw-picker-list"></div>
+  </div>
+</div>
+
+<!-- ====== KHATM READER ====== -->
+<div id="khatm-reader" class="overlay hidden">
+  <div id="kr-bg"></div>
+  <!-- Barre de progression fine -->
+  <div id="kr-progress-bar-wrap"><div id="kr-progress-bar"></div></div>
+  <header id="kr-header">
+    <button id="kr-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div id="kr-header-title">
+      <span id="kr-surah-name">Al-Fatiha</span>
+      <span id="kr-surah-sub">L'OUVERTURE</span>
+    </div>
+    <button id="kr-menu-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </button>
   </header>
 
-  <!-- Ayah viewer -->
-  <div class="ayah-container" id="ayah-container">
-    <p class="ayah-ref ayah-ref-clickable" id="ayah-ref" title="Voir les sourates"></p>
-    <div class="ayah-scroll" id="ayah-scroll">
-      <div class="ayah-scroll-inner">
-        <div class="ayah-text size-M" id="ayah-text" dir="rtl"></div>
+  <!-- Panel paramètres -->
+  <div id="kr-panel" class="hidden">
+    <div id="kr-panel-top">
+      <span id="kr-panel-title">Mon Khatm</span>
+      <span id="kr-panel-days"></span>
+    </div>
+    <div class="kr-panel-row" id="kr-lang-row">
+      <div><span class="kr-panel-name">Langue</span><span class="kr-panel-val" id="kr-lang-val">ARABE &amp; FRANÇAIS</span></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div id="kr-lang-picker" class="hidden">
+      <div class="kr-lang-opt" data-lang="ar">Arabe</div>
+      <div class="kr-lang-opt" data-lang="fr">Français</div>
+      <div class="kr-lang-opt active" data-lang="ar+fr">Arabe &amp; Français</div>
+    </div>
+    <!-- Mode de lecture -->
+    <div class="kr-panel-row" id="kr-mode-row">
+      <div><span class="kr-panel-name">Mode de lecture</span><span class="kr-panel-val" id="kr-mode-val">MINIMAL</span></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div id="kr-mode-picker" class="hidden">
+      <div class="kr-mode-opt" data-mode="minimal">
+        <div class="kr-mode-opt-text"><span class="kr-mode-label">Minimal</span><span class="kr-mode-desc">Sans couleurs · sans signes de waqf</span></div>
+      </div>
+      <div class="kr-mode-opt" data-mode="minimal-color">
+        <div class="kr-mode-opt-text"><span class="kr-mode-label">Minimal · couleurs</span><span class="kr-mode-desc">Couleurs tajwid · sans signes de waqf</span></div>
+      </div>
+      <div class="kr-mode-opt" data-mode="tajwid">
+        <div class="kr-mode-opt-text"><span class="kr-mode-label">Tajwid</span><span class="kr-mode-desc">Signes de waqf visibles · sans couleurs</span></div>
+      </div>
+      <div class="kr-mode-opt" data-mode="tajwid-color">
+        <div class="kr-mode-opt-text"><span class="kr-mode-label">Tajwid · couleurs</span><span class="kr-mode-desc">Couleurs tajwid + signes de waqf</span></div>
       </div>
     </div>
-    <div class="nav-arrows" id="nav-arrows">
-      <button class="nav-btn" id="share-btn" aria-label="Partager">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
-          <polyline points="16 6 12 2 8 6"/>
-          <line x1="12" y1="2" x2="12" y2="15"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="prev-btn" aria-label="Verset précédent">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="audio-btn" aria-label="Écouter le verset">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="5 3 19 12 5 21 5 3"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="next-btn" aria-label="Verset suivant">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 6 15 12 9 18"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="bookmark-btn" aria-label="Signet">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-        </svg>
-      </button>
+    <div class="kr-panel-row">
+      <div><span class="kr-panel-name">Taille du texte</span><span class="kr-panel-val" id="kr-size-val">100% (PAR DÉFAUT)</span></div>
+      <div class="kr-size-btns"><button id="kr-size-minus">−</button><button id="kr-size-plus">+</button></div>
     </div>
   </div>
 
-  <!-- Goal reached -->
-  <div class="goal-reached hidden" id="goal-reached">
-    <p>Objectif du jour atteint ✓</p>
-    <button id="continue-btn">Continuer la lecture</button>
-  </div>
-
-  <!-- Progress bars -->
-  <div class="progress-section">
-    <div class="progress-row">
-      <div class="progress-labels">
-        <span>Versets du jour</span>
-        <span id="today-label">0/0</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill-today" id="today-fill" style="width:0%"></div>
-      </div>
-    </div>
-    <div class="progress-row">
-      <div class="progress-labels">
-        <span>Lecture complète</span>
-        <span id="khatma-label">0%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill-khatma" id="khatma-fill" style="width:0%"></div>
-      </div>
-    </div>
-  </div>
+  <!-- Zone de lecture -->
+  <div id="kr-scroll"></div>
 </div>
 
 <!-- ====== MENU OVERLAY ====== -->
@@ -694,53 +992,97 @@
 </div>
 
 <!-- ====== PRAYER TIMES OVERLAY ====== -->
-<div id="prayer-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Horaires de prière</h2>
+<div id="prayer-overlay" class="overlay hidden prayer-overlay-bg">
+  <!-- Sun rays / light beam overlay -->
+  <div class="prayer-sun-rays" id="prayer-sun-rays"></div>
+  <!-- Close button -->
+  <div class="prayer-top-bar">
     <button class="close-btn" id="prayer-close" aria-label="Fermer">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
   </div>
-  <div class="overlay-body">
-    <!-- City search bar -->
-    <div id="prayer-location-bar" class="prayer-location-bar"></div>
 
-    <div id="prayer-loading" class="prayer-state">
-      <div class="spinner"></div>
-      <p class="prayer-state-text">Localisation en cours...</p>
+  <!-- Date navigation -->
+  <div class="prayer-date-nav">
+    <button class="prayer-date-arrow" id="prayer-date-prev" aria-label="Jour précédent">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="prayer-date-center">
+      <div class="prayer-date-gregorian" id="prayer-date-gregorian">Aujourd'hui</div>
+      <div class="prayer-date-hijri" id="prayer-date-hijri"></div>
     </div>
-    <div id="prayer-error" class="prayer-state hidden">
-      <p class="prayer-state-text" id="prayer-error-msg">Impossible de charger.</p>
-      <button class="qibla-action-btn" id="prayer-retry">Réessayer</button>
-    </div>
-    <!-- Mawaqit mosque selector (shown when searching nearby mosques) -->
-    <div id="prayer-mosque-selector" class="mosque-selector hidden"></div>
+    <button class="prayer-date-arrow" id="prayer-date-next" aria-label="Jour suivant">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
 
-    <div id="prayer-content" class="hidden">
-      <div class="prayer-next-card">
-        <div class="prayer-next-label">Prochaine prière</div>
-        <div class="prayer-next-name" id="prayer-next-name">—</div>
-        <div class="prayer-countdown" id="prayer-countdown">—</div>
-        <div class="prayer-progress-bar">
-          <div class="prayer-progress-fill" id="prayer-progress-fill"></div>
-        </div>
-        <div class="prayer-progress-labels">
-          <span id="prayer-progress-prev">—</span>
-          <span id="prayer-progress-next">—</span>
+  <!-- Timeline + prayer names (aligned together) -->
+  <div class="prayer-timeline-section">
+    <div class="prayer-timeline" id="prayer-timeline"></div>
+    <div class="prayer-times-row" id="prayer-times-row"></div>
+  </div>
+
+  <!-- Spacer to push countdown down -->
+  <div class="prayer-spacer"></div>
+
+  <!-- Countdown (floats over background) -->
+  <div class="prayer-countdown-overlay" id="prayer-countdown-overlay">
+    <div class="prayer-countdown-label" id="prayer-countdown-label">Prochaine prière</div>
+    <div class="prayer-countdown-name" id="prayer-countdown-name"></div>
+    <div class="prayer-countdown-time" id="prayer-countdown-time"></div>
+  </div>
+
+  <!-- Loading / Error states -->
+  <div id="prayer-loading" class="prayer-state">
+    <div class="spinner"></div>
+    <p class="prayer-state-text">Localisation en cours...</p>
+  </div>
+  <div id="prayer-error" class="prayer-state hidden">
+    <p class="prayer-state-text" id="prayer-error-msg">Impossible de charger.</p>
+    <button class="qibla-action-btn" id="prayer-retry">Réessayer</button>
+  </div>
+  <!-- Mawaqit mosque selector -->
+  <div id="prayer-mosque-selector" class="mosque-selector hidden"></div>
+
+  <!-- Bottom action bar -->
+  <div class="prayer-bottom-bar">
+    <button class="prayer-bottom-btn" id="prayer-qibla-btn">QIBLA</button>
+    <div class="prayer-bottom-location" id="prayer-bottom-location"></div>
+    <button class="prayer-bottom-btn" id="prayer-settings-btn">RÉGLAGES</button>
+  </div>
+
+  <!-- Settings sub-panel (slides up) -->
+  <div id="prayer-settings-panel" class="prayer-settings-panel hidden">
+    <div class="prayer-settings-header">
+      <span class="prayer-settings-title">Réglages</span>
+      <button class="close-btn" id="prayer-settings-close" aria-label="Fermer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="prayer-settings-body">
+      <div id="prayer-location-bar" class="prayer-location-bar"></div>
+      <div class="setting-group" id="prayer-method-section">
+        <div class="setting-label">Méthode de calcul</div>
+        <div class="setting-buttons" id="prayer-method-buttons"></div>
+        <div id="prayer-mosque-row" class="prayer-mosque-row hidden">
+          <span class="prayer-mosque-label">Mosquée :</span>
+          <span id="prayer-mosque-name" class="prayer-mosque-name"></span>
+          <button class="prayer-mosque-change" id="prayer-mosque-change">Changer</button>
         </div>
       </div>
-      <div id="prayer-times-list" class="prayer-times-list"></div>
-    </div>
-    <div class="setting-group" id="prayer-method-section" style="margin-top:24px">
-      <div class="setting-label">Méthode de calcul</div>
-      <div class="setting-buttons" id="prayer-method-buttons"></div>
-      <!-- Mawaqit mosque info row -->
-      <div id="prayer-mosque-row" class="prayer-mosque-row hidden">
-        <span class="prayer-mosque-label">Mosquée :</span>
-        <span id="prayer-mosque-name" class="prayer-mosque-name"></span>
-        <button class="prayer-mosque-change" id="prayer-mosque-change">Changer</button>
+      <div id="prayer-night-info" class="prayer-night-info hidden">
+        <div class="prayer-night-item">
+          <span class="prayer-night-label">Moitié de la nuit</span>
+          <span class="prayer-night-value" id="prayer-midnight-val">--:--</span>
+        </div>
+        <div class="prayer-night-item">
+          <span class="prayer-night-label">Dernier tiers</span>
+          <span class="prayer-night-value" id="prayer-lastthird-val">--:--</span>
+        </div>
       </div>
     </div>
   </div>
@@ -954,6 +1296,114 @@
     </div>
 
   </div>
+</div>
+
+<!-- ====== EMOTION DETAIL OVERLAY ====== -->
+<div id="emotion-overlay" class="overlay hidden emotion-overlay-bg">
+  <div class="emotion-overlay-scroll">
+    <!-- HERO — full viewport -->
+    <div class="emotion-hero">
+      <div class="emotion-top-bar">
+        <button class="emotion-back-btn" id="emotion-close" aria-label="Retour">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button class="emotion-share-btn" id="emotion-share" aria-label="Partager">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="emotion-title" id="emotion-title"></h1>
+      <p class="emotion-quote" id="emotion-quote"></p>
+    </div>
+
+    <!-- ACTIONS — Se tourner vers / Se protéger de -->
+    <div class="emotion-actions">
+      <div class="emotion-section">
+        <div class="emotion-section-divider"></div>
+        <h3 class="emotion-section-label">SE TOURNER VERS</h3>
+        <ul class="emotion-list" id="emotion-turn-towards"></ul>
+      </div>
+      <div class="emotion-section">
+        <div class="emotion-section-divider"></div>
+        <h3 class="emotion-section-label">SE PROTÉGER DE</h3>
+        <ul class="emotion-list" id="emotion-guard-against"></ul>
+      </div>
+    </div>
+
+    <!-- ARTICLE — Versets & hadiths -->
+    <div class="emotion-article" id="emotion-article">
+      <h2 class="emotion-article-title" id="emotion-article-title"></h2>
+      <div class="emotion-article-entries" id="emotion-article-entries"></div>
+    </div>
+  </div>
+  <button class="float-back-fab" id="emotion-float-back" aria-label="Retour">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+</div>
+
+<!-- ====== DUA DETAIL OVERLAY ====== -->
+<div id="dua-overlay" class="overlay hidden emotion-overlay-bg">
+  <div class="emotion-overlay-scroll dua-overlay-scroll">
+    <div class="emotion-hero">
+      <div class="emotion-top-bar">
+        <button class="emotion-back-btn" id="dua-close" aria-label="Retour">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button class="emotion-share-btn" id="dua-share" aria-label="Partager">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="emotion-title" id="dua-title"></h1>
+      <p class="emotion-quote" id="dua-quote"></p>
+    </div>
+    <div class="emotion-article" id="dua-article">
+      <h2 class="emotion-article-title" id="dua-article-title"></h2>
+      <div class="emotion-article-entries" id="dua-entries"></div>
+    </div>
+  </div>
+  <button class="float-back-fab" id="dua-float-back" aria-label="Retour">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+</div>
+
+<!-- ====== KHATM DELETE SHEET ====== -->
+<div id="khatm-delete-sheet" class="hidden">
+  <div id="kds-backdrop"></div>
+  <div id="kds-panel">
+    <h2>Supprimer mon Khatm ?</h2>
+    <p id="kds-subtitle">Vous n'êtes qu'à <span id="kds-days"></span> jours de compléter votre khatm. Ce jalon est riche en bienfaits.</p>
+    <ul id="kds-list">
+      <li>Un moment de doua exaucée</li>
+      <li>Immenses récompenses et baraka</li>
+      <li>Renouvelle votre lien avec Allah</li>
+    </ul>
+    <div id="kds-btns">
+      <button id="kds-cancel">ANNULER</button>
+      <button id="kds-confirm">SUPPRIMER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== KHATM HISTORY OVERLAY ====== -->
+<div id="khatm-history-overlay" class="overlay hidden">
+  <div id="kh-hist-header">
+    <button id="kh-hist-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h1>Historique</h1>
+  </div>
+  <div id="kh-hist-list"></div>
 </div>
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>

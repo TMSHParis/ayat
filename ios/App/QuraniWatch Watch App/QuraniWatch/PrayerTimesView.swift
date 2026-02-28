@@ -66,7 +66,11 @@ struct PrayerTimesView: View {
             .navigationTitle("Qurani")
         }
         .onAppear {
-            prayerData = PrayerTimesData.load()
+            prayerData = PrayerTimesData.load() ?? PrayerTimesData(
+                fajr: "06:22", sunrise: "07:52", dhuhr: "13:04",
+                asr: "16:12", maghrib: "18:38", isha: "20:02",
+                date: "", timestamp: Date()
+            )
         }
     }
 }

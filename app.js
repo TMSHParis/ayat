@@ -40,6 +40,52 @@
     "L'Aube Naissante", "Les Hommes"
   ];
 
+  // ---- SURAH TRANSLITERATIONS ----
+  var SURAH_TRANSLIT = [
+    "", // 0 unused
+    "Al-Fatiha","Al-Baqara","Ali 'Imran","An-Nisa'",
+    "Al-Ma'ida","Al-An'am","Al-A'raf","Al-Anfal",
+    "At-Tawba","Yunus","Hud","Yusuf",
+    "Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl",
+    "Al-Isra'","Al-Kahf","Maryam","Ta-Ha",
+    "Al-Anbiya'","Al-Hajj","Al-Mu'minun","An-Nur",
+    "Al-Furqan","Ash-Shu'ara'","An-Naml","Al-Qasas",
+    "Al-'Ankabut","Ar-Rum","Luqman","As-Sajda",
+    "Al-Ahzab","Saba'","Fatir","Ya-Sin",
+    "As-Saffat","Sad","Az-Zumar","Ghafir",
+    "Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan",
+    "Al-Jathiya","Al-Ahqaf","Muhammad","Al-Fath",
+    "Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur",
+    "An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'a",
+    "Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahana",
+    "As-Saf","Al-Jumu'a","Al-Munafiqun","At-Taghabun",
+    "At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam",
+    "Al-Haqqa","Al-Ma'arij","Nuh","Al-Jinn",
+    "Al-Muzzammil","Al-Muddaththir","Al-Qiyama","Al-Insan",
+    "Al-Mursalat","An-Naba'","An-Nazi'at","'Abasa",
+    "At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq",
+    "Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiya",
+    "Al-Fajr","Al-Balad","Ash-Shams","Al-Layl",
+    "Ad-Duha","Ash-Sharh","At-Tin","Al-'Alaq",
+    "Al-Qadr","Al-Bayyina","Az-Zalzala","Al-'Adiyat",
+    "Al-Qari'a","At-Takathur","Al-'Asr","Al-Humaza",
+    "Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar",
+    "Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas",
+    "Al-Falaq","An-Nas"
+  ];
+
+  // Surah background images (50 landscape photos, cycling for 114 surahs)
+  var PRAYER_IMGS = [
+    "1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg","9.jpg","10.jpg",
+    "11.jpg","12.jpg","13.jpg","14.jpg","15.jpg","16.jpg","17.jpg","18.jpg","19.jpg","20.png",
+    "21.jpg","22.jpg","23.jpg","24.jpg","25.jpg","26.jpg","27.jpg","28.jpg","29.jpg","30.jpg",
+    "31.jpg","32.jpg","33.jpg","34.jpg","35.jpg","36.png","37.jpg","38.jpg","39.jpg","40.png",
+    "41.jpg","42.jpg","43.jpg","44.jpg","45.jpg","47.jpg","48.jpg","49.jpg","50.jpg","51.jpg"
+  ];
+  function getSurahImg(surahNum) {
+    return "img/prayer/" + PRAYER_IMGS[(surahNum - 1) % PRAYER_IMGS.length];
+  }
+
   // ---- DATA ----
   var surahs = [];
   var surahsFr = []; // French translation (parallel structure)
@@ -328,6 +374,11 @@
         if (state.readingMode === "tajwid") {
           if (freeReadMode) renderFreeReading();
           else render();
+        }
+        // Re-render khatm reader if open and in color mode
+        var krMode = khatm && khatm.krMode;
+        if (krMode && (krMode === "minimal-color" || krMode === "tajwid-color") && $("khatm-reader") && !$("khatm-reader").classList.contains("hidden")) {
+          rerenderKrReader();
         }
       })
       .catch(function () {
@@ -2032,6 +2083,7 @@
   var PRAYER_LOCATION_KEY = "qurani-prayer-location";
   var MAWAQIT_MOSQUE_KEY  = "qurani-mawaqit-mosque";
   var prayerTimesCache = null;
+  var prayerDayOffset = 0; // 0 = today, -1 = yesterday, +1 = tomorrow
   var prayerCountdownInterval = null;
   var _citySearchTimer = null;
 
@@ -2064,6 +2116,29 @@
   ];
   var _lastPrayerBg = -1;
 
+  function getPrayerTargetDate() {
+    var d = new Date();
+    d.setDate(d.getDate() + prayerDayOffset);
+    return d;
+  }
+
+  function updatePrayerDateLabel() {
+    var label = $("prayer-date-gregorian");
+    if (!label) return;
+    if (prayerDayOffset === 0) { label.textContent = "Aujourd\u2019hui"; return; }
+    if (prayerDayOffset === -1) { label.textContent = "Hier"; return; }
+    if (prayerDayOffset === 1) { label.textContent = "Demain"; return; }
+    var d = getPrayerTargetDate();
+    label.textContent = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  }
+
+  function refetchPrayerTimes() {
+    $("prayer-loading").classList.remove("hidden");
+    $("prayer-error").classList.add("hidden");
+    var saved = getSavedPrayerLocation();
+    if (saved) fetchPrayerTimes(saved.lat, saved.lon);
+  }
+
   function openPrayerOverlay() {
     var overlay = $("prayer-overlay");
     overlay.classList.remove("hidden");
@@ -2089,8 +2164,31 @@
     var settingsPanel = $("prayer-settings-panel");
     if (settingsPanel) settingsPanel.classList.remove("visible");
 
+    prayerDayOffset = 0;
     renderPrayerMethodButtons();
     renderPrayerLocationBar();
+    updatePrayerDateLabel();
+
+    // Wire up day navigation arrows
+    var isMawaqit = getPrayerMethod() === "mawaqit";
+    var prevBtn = $("prayer-date-prev");
+    var nextBtn = $("prayer-date-next");
+    if (prevBtn) {
+      prevBtn.style.visibility = isMawaqit ? "hidden" : "visible";
+      prevBtn.onclick = isMawaqit ? null : function() {
+        prayerDayOffset--;
+        updatePrayerDateLabel();
+        refetchPrayerTimes();
+      };
+    }
+    if (nextBtn) {
+      nextBtn.style.visibility = isMawaqit ? "hidden" : "visible";
+      nextBtn.onclick = isMawaqit ? null : function() {
+        prayerDayOffset++;
+        updatePrayerDateLabel();
+        refetchPrayerTimes();
+      };
+    }
 
     var saved = getSavedPrayerLocation();
     if (saved) {
@@ -2104,7 +2202,9 @@
       return;
     }
     navigator.geolocation.getCurrentPosition(function (pos) {
-      fetchPrayerTimes(pos.coords.latitude, pos.coords.longitude);
+      var loc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      savePrayerLocation(loc);
+      fetchPrayerTimes(loc.lat, loc.lon);
     }, function (err) {
       $("prayer-loading").classList.add("hidden");
       $("prayer-error").classList.remove("hidden");
@@ -2126,7 +2226,7 @@
     var input = document.createElement("input");
     input.type = "text";
     input.className = "prayer-search-input";
-    input.placeholder = saved ? saved.name : "Rechercher une ville…";
+    input.placeholder = (saved && saved.name) ? saved.name : "Entrez votre ville…";
     input.setAttribute("autocomplete", "off");
     wrap.appendChild(input);
 
@@ -2199,7 +2299,8 @@
     var method = getPrayerMethod();
     if (method === "islamsounnah") return fetchPrayerTimesIslamSounnah(lat, lon);
     if (method === "mawaqit")      return fetchPrayerTimesMawaqit(lat, lon);
-    var ts = Math.floor(Date.now() / 1000);
+    var targetDate = getPrayerTargetDate();
+    var ts = Math.floor(targetDate.getTime() / 1000);
     var url = "https://api.aladhan.com/v1/timings/" + ts + "?latitude=" + lat + "&longitude=" + lon + "&method=" + method;
     fetch(url).then(function (r) { return r.json(); }).then(function (data) {
       if (data.code !== 200 || !data.data) throw new Error("err");
@@ -2300,24 +2401,18 @@
     try {
       if (!_islamSounnahEngine) _islamSounnahEngine = new _ISPrayerTimeFr();
       var inFrance = _isInFrance(lat, lon);
+      var targetDate = getPrayerTargetDate();
       var times;
       if (inFrance) {
         // Use France-specific Fajr interpolation + astronomical calculation
-        times = _islamSounnahEngine.getTimes(new Date(), lat, lon);
+        times = _islamSounnahEngine.getTimes(targetDate, lat, lon);
       } else {
         // Fallback: use MWL astronomical calculation for non-France locations
         var fallback = new _ISPrayTimes("MWL");
         fallback.adjust({ imsak: "0 min", highLats: "AngleBased", midnight: "Jafari" });
-        var isDST = function(d) {
-          var mar = new Date(Date.UTC(d.getFullYear(), 2, 31)), oct = new Date(Date.UTC(d.getFullYear(), 9, 31));
-          var i = 31; while (mar.getDay() !== 0) mar.setUTCDate(--i);
-          var j = 31; while (oct.getDay() !== 0) oct.setUTCDate(--j);
-          return d.getTime() >= mar.getTime() && d.getTime() < oct.getTime();
-        };
-        var now = new Date();
         // Use device's actual UTC offset — reliable on all browsers/iOS (already includes DST)
-        var tzOffset = -now.getTimezoneOffset() / 60;
-        times = fallback.getTimes(now, [lat, lon], tzOffset, 0);
+        var tzOffset = -targetDate.getTimezoneOffset() / 60;
+        times = fallback.getTimes(targetDate, [lat, lon], tzOffset, 0);
       }
       prayerTimesCache = {
         Fajr: times.fajr,
@@ -2356,34 +2451,43 @@
 
   function renderPrayerTimes() {
     if (!prayerTimesCache) return;
+    // Refresh morning/evening label now that we have accurate Maghrib time
+    initDashboardCards();
     var mainPrayers = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
     var now = new Date();
     var nextPrayer = null;
     var prevPrayer = null;
 
-    // Parse times and find next/prev
+    // Parse times and find next/prev (offset-aware)
     var prayerDates = [];
     mainPrayers.forEach(function (key) {
       var time = prayerTimesCache[key];
       if (!time) return;
       var parts = time.split(":");
       var d = new Date();
+      d.setDate(d.getDate() + prayerDayOffset);
       d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
-      var isPast = d < now;
-      var isNext = !isPast && !nextPrayer;
+      var isPast = prayerDayOffset < 0 ? true  : (prayerDayOffset > 0 ? false : d < now);
+      var isNext = prayerDayOffset > 0 ? (!nextPrayer) : (prayerDayOffset < 0 ? false : (!isPast && !nextPrayer));
       if (isNext) nextPrayer = { key: key, date: d, time: time };
       if (isPast) prevPrayer = { key: key, date: d, time: time };
       prayerDates.push({ key: key, date: d, time: time, isPast: isPast, isNext: isNext });
     });
 
-    // Render timeline row (prayer names + times in a horizontal row)
+    // Collapse old separate timeline div (dots are now inline in each column)
+    var timeline = $("prayer-timeline");
+    if (timeline) { timeline.innerHTML = ""; timeline.style.height = "0"; }
+
+    // Render prayer columns with dot centered above each name
     var timesRow = $("prayer-times-row");
     if (timesRow) {
       timesRow.innerHTML = "";
       prayerDates.forEach(function (p) {
         var col = document.createElement("div");
         col.className = "prayer-time-col" + (p.isNext ? " prayer-active" : "") + (p.isPast ? " prayer-past" : "");
-        col.innerHTML = '<div class="prayer-time-col-name">' + PRAYER_NAMES[p.key] + '</div>' +
+        col.innerHTML =
+          '<div class="prayer-dot"></div>' +
+          '<div class="prayer-time-col-name">' + PRAYER_NAMES[p.key] + '</div>' +
           '<div class="prayer-time-col-time">' + p.time.substring(0, 5) + '</div>';
         timesRow.appendChild(col);
       });
@@ -2394,18 +2498,24 @@
     var countdownTime = $("prayer-countdown-time");
     var countdownLabel = $("prayer-countdown-label");
     if (countdownName && countdownTime) {
-      if (nextPrayer) {
+      if (prayerDayOffset !== 0) {
+        // For past/future days: show first or last prayer, no live countdown
+        var refPrayer = prayerDayOffset < 0 ? prayerDates[prayerDates.length - 1] : prayerDates[0];
+        if (refPrayer) countdownName.textContent = PRAYER_NAMES[refPrayer.key];
+        countdownTime.textContent = prayerDayOffset < 0 ? "Journ\u00e9e pass\u00e9e" : "Journ\u00e9e \u00e0 venir";
+        if (countdownLabel) countdownLabel.textContent = prayerDayOffset < 0 ? "Hier" : "Demain";
+      } else if (nextPrayer) {
         var diff = nextPrayer.date - now;
         var h = Math.floor(diff / 3600000);
         var m = Math.floor((diff % 3600000) / 60000);
         var s = Math.floor((diff % 60000) / 1000);
         countdownName.textContent = PRAYER_NAMES[nextPrayer.key];
         countdownTime.textContent = (h > 0 ? h + "h " : "") + m + "min " + s + "s";
-        if (countdownLabel) countdownLabel.textContent = "Prochaine prière";
+        if (countdownLabel) countdownLabel.textContent = "Prochaine pri\u00e8re";
       } else {
         countdownName.textContent = "Fajr";
         countdownTime.textContent = "demain in shaa Allah";
-        if (countdownLabel) countdownLabel.textContent = "Prochaine prière";
+        if (countdownLabel) countdownLabel.textContent = "Prochaine pri\u00e8re";
       }
     }
 
@@ -2655,21 +2765,41 @@
     "INVOCATIONS DU MATIN", "INVOCATIONS DU SOIR"
   ];
 
-  function initDashboardCards() {
+  function _isDashMorning() {
     var now = new Date();
-    var hour = now.getHours();
-    var labelEl = $("dash-card-label");
-    if (labelEl) {
-      labelEl.textContent = hour < 12 ? "INVOCATIONS DU MATIN" : "INVOCATIONS DU SOIR";
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    if (prayerTimesCache && prayerTimesCache.Maghrib) {
+      var parts = (prayerTimesCache.Maghrib + "").split(":");
+      var magMin = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
+      if (!isNaN(magMin)) return nowMin < magMin;
     }
-    // Reading subtitle
+    return nowMin < 18 * 60;
+  }
+
+  function updateDashKhatmCard() {
+    loadKhatm();
+    var titleEl = $("dash-reading-card") ? $("dash-reading-card").querySelector(".dash-verse-title") : null;
     var subEl = $("dash-reading-subtitle");
-    if (subEl) {
+    if (!subEl) return;
+    var p = getKhatmProgress();
+    if (p) {
+      if (titleEl) titleEl.textContent = "KHATM EN COURS";
+      subEl.textContent = p.translit + " — Verset " + p.ayahNum + " · " + p.pct + "% complété";
+    } else {
+      if (titleEl) titleEl.textContent = "Versets du Jour";
       var ayah = getAyahByGlobalIndex(state.globalIndex);
       if (ayah) {
         subEl.textContent = "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
       }
     }
+  }
+
+  function initDashboardCards() {
+    var labelEl = $("dash-card-label");
+    if (labelEl) {
+      labelEl.textContent = _isDashMorning() ? "INVOCATIONS DU MATIN" : "INVOCATIONS DU SOIR";
+    }
+    updateDashKhatmCard();
   }
 
   // ---- TAB BAR SWITCHING ----
@@ -4062,7 +4192,7 @@
   // ============================================================
   // EMOTION WHEEL — DATA & FUNCTIONS
   // ============================================================
-  var EMOTION_WORDS = ["Gratitude","Tristesse","Col\u00e8re","Solitude","Doute","Amour","Joie","Repentir","Paresse","Angoisse","Peur","D\u00e9tresse","Espoir","Regret","Honte","Envie","Haine","Orgueil"];
+  var EMOTION_WORDS = ["Gratitude","Tristesse","Col\u00e8re","Solitude","Doute","Amour","Joie","Repentir","Paresse","Angoisse","Peur","D\u00e9tresse","Espoir","Regret","Honte","Envie","Haine","Orgueil","Arrogance","Ingratitude","Pauvret\u00e9","Richesse","Pudeur","Mis\u00e9ricorde","Compassion","Ghayrah"];
   var emotionIndex = 0;
   var wheelOffset = 0;
 
@@ -4407,7 +4537,7 @@
       article: {
         title: "Versets et hadiths sur la d\u00e9tresse",
         entries: [
-          {type:"verset",ref:"Al-Anbiya 21:87",ar:"\u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0623\u0646\u062a \u0633\u0628\u062d\u0627\u0646\u0643 \u0625\u0650\u0646\u0651\u064a \u0643\u0646\u062a \u0645\u0646 \u0627\u0644\u0638\u0651\u0627\u0644\u0645\u064a\u0646",fr:"Il n\u2019y a de divinit\u00e9 que Toi ! Gloire \u00e0 Toi ! J\u2019\u00e9tais du nombre des injustes.",commentary:"L\u2019invocation de Yunus dans le ventre de la baleine. Aucun musulman n\u2019invoque par elle sans qu\u2019Allah ne le d\u00e9livre."},
+          {type:"verset",ref:"Al-Anbiya 21:87",ar:"\u0644\u064e\u0627 \u0625\u0650\u0644\u064e\u0647\u064e \u0625\u0650\u0644\u0651\u064e\u0627 \u0623\u064e\u0646\u0652\u062a\u064e \u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e\u0643\u064e \u0625\u0650\u0646\u0650\u0651\u064a \u0643\u064f\u0646\u0652\u062a\u064f \u0645\u0650\u0646\u064e \u0627\u0644\u0638\u0651\u064e\u0627\u0644\u0650\u0645\u0650\u064a\u0646\u064e",fr:"Il n\u2019y a de divinit\u00e9 que Toi ! Gloire \u00e0 Toi ! J\u2019\u00e9tais du nombre des injustes.",commentary:"L\u2019invocation de Yunus dans le ventre de la baleine. Aucun musulman n\u2019invoque par elle sans qu\u2019Allah ne le d\u00e9livre."},
           {type:"verset",ref:"At-Talaq 65:2-3",ar:"\u0648\u0645\u0646 \u064a\u062a\u0651\u0642 \u0627\u0644\u0644\u0651\u0647 \u064a\u062c\u0639\u0644 \u0644\u0647 \u0645\u062e\u0631\u062c\u0627 \u0648\u064a\u0631\u0632\u0642\u0647 \u0645\u0646 \u062d\u064a\u062b \u0644\u0627 \u064a\u062d\u062a\u0633\u0628",fr:"Quiconque craint Allah, Il lui donnera une issue favorable et lui accordera Ses dons par des moyens insoup\u00e7onn\u00e9s.",commentary:"La taqwa est la cl\u00e9 de toute sortie de crise. Allah ouvre des portes l\u00e0 o\u00f9 on ne les attend pas."},
           {type:"verset",ref:"Al-Baqarah 2:214",ar:"\u0623\u0645 \u062d\u0633\u0628\u062a\u0645 \u0623\u0646 \u062a\u062f\u062e\u0644\u0648\u0627 \u0627\u0644\u062c\u0646\u0651\u0629 \u0648\u0644\u0645\u0651\u0627 \u064a\u0623\u062a\u0643\u0645 \u0645\u062b\u0644 \u0627\u0644\u0651\u0630\u064a\u0646 \u062e\u0644\u0648\u0627 \u0645\u0646 \u0642\u0628\u0644\u0643\u0645",fr:"Pensez-vous entrer au Paradis sans qu\u2019il ne vous arrive ce qui est arriv\u00e9 \u00e0 ceux avant vous ?",commentary:"L\u2019\u00e9preuve est le chemin vers le Paradis. Les meilleurs des hommes ont \u00e9t\u00e9 les plus \u00e9prouv\u00e9s."},
           {type:"hadith",ref:"Tirmidhi 3505",ar:"\u062f\u0639\u0648\u0629 \u0630\u064a \u0627\u0644\u0646\u0651\u0648\u0646 \u0625\u0650\u0630 \u062f\u0639\u0627 \u0648\u0647\u0648 \u0641\u064a \u0628\u0637\u0646 \u0627\u0644\u062d\u0648\u062a \u0644\u0645 \u064a\u062f\u0639 \u0628\u0647\u0627 \u0631\u062c\u0644 \u0645\u0633\u0644\u0645 \u0625\u0650\u0644\u0651\u0627 \u0627\u0633\u062a\u062c\u0627\u0628 \u0627\u0644\u0644\u0651\u0647 \u0644\u0647",fr:"L\u2019invocation de Dh\u00fb n-N\u00fbn dans le ventre de la baleine : aucun musulman n\u2019invoque par elle sans qu\u2019Allah ne lui r\u00e9ponde.",commentary:"Cette invocation est une cl\u00e9 pour sortir de toute d\u00e9tresse."},
@@ -4524,7 +4654,7 @@
         title: "Versets et hadiths sur l\u2019envie",
         entries: [
           {type:"verset",ref:"An-Nisa 4:32",ar:"\u0648\u0644\u0627 \u062a\u062a\u0645\u0646\u0651\u0648\u0627 \u0645\u0627 \u0641\u0636\u0651\u0644 \u0627\u0644\u0644\u0651\u0647 \u0628\u0647 \u0628\u0639\u0636\u0643\u0645 \u0639\u0644\u0649 \u0628\u0639\u0636",fr:"Ne convoitez pas ce par quoi Allah a favoris\u00e9 certains d\u2019entre vous par rapport aux autres.",commentary:"Allah interdit la convoitise de ce qu\u2019Il a donn\u00e9 aux autres. Chacun a sa part dans le d\u00e9cret divin."},
-          {type:"verset",ref:"Al-Falaq 113:1-5",ar:"\u0642\u0644 \u0623\u0639\u0648\u0630 \u0628\u0631\u0628\u0651 \u0627\u0644\u0641\u0644\u0642 \u0645\u0646 \u0634\u0631\u0651 \u0645\u0627 \u062e\u0644\u0642 \u0648\u0645\u0646 \u0634\u0631\u0651 \u062d\u0627\u0633\u062f \u0625\u0650\u0630\u0627 \u062d\u0633\u062f",fr:"Dis : Je me r\u00e9fugie aupr\u00e8s du Seigneur de l\u2019aube\u2026 contre le mal de l\u2019envieux quand il envie.",commentary:"Allah nous ordonne de chercher refuge contre le mal de l\u2019envie, signe de sa gravit\u00e9."},
+          {type:"verset",ref:"Al-Falaq 113:1-5",ar:"\u0642\u064f\u0644\u0652 \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0631\u064e\u0628\u0651\u0650 \u0627\u0644\u0652\u0641\u064e\u0644\u064e\u0642\u0650 \u06de \u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0645\u064e\u0627 \u062e\u064e\u0644\u064e\u0642\u064e \u06de \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u063a\u064e\u0627\u0633\u0650\u0642\u0613 \u0625\u0650\u0630\u064e\u0627 \u0648\u064e\u0642\u064e\u0628\u064e \u06de \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0627\u0644\u0646\u0651\u064e\u0641\u0651\u064e\u0627\u062b\u064e\u0627\u062a\u0650 \u0641\u0650\u064a \u0627\u0644\u0652\u0639\u064f\u0642\u064e\u062f\u0650 \u06de \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u062d\u064e\u0627\u0633\u0650\u062f\u0613 \u0625\u0650\u0630\u064e\u0627 \u062d\u064e\u0633\u064e\u062f\u064e \u0648\u0645\u0646 \u0634\u0631\u0651 \u062d\u0627\u0633\u062f \u0625\u0650\u0630\u0627 \u062d\u0633\u062f",fr:"Dis : Je me r\u00e9fugie aupr\u00e8s du Seigneur de l\u2019aube\u2026 contre le mal de l\u2019envieux quand il envie.",commentary:"Allah nous ordonne de chercher refuge contre le mal de l\u2019envie, signe de sa gravit\u00e9."},
           {type:"verset",ref:"Al-Baqarah 2:109",ar:"\u0648\u062f\u0651 \u0643\u062b\u064a\u0631 \u0645\u0646 \u0623\u0647\u0644 \u0627\u0644\u0643\u062a\u0627\u0628 \u0644\u0648 \u064a\u0631\u062f\u0651\u0648\u0646\u0643\u0645 \u0645\u0646 \u0628\u0639\u062f \u0625\u064a\u0645\u0627\u0646\u0643\u0645 \u0643\u0641\u0651\u0627\u0631\u0627 \u062d\u0633\u062f\u0627",fr:"Beaucoup de Gens du Livre aimeraient, par envie, vous faire redevenir m\u00e9cr\u00e9ants apr\u00e8s votre foi.",commentary:"L\u2019envie est si destructrice qu\u2019elle pousse \u00e0 vouloir enlever la guidance m\u00eame des croyants."},
           {type:"hadith",ref:"Abu Dawud 4903",ar:"\u0625\u0650\u064a\u0651\u0627\u0643\u0645 \u0648\u0627\u0644\u062d\u0633\u062f \u0641\u0625\u0650\u0646\u0651 \u0627\u0644\u062d\u0633\u062f \u064a\u0623\u0643\u0644 \u0627\u0644\u062d\u0633\u0646\u0627\u062a \u0643\u0645\u0627 \u062a\u0623\u0643\u0644 \u0627\u0644\u0646\u0651\u0627\u0631 \u0627\u0644\u062d\u0637\u0628",fr:"Prenez garde \u00e0 l\u2019envie, car l\u2019envie d\u00e9vore les bonnes \u0153uvres comme le feu d\u00e9vore le bois.",commentary:"L\u2019envie an\u00e9antit les bonnes actions de l\u2019envieux. C\u2019est un poison pour le c\u0153ur et les \u0153uvres."},
           {type:"hadith",ref:"Bukhari 73, Muslim 816",ar:"\u0644\u0627 \u062d\u0633\u062f \u0625\u0650\u0644\u0651\u0627 \u0641\u064a \u0627\u062b\u0646\u062a\u064a\u0646",fr:"Il n\u2019y a d\u2019envie permise que dans deux cas : un homme \u00e0 qui Allah a donn\u00e9 le Coran, et un homme \u00e0 qui Allah a donn\u00e9 une richesse qu\u2019il d\u00e9pense dans le bien.",commentary:"La seule \u00abenvie\u00bb permise est la ghibtah : souhaiter avoir le m\u00eame bien sans vouloir qu\u2019il disparaisse chez l\u2019autre."}
@@ -4586,6 +4716,238 @@
           {type:"verset",ref:"Al-A\u2019raf 7:13",ar:"\u0642\u0627\u0644 \u0645\u0627 \u0645\u0646\u0639\u0643 \u0623\u0644\u0651\u0627 \u062a\u0633\u062c\u062f \u0625\u0650\u0630 \u0623\u0645\u0631\u062a\u0643 \u0642\u0627\u0644 \u0623\u0646\u0627 \u062e\u064a\u0631 \u0645\u0646\u0647",fr:"Qu\u2019est-ce qui t\u2019emp\u00eache de te prosterner quand Je te l\u2019ai ordonn\u00e9 ? Il dit : Je suis meilleur que lui.",commentary:"L\u2019orgueil est le premier p\u00e9ch\u00e9 de l\u2019histoire. Iblis a refus\u00e9 de se prosterner par arrogance."},
           {type:"hadith",ref:"Muslim 91",ar:"\u0644\u0627 \u064a\u062f\u062e\u0644 \u0627\u0644\u062c\u0646\u0651\u0629 \u0645\u0646 \u0643\u0627\u0646 \u0641\u064a \u0642\u0644\u0628\u0647 \u0645\u062b\u0642\u0627\u0644 \u0630\u0631\u0651\u0629 \u0645\u0646 \u0643\u0628\u0631",fr:"N\u2019entrera pas au Paradis celui qui a dans son c\u0153ur le poids d\u2019un atome d\u2019orgueil.",commentary:"Le Proph\u00e8te a d\u00e9fini l\u2019orgueil : rejeter la v\u00e9rit\u00e9 et m\u00e9priser les gens. M\u00eame un atome suffit."},
           {type:"hadith",ref:"Muslim 2620",ar:"\u0645\u0627 \u0646\u0642\u0635\u062a \u0635\u062f\u0642\u0629 \u0645\u0646 \u0645\u0627\u0644 \u0648\u0645\u0627 \u0632\u0627\u062f \u0627\u0644\u0644\u0651\u0647 \u0639\u0628\u062f\u0627 \u0628\u0639\u0641\u0648 \u0625\u0650\u0644\u0651\u0627 \u0639\u0632\u0651\u0627 \u0648\u0645\u0627 \u062a\u0648\u0627\u0636\u0639 \u0623\u062d\u062f \u0644\u0644\u0651\u0647 \u0625\u0650\u0644\u0651\u0627 \u0631\u0641\u0639\u0647 \u0627\u0644\u0644\u0651\u0647",fr:"Personne ne fait preuve d\u2019humilit\u00e9 pour Allah sans qu\u2019Allah ne l\u2019\u00e9l\u00e8ve.",commentary:"L\u2019humilit\u00e9 \u00e9l\u00e8ve tandis que l\u2019orgueil rabaisse. C\u2019est une loi divine immuable."}
+        ]
+      }
+    },
+    "Arrogance": {
+      gradient: "linear-gradient(165deg, #2a1218 0%, #260f18 30%, #1f0c14 60%, #1a0a10 100%)",
+      articleBg: "rgba(20,8,12,0.95)",
+      quote: "Allah n\u2019aime pas le pr\u00e9somptueux plein de gloriole.",
+      turnTowards: [
+        "L\u2019humilit\u00e9 sincère (tawadu\u2019) dans les actes et la parole",
+        "Le service des humbles et des d\u00e9munis",
+        "La m\u00e9ditation sur l\u2019origine de l\u2019homme (argile, goutte d\u2019eau)",
+        "L\u2019acceptation de la correction et du conseil d\u2019autrui",
+        "Le rappel constant de la grandeur infinie d\u2019Allah"
+      ],
+      guardAgainst: [
+        "Le rejet de la v\u00e9rit\u00e9 par orgueil",
+        "Le m\u00e9pris et le d\u00e9dain envers les autres",
+        "La vantardise de ses qualit\u00e9s et de ses œuvres",
+        "L\u2019admiration excessive de soi-m\u00eame (\u2018ujb)",
+        "La recherche de l\u2019\u00e9l\u00e9vation sur les cr\u00e9atures"
+      ],
+      article: {
+        title: "Versets et hadiths sur l\u2019arrogance",
+        entries: [
+          {type:"verset",ref:"An-Nahl 16:23",ar:"إِنَّهُ لَا يُحِبُّ الْمُسْتَكْبِرِينَ",fr:"En v\u00e9rit\u00e9, Il n\u2019aime pas les arrogants.",commentary:"Allah d\u00e9tourne Son amour de ceux qui s\u2019enflent d\u2019orgueil. L\u2019arrogance est un voile entre le serviteur et la mis\u00e9ricorde divine."},
+          {type:"verset",ref:"Al-Hadid 57:23",ar:"وَاللَّهُ لَا يُحِبُّ كُلَّ مُخْتَالٍ فَخُورٍ",fr:"Allah n\u2019aime pas le pr\u00e9somptueux plein de gloriole.",commentary:"Le mukhtal est celui qui se pavane d\u2019orgueil. Le fakhour est celui qui ne cesse de se vanter. Les deux sont d\u00e9test\u00e9s d\u2019Allah."},
+          {type:"verset",ref:"Al-Mu\u2019min 40:35",ar:"كَذَلِكَ يَطْبَعُ اللَّهُ عَلَى كُلِّ قَلْبِ مُتَكَبِّرٍ جَبَّارٍ",fr:"C\u2019est ainsi qu\u2019Allah scelle tout c\u0153ur arrogant et tyran.",commentary:"L\u2019arrogance obstrue le c\u0153ur jusqu\u2019\u00e0 ce qu\u2019Allah y appose Son sceau. Plus aucune v\u00e9rit\u00e9 ne peut y entrer."},
+          {type:"verset",ref:"Az-Zumar 39:60",ar:"أَلَيْسَ فِي جَهَنَّمَ مَثْوًى لِلْمُتَكَبِّرِينَ",fr:"La G\u00e9henne n\u2019est-elle pas la demeure des arrogants ?",commentary:"Allah pose la question de mani\u00e8re rh\u00e9torique. L\u2019arrogance conduit in\u00e9vitablement \u00e0 l\u2019Enfer. Nulle excuse ne sera accept\u00e9e."},
+          {type:"hadith",ref:"Muslim 91",ar:"لَا يَدْخُلُ الْجَنَّةَ مَنْ كَانَ فِي قَلْبِهِ مِثْقَالُ ذَرَّةٍ مِنْ كِبْرٍ",fr:"N\u2019entrera pas au Paradis celui qui a dans son c\u0153ur le poids d\u2019un atome d\u2019orgueil.",commentary:"Le Proph\u00e8te a d\u00e9fini le kibr : rejeter la v\u00e9rit\u00e9 et m\u00e9priser les gens. Ces deux attitudes suffisent \u00e0 fermer les portes du Paradis."}
+        ]
+      }
+    },
+    "Ingratitude": {
+      gradient: "linear-gradient(165deg, #181820 0%, #141520 30%, #10121a 60%, #0e1018 100%)",
+      articleBg: "rgba(10,10,18,0.95)",
+      quote: "Si vous \u00eates ingrats, sachez qu\u2019Allah Se passe de vous.",
+      turnTowards: [
+        "Compter chaque bienfait d\u2019Allah, m\u00eame le plus infime",
+        "Le sujud ash-shukr \u00e0 chaque bienfait re\u00e7u",
+        "Exprimer sa gratitude aux gens qui nous font du bien",
+        "Partager ses bienfaits avec ceux qui en ont besoin",
+        "Cultiver la m\u00e9moire des bienfaits pass\u00e9s dans l\u2019\u00e9preuve"
+      ],
+      guardAgainst: [
+        "La plainte excessive et l\u2019oubli des bienfaits",
+        "Consid\u00e9rer ses bienfaits comme m\u00e9rit\u00e9s ou acquis",
+        "Le kufr an-ni\u2019ma : nier les bienfaits d\u2019Allah",
+        "Attribuer ses succ\u00e8s \u00e0 sa seule force ou intelligence",
+        "L\u2019ingratitude envers les gens, porte de l\u2019ingratitude envers Allah"
+      ],
+      article: {
+        title: "Versets et hadiths sur l\u2019ingratitude",
+        entries: [
+          {type:"verset",ref:"Ibrahim 14:7",ar:"لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ وَلَئِن كَفَرْتُمْ إِنَّ عَذَابِي لَشَدِيدٌ",fr:"Si vous \u00eates reconnaissants, J\u2019augmenterai Mes bienfaits. Mais si vous \u00eates ingrats, Mon ch\u00e2timent est assur\u00e9ment s\u00e9v\u00e8re.",commentary:"La gratitude est une loi divine : elle multiplie les bienfaits. L\u2019ingratitude, elle, appelle le ch\u00e2timent. Ce choix appartient \u00e0 chaque \u00e2me."},
+          {type:"verset",ref:"Az-Zumar 39:7",ar:"وَإِن تَكْفُرُوا فَإِنَّ اللَّهَ غَنِيٌّ عَنكُمْ وَلَا يَرْضَى لِعِبَادِهِ الْكُفْرَ",fr:"Si vous \u00eates ingrats, Allah Se passe de vous. Il n\u2019agr\u00e9e pas l\u2019ingratitude de Ses serviteurs.",commentary:"Allah n\u2019a pas besoin de notre reconnaissance. Mais Il ne l\u2019agr\u00e9e pas. L\u2019ingratitude blesse le serviteur, non son Seigneur."},
+          {type:"verset",ref:"Al-Baqara 2:152",ar:"فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ",fr:"Souvenez-vous de Moi, Je Me souviendrai de vous. Soyez-Moi reconnaissants et ne soyez pas ingrats.",commentary:"Allah lie le dhikr et le shukr. Se souvenir d\u2019Allah et Lui \u00eatre reconnaissant sont deux actes fondamentaux du serviteur."},
+          {type:"verset",ref:"Ibrahim 14:34",ar:"إِنَّ الْإِنسَانَ لَظَلُومٌ كَفَّارٌ",fr:"En v\u00e9rit\u00e9, l\u2019homme est tr\u00e8s injuste et tr\u00e8s ingrat.",commentary:"Allah d\u00e9crit la tendance naturelle de l\u2019homme \u00e0 l\u2019ingratitude. Reconnaître cette faiblesse est la premi\u00e8re \u00e9tape vers la gu\u00e9rison."},
+          {type:"hadith",ref:"Tirmidhi 1954",ar:"مَنْ لَا يَشْكُرُ النَّاسَ لَا يَشْكُرُ اللَّهَ",fr:"Celui qui ne remercie pas les gens ne remercie pas Allah.",commentary:"La gratitude est un tout. Celui qui m\u00e9prise les bienfaits humains manque de la v\u00e9ritable gratitude envers son Cr\u00e9ateur."}
+        ]
+      }
+    },
+    "Pauvret\u00e9": {
+      gradient: "linear-gradient(165deg, #1e1810 0%, #1a1508 30%, #15100a 60%, #120e08 100%)",
+      articleBg: "rgba(14,10,6,0.95)",
+      quote: "La v\u00e9ritable richesse est la richesse de l\u2019\u00e2me.",
+      turnTowards: [
+        "La confiance totale en Allah le Pourvoyeur (Al-Razzaq)",
+        "La patience dans l\u2019\u00e9preuve et l\u2019attente du soulagement",
+        "La pri\u00e8re de l\u2019aube (Fajr) et le dhikr du matin",
+        "Chercher le halal avec ardeur et sans d\u00e9couragement",
+        "Contempler ceux plus d\u00e9munis pour relativiser"
+      ],
+      guardAgainst: [
+        "Le d\u00e9sespoir de la mis\u00e9ricorde d\u2019Allah",
+        "La jalousie envers les plus ais\u00e9s",
+        "Recourir \u00e0 l\u2019ill\u00e9gal pour sortir de la pauvret\u00e9",
+        "Croire que la pauvret\u00e9 est un signe de m\u00e9pris divin",
+        "N\u00e9gliger ses obligations religieuses par d\u00e9couragement"
+      ],
+      article: {
+        title: "Versets et hadiths sur la pauvret\u00e9",
+        entries: [
+          {type:"verset",ref:"Ad-Duha 93:8",ar:"وَوَجَدَكَ عَائِلًا فَأَغْنَى",fr:"Il t\u2019a trouv\u00e9 pauvre et Il t\u2019a enrichi.",commentary:"Allah rappelle au Proph\u00e8te \u2605 Ses bienfaits. M\u00eame la pauvret\u00e9 pass\u00e9e \u00e9tait un d\u00e9but de chemin. Aucune situation n\u2019est d\u00e9finitive pour Allah."},
+          {type:"verset",ref:"Al-Baqara 2:268",ar:"الشَّيْطَانُ يَعِدُكُمُ الْفَقْرَ وَيَأْمُرُكُم بِالْفَحْشَاءِ وَاللَّهُ يَعِدُكُم مَّغْفِرَةً مِّنْهُ وَفَضْلًا",fr:"Satan vous promet la pauvret\u00e9 et vous commande la turpitude. Mais Allah vous promet Son pardon et Sa gr\u00e2ce.",commentary:"La peur de la pauvret\u00e9 est une arme de Satan pour pousser l\u2019homme au p\u00e9ch\u00e9. Allah promet le contraire : pardon et abondance."},
+          {type:"verset",ref:"Ash-Sharh 94:5-6",ar:"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا إِنَّ مَعَ الْعُسْرِ يُسْرًا",fr:"Avec la difficult\u00e9 vient l\u2019aisance. Avec la difficult\u00e9 vient l\u2019aisance.",commentary:"Allah r\u00e9p\u00e8te deux fois la m\u00eame promesse. Un seul 'usr (difficult\u00e9) avec deux yusr (aisances). La promesse divine est double."},
+          {type:"verset",ref:"At-Talaq 65:7",ar:"سَيَجْعَلُ اللَّهُ بَعْدَ عُسْرٍ يُسْرًا",fr:"Allah accordera l\u2019aisance apr\u00e8s la g\u00eane.",commentary:"Ce 'apr\u00e8s' est une promesse divine. La g\u00eane actuelle ne d\u00e9finit pas l\u2019avenir. Allah est Celui qui transforme les situations."},
+          {type:"hadith",ref:"Bukhari 6446",ar:"لَيْسَ الْغِنَى عَنْ كَثْرَةِ الْعَرَضِ وَلَكِنَّ الْغِنَى غِنَى النَّفْسِ",fr:"La richesse n\u2019est pas l\u2019abondance des biens, mais la richesse de l\u2019\u00e2me.",commentary:"La pauvret\u00e9 mat\u00e9rielle ne d\u00e9finit pas le rang spirituel. L\u2019homme le plus riche mat\u00e9riellement peut \u00eatre int\u00e9rieurement vide."}
+        ]
+      }
+    },
+    "Richesse": {
+      gradient: "linear-gradient(165deg, #1e1a06 0%, #1c1804 30%, #181402 60%, #141200 100%)",
+      articleBg: "rgba(14,12,2,0.95)",
+      quote: "La richesse et les enfants sont l\u2019ornement de la vie d\u2019ici-bas.",
+      turnTowards: [
+        "La zakat et la sadaqa comme purification du bien",
+        "La gratitude constante pour les bienfaits re\u00e7us",
+        "D\u00e9penser dans le chemin d\u2019Allah sans craindre la pauvret\u00e9",
+        "Utiliser la richesse pour aider les vuln\u00e9rables",
+        "Se rappeler que la richesse est un test, non une r\u00e9compense"
+      ],
+      guardAgainst: [
+        "L\u2019attachement au dunya et l\u2019oubli de l\u2019Au-del\u00e0",
+        "L\u2019avarice et la th\u00e9saurisation du bien",
+        "L\u2019orgueil li\u00e9 aux possessions mat\u00e9rielles",
+        "N\u00e9gliger ses obligations spirituelles par occupation",
+        "Croire que la richesse t\u00e9moigne de la faveur divine"
+      ],
+      article: {
+        title: "Versets et hadiths sur la richesse",
+        entries: [
+          {type:"verset",ref:"Al-Kahf 18:46",ar:"الْمَالُ وَالْبَنُونَ زِينَةُ الْحَيَاةِ الدُّنْيَا وَالْبَاقِيَاتُ الصَّالِحَاتُ خَيْرٌ عِندَ رَبِّكَ ثَوَابًا وَخَيْرٌ أَمَلًا",fr:"La richesse et les enfants sont l\u2019ornement de la vie d\u2019ici-bas. Mais les bonnes œuvres durables valent mieux aupr\u00e8s de ton Seigneur.",commentary:"La richesse n\u2019est qu\u2019un ornement temporaire. Les b\u00e2qiy\u00e2t \u015f\u00e2li\u1e25\u00e2t (bonnes œuvres durables) sont le v\u00e9ritable investissement."},
+          {type:"verset",ref:"At-Tawba 9:34",ar:"وَالَّذِينَ يَكْنِزُونَ الذَّهَبَ وَالْفِضَّةَ وَلَا يُنفِقُونَهَا فِي سَبِيلِ اللَّهِ فَبَشِّرْهُم بِعَذَابٍ أَلِيمٍ",fr:"Ceux qui th\u00e9saurisent l\u2019or et l\u2019argent sans les d\u00e9penser dans le chemin d\u2019Allah, annonce-leur un ch\u00e2timent douloureux.",commentary:"La th\u00e9saurisation est l\u2019un des grands p\u00e9ch\u00e9s. La richesse immobilis\u00e9e br\u00fblera son propri\u00e9taire le Jour du Jugement."},
+          {type:"verset",ref:"Al-Baqara 2:261",ar:"مَثَلُ الَّذِينَ يُنفِقُونَ أَمْوَالَهُمْ فِي سَبِيلِ اللَّهِ كَمَثَلِ حَبَّةٍ أَنبَتَتْ سَبْعَ سَنَابِلَ",fr:"Ceux qui d\u00e9pensent leurs biens dans le chemin d\u2019Allah ressemblent \u00e0 un grain qui produit sept \u00e9pis.",commentary:"Chaque dirham d\u00e9pens\u00e9 pour Allah est multipli\u00e9 par sept cents. La g\u00e9n\u00e9rosit\u00e9 est le meilleur des investissements."},
+          {type:"verset",ref:"Saba 34:39",ar:"وَمَا أَنفَقْتُم مِّن شَيْءٍ فَهُوَ يُخْلِفُهُ وَهُوَ خَيْرُ الرَّازِقِينَ",fr:"Tout ce que vous d\u00e9pensez, Il le remplace. Il est le meilleur des Pourvoyeurs.",commentary:"Allah garantit le remplacement de ce qui est d\u00e9pens\u00e9 pour Sa cause. La g\u00e9n\u00e9rosit\u00e9 n\u2019appauvrit jamais."},
+          {type:"hadith",ref:"Ahmad 17452",ar:"نِعْمَ الْمَالُ الصَّالِحُ لِلرَّجُلِ الصَّالِحِ",fr:"Quel excellent bien que le bien l\u00e9gitime pour l\u2019homme pieux !",commentary:"Le Proph\u00e8te ne condamne pas la richesse en soi. Entre les mains d\u2019un homme pieux, elle devient un instrument de bien."}
+        ]
+      }
+    },
+    "Pudeur": {
+      gradient: "linear-gradient(165deg, #201520 0%, #1c121a 30%, #180e18 60%, #140c14 100%)",
+      articleBg: "rgba(14,8,14,0.95)",
+      quote: "La pudeur fait enti\u00e8rement partie de la foi.",
+      turnTowards: [
+        "Baisser le regard devant ce qu\u2019Allah a interdit",
+        "Soigner son apparence et son habillement selon la Sunnah",
+        "Cultiver la modestie dans la parole et la d\u00e9marche",
+        "Prot\u00e9ger ce qu\u2019Allah a rendu sacr\u00e9 (chastet\u00e9, honneur)",
+        "Ressentir de la honte devant Allah avant devant les hommes"
+      ],
+      guardAgainst: [
+        "Tout ce qui est expos\u00e9 sans pudeur sur les r\u00e9seaux sociaux",
+        "Les regards interdits et les fr\u00e9quentations mixtes non n\u00e9cessaires",
+        "Perdre la honte devant Allah \u00e0 force de p\u00e9ch\u00e9s r\u00e9p\u00e9t\u00e9s",
+        "La trivialit\u00e9 et l\u2019impudeur dans le langage",
+        "S\u2019habiller de mani\u00e8re \u00e0 attirer l\u2019attention d\u2019autrui"
+      ],
+      article: {
+        title: "Versets et hadiths sur la pudeur",
+        entries: [
+          {type:"verset",ref:"An-Nur 24:30",ar:"قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ذَلِكَ أَزْكَى لَهُمْ",fr:"Dis aux croyants de baisser leurs regards et de garder leur chastet\u00e9. C\u2019est plus pur pour eux.",commentary:"Baisser le regard est un acte de foi. \u2018Azk\u00e2 lahum\u2019 : cela les purifie int\u00e9rieurement. La pudeur est une protection de l\u2019\u00e2me."},
+          {type:"verset",ref:"An-Nur 24:31",ar:"وَقُل لِّلْمُؤْمِنَاتِ يَغْضُضْنَ مِنْ أَبْصَارِهِنَّ وَيَحْفَظْنَ فُرُوجَهُنَّ",fr:"Dis aux croyantes de baisser leurs regards et de garder leur chastet\u00e9.",commentary:"La pudeur est exig\u00e9e des deux genres. Ce n\u2019est pas une oppression mais une protection de la dignit\u00e9 de l\u2019\u00e2me."},
+          {type:"verset",ref:"Al-A\u2019raf 7:26",ar:"وَلِبَاسُ التَّقْوَى ذَلِكَ خَيْرٌ",fr:"Le v\u00eatement de la pi\u00e9t\u00e9, voil\u00e0 qui est meilleur.",commentary:"Le meilleur v\u00eatement n\u2019est pas celui qui couvre le corps mais celui qui couvre le c\u0153ur : la taqwa, la conscience permanente d\u2019Allah."},
+          {type:"verset",ref:"Al-Mu\u2019minun 23:5",ar:"وَالَّذِينَ هُمْ لِفُرُوجِهِمْ حَافِظُونَ",fr:"Ceux qui pr\u00e9servent leur chastet\u00e9.",commentary:"Parmi les attributs des vrais croyants figure la pr\u00e9servation de la chastet\u00e9. C\u2019est un pilier du succ\u00e8s dans l\u2019Au-del\u00e0."},
+          {type:"hadith",ref:"Tirmidhi 2009",ar:"الْحَيَاءُ شُعْبَةٌ مِنَ الْإِيمَانِ",fr:"La pudeur est une branche de la foi.",commentary:"La foi a des branches. La pudeur en est une essentielle. Sa disparition progressive affaiblit la foi tout enti\u00e8re."}
+        ]
+      }
+    },
+    "Mis\u00e9ricorde": {
+      gradient: "linear-gradient(165deg, #0a1e20 0%, #081a1c 30%, #061618 60%, #051214 100%)",
+      articleBg: "rgba(4,14,16,0.95)",
+      quote: "Ma mis\u00e9ricorde embrasse toute chose.",
+      turnTowards: [
+        "Invoquer les Noms d\u2019Allah Ar-Rahman et Ar-Rahim",
+        "La tawba (repentir) sans jamais d\u00e9sesp\u00e9rer du pardon",
+        "Faire mis\u00e9ricorde aux cr\u00e9atures d\u2019Allah (hommes, animaux)",
+        "La dou\u2019a pour les autres, vivants et d\u00e9c\u00e9d\u00e9s",
+        "Rappeler aux gens la Mis\u00e9ricorde d\u2019Allah face au d\u00e9sespoir"
+      ],
+      guardAgainst: [
+        "Le d\u00e9sespoir du pardon d\u2019Allah (qunut)",
+        "Sous-estimer la gravit\u00e9 des p\u00e9ch\u00e9s en comptant sur la mis\u00e9ricorde",
+        "Priver les autres de mis\u00e9ricorde tout en l\u2019attendant d\u2019Allah",
+        "Croire qu\u2019Allah ne pardonne pas certains p\u00e9ch\u00e9s",
+        "L\u2019exc\u00e8s de rigueur envers soi-m\u00eame au point du d\u00e9sespoir"
+      ],
+      article: {
+        title: "Versets et hadiths sur la mis\u00e9ricorde",
+        entries: [
+          {type:"verset",ref:"Al-A\u2019raf 7:156",ar:"وَرَحْمَتِي وَسِعَتْ كُلَّ شَيْءٍ",fr:"Ma mis\u00e9ricorde embrasse toute chose.",commentary:"La Rahma d\u2019Allah est sans limites. Elle pr\u00e9c\u00e8de Sa col\u00e8re, elle couvre tout p\u00e9ch\u00e9 pour qui revient \u00e0 Lui avec sinc\u00e9rit\u00e9."},
+          {type:"verset",ref:"Az-Zumar 39:53",ar:"لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ",fr:"Ne d\u00e9sesp\u00e9rez pas de la mis\u00e9ricorde d\u2019Allah. Allah pardonne tous les p\u00e9ch\u00e9s.",commentary:"Ce verset est l\u2019un des plus beaux du Coran. \u2018Jami\u2018an\u2019 : tous les p\u00e9ch\u00e9s. Aucune exception. Seul le d\u00e9sespoir ferme cette porte."},
+          {type:"verset",ref:"Al-An\u2019am 6:12",ar:"كَتَبَ عَلَى نَفْسِهِ الرَّحْمَةَ",fr:"Il S\u2019est prescrit \u00e0 Lui-m\u00eame la mis\u00e9ricorde.",commentary:"Allah a fait de la Mis\u00e9ricorde une obligation qu\u2019Il S\u2019impose \u00e0 Lui-m\u00eame. C\u2019est une promesse divine inalt\u00e9rable."},
+          {type:"verset",ref:"Al-Anbiya 21:107",ar:"وَمَا أَرْسَلْنَاكَ إِلَّا رَحْمَةً لِّلْعَالَمِينَ",fr:"Nous ne t\u2019avons envoy\u00e9 qu\u2019en mis\u00e9ricorde pour les mondes.",commentary:"Le Proph\u00e8te Muhammad \u2605 est lui-m\u00eame une rahma pour toute l\u2019humanit\u00e9, croyants et non-croyants confondus."},
+          {type:"hadith",ref:"Bukhari 5999",ar:"اللَّهُ أَرْحَمُ بِعِبَادِهِ مِنَ الْأُمِّ بِوَلَدِهَا",fr:"Allah a plus de mis\u00e9ricorde envers Ses serviteurs qu\u2019une m\u00e8re envers son enfant.",commentary:"Une m\u00e8re est l\u2019image m\u00eame de la tendresse. Allah est encore plus tendrement mis\u00e9ricordieux que cela. Quel apaisement pour celui qui souffre."}
+        ]
+      }
+    },
+    "Compassion": {
+      gradient: "linear-gradient(165deg, #18102a 0%, #150d26 30%, #110920 60%, #0d071a 100%)",
+      articleBg: "rgba(10,6,18,0.95)",
+      quote: "Ceux qui font mis\u00e9ricorde seront trait\u00e9s avec mis\u00e9ricorde par le Tout-Mis\u00e9ricordieux.",
+      turnTowards: [
+        "Nourrir les pauvres et les orphelins r\u00e9guli\u00e8rement",
+        "Visiter les malades et les endeuill\u00e9s",
+        "Intercession (shafa\u2019a) en faveur de ceux dans le besoin",
+        "Sourire \u00e0 son fr\u00e8re comme acte de sadaqa",
+        "Soulager la souffrance des cr\u00e9atures d\u2019Allah sans exception"
+      ],
+      guardAgainst: [
+        "L\u2019indiff\u00e9rence face \u00e0 la souffrance d\u2019autrui",
+        "Rejeter l\u2019orphelin et n\u00e9gliger le pauvre",
+        "La duret\u00e9 de c\u0153ur acquise par les p\u00e9ch\u00e9s r\u00e9p\u00e9t\u00e9s",
+        "Agir par charit\u00e9 uniquement en public (riy\u00e2\u2019)",
+        "Manger \u00e0 sa faim en ignorant celui qui a faim"
+      ],
+      article: {
+        title: "Versets et hadiths sur la compassion",
+        entries: [
+          {type:"verset",ref:"Al-Insan 76:8",ar:"وَيُطْعِمُونَ الطَّعَامَ عَلَى حُبِّهِ مِسْكِينًا وَيَتِيمًا وَأَسِيرًا",fr:"Ils donnent la nourriture, malgr\u00e9 leur amour pour elle, au pauvre, \u00e0 l\u2019orphelin et au prisonnier.",commentary:"\u2018Ala hubbihi : malgr\u00e9 leur besoin personnel. La compassion v\u00e9ritable donne m\u00eame ce qu\u2019on aime. Elle ne calcule pas."},
+          {type:"verset",ref:"Al-Insan 76:9",ar:"إِنَّمَا نُطْعِمُكُمْ لِوَجْهِ اللَّهِ لَا نُرِيدُ مِنكُمْ جَزَاءً وَلَا شُكُورًا",fr:"Nous ne vous nourrissons que pour le visage d\u2019Allah. Nous n\u2019attendons de vous ni r\u00e9compense ni gratitude.",commentary:"La compassion islamique est purement pour Allah. Pas de reconnaissance humaine attendue, pas de publicit\u00e9 recherch\u00e9e."},
+          {type:"verset",ref:"Al-Balad 90:13-14",ar:"فَكُّ رَقَبَةٍ أَوْ إِطْعَامٌ فِي يَوْمٍ ذِي مَسْغَبَةٍ",fr:"Affranchir un esclave, ou nourrir un jour de famine.",commentary:"Allah d\u00e9finit l\u2019escalade vers le bien. La compassion concr\u00e8te envers les oppress\u00e9s et les affam\u00e9s est la voie du salut."},
+          {type:"verset",ref:"Al-Ma\u2019un 107:2-3",ar:"فَذَلِكَ الَّذِي يَدُعُّ الْيَتِيمَ وَلَا يَحُضُّ عَلَى طَعَامِ الْمِسْكِينِ",fr:"C\u2019est celui qui repousse l\u2019orphelin et n\u2019encourage pas \u00e0 nourrir le pauvre.",commentary:"Allah d\u00e9finit le d\u00e9menteur de la religion non par ses croyances mais par son manque de compassion. L\u2019acte prime."},
+          {type:"hadith",ref:"Tirmidhi 1924",ar:"الرَّاحِمُونَ يَرْحَمُهُمُ الرَّحْمَنُ ارْحَمُوا مَنْ فِي الْأَرْضِ يَرْحَمْكُمْ مَنْ فِي السَّمَاءِ",fr:"Ceux qui font mis\u00e9ricorde re\u00e7oivent la mis\u00e9ricorde du Tout-Mis\u00e9ricordieux. Ayez compassion pour ceux sur terre et Celui dans le ciel aura compassion de vous.",commentary:"Une loi divine parfaite : la compassion descend du ciel en proportion de celle qu\u2019on accorde sur terre."}
+        ]
+      }
+    },
+    "Ghayrah": {
+      gradient: "linear-gradient(165deg, #0c2018 0%, #0a1c14 30%, #081810 60%, #06140c 100%)",
+      articleBg: "rgba(4,14,8,0.95)",
+      quote: "Allah est ghay\u00fbr, et Sa ghayrah est viol\u00e9e lorsque ce qu\u2019Il a interdit est commis.",
+      turnTowards: [
+        "Prot\u00e9ger l\u2019honneur de sa famille avec sagesse et dignit\u00e9",
+        "Maintenir les limites d\u2019Allah (hud\u00fbd) avec fermet\u00e9",
+        "Canaliser la ghayrah vers la jalousie positive (al-ghibtah)",
+        "Refuser ce qu\u2019Allah a interdit par amour pour Lui",
+        "D\u00e9velopper la ghayrah pour Allah avant celle pour soi"
+      ],
+      guardAgainst: [
+        "La ghayrah non fond\u00e9e sur des pr\u00e9somptions injustes",
+        "Laisser la ghayrah d\u00e9g\u00e9n\u00e9rer en violence injustifi\u00e9e",
+        "La jalousie destructrice envers les bienfaits d\u2019autrui (hasad)",
+        "Ignorer ses obligations de protection par faiblesse",
+        "Confondre la ghayrah saine et la possessivit\u00e9 maladive"
+      ],
+      article: {
+        title: "Versets et hadiths sur la ghayrah",
+        entries: [
+          {type:"verset",ref:"Al-Isra 17:32",ar:"وَلَا تَقْرَبُوا الزِّنَا إِنَّهُ كَانَ فَاحِشَةً وَسَاءَ سَبِيلًا",fr:"N\u2019approchez pas la fornication. C\u2019est une turpitude et une mauvaise voie.",commentary:"La ghayrah divine est viol\u00e9e par le zin\u00e2. Allah interdit m\u00eame de s\u2019en approcher. La protection des sanctuaires commence par l\u2019\u00e9loignement."},
+          {type:"verset",ref:"An-Nur 24:2",ar:"الزَّانِيَةُ وَالزَّانِي فَاجْلِدُوا كُلَّ وَاحِدٍ مِّنْهُمَا مِائَةَ جَلْدَةٍ",fr:"La fornicatrice et le fornicateur, fouettez chacun d\u2019eux de cent coups.",commentary:"La rigueur de la loi sur ce point t\u00e9moigne de l\u2019importance de la ghayrah collective. Prot\u00e9ger l\u2019honneur est un devoir communautaire."},
+          {type:"verset",ref:"An-Nisa 4:34",ar:"الرِّجَالُ قَوَّامُونَ عَلَى النِّسَاءِ بِمَا فَضَّلَ اللَّهُ بَعْضَهُمْ عَلَى بَعْضٍ",fr:"Les hommes sont responsables des femmes en raison de ce par quoi Allah a favoris\u00e9 les uns sur les autres.",commentary:"La qiwama implique la protection. La ghayrah du mari envers son \u00e9pouse est une expression de cette responsabilit\u00e9 divine."},
+          {type:"hadith",ref:"Bukhari 5220",ar:"إِنَّ اللَّهَ يَغَارُ وَغَيْرَةُ اللَّهِ أَنْ يَأْتِيَ الْمُؤْمِنُ مَا حَرَّمَ اللَّهُ",fr:"Allah est ghay\u00fbr, et Sa ghayrah est viol\u00e9e lorsque le croyant commet ce qu\u2019Allah a interdit.",commentary:"Allah Lui-m\u00eame est d\u00e9crit comme ayant une ghayrah. Toute violation de Ses limites touche cette ghayrah divine."},
+          {type:"hadith",ref:"Bukhari 7416",ar:"لَا أَحَدَ أَغْيَرُ مِنَ اللَّهِ",fr:"Personne n\u2019est plus ghay\u00fbr qu\u2019Allah.",commentary:"La ghayrah d\u2019Allah surpasse celle de toute cr\u00e9ature. Elle se manifeste dans Ses interdictions qui prot\u00e8gent la dignit\u00e9 humaine."}
         ]
       }
     }
@@ -4775,14 +5137,18 @@
       quote: "Les adhkar du matin, bouclier du croyant jusqu\u2019au soir.",
       articleTitle: "Adhkar as-Sabah",
       entries: [
-        {type:"dua",ref:"Al-Baqarah 2:255 (Ayat al-Kursi)",ar:"\u0627\u0644\u0644\u0651\u0647 \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0647\u0648 \u0627\u0644\u062d\u064a\u0651 \u0627\u0644\u0642\u064a\u0651\u0648\u0645 \u0644\u0627 \u062a\u0623\u062e\u0630\u0647 \u0633\u0646\u0629 \u0648\u0644\u0627 \u0646\u0648\u0645",fr:"Allah ! Point de divinit\u00e9 \u00e0 part Lui, le Vivant, Celui qui subsiste par Lui-m\u00eame. Ni somnolence ni sommeil ne Le saisissent."},
-        {type:"dua",ref:"Muslim 2723",ar:"\u0623\u0635\u0628\u062d\u0646\u0627 \u0648\u0623\u0635\u0628\u062d \u0627\u0644\u0645\u0644\u0643 \u0644\u0644\u0651\u0647 \u0648\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0651\u0647 \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0627\u0644\u0644\u0651\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0647",fr:"Nous voil\u00e0 au matin et le royaume appartient \u00e0 Allah. Louange \u00e0 Allah. Nulle divinit\u00e9 except\u00e9 Allah, Seul, sans associ\u00e9."},
-        {type:"dua",ref:"Abu Dawud 5068",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0628\u0643 \u0623\u0635\u0628\u062d\u0646\u0627 \u0648\u0628\u0643 \u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0628\u0643 \u0646\u062d\u064a\u0627 \u0648\u0628\u0643 \u0646\u0645\u0648\u062a \u0648\u0625\u0650\u0644\u064a\u0643 \u0627\u0644\u0646\u0651\u0634\u0648\u0631",fr:"O Allah, c\u2019est par Toi que nous arrivons au matin, par Toi au soir, par Toi nous vivons, par Toi nous mourons, et vers Toi est la r\u00e9surrection."},
-        {type:"dua",ref:"Abu Dawud 5069",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0645\u0627 \u0623\u0635\u0628\u062d \u0628\u064a \u0645\u0646 \u0646\u0639\u0645\u0629 \u0623\u0648 \u0628\u0623\u062d\u062f \u0645\u0646 \u062e\u0644\u0642\u0643 \u0641\u0645\u0646\u0643 \u0648\u062d\u062f\u0643 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0643 \u0641\u0644\u0643 \u0627\u0644\u062d\u0645\u062f \u0648\u0644\u0643 \u0627\u0644\u0634\u0651\u0643\u0631",fr:"O Allah, tout bienfait qui m\u2019atteint ou atteint l\u2019une de Tes cr\u00e9atures vient de Toi Seul, sans associ\u00e9. A Toi la louange et la gratitude."},
-        {type:"dua",ref:"Bukhari 6306 (Sayyid al-Istighfar)",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0623\u0646\u062a \u0631\u0628\u0651\u064a \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0623\u0646\u062a \u062e\u0644\u0642\u062a\u0646\u064a \u0648\u0623\u0646\u0627 \u0639\u0628\u062f\u0643 \u0648\u0623\u0646\u0627 \u0639\u0644\u0649 \u0639\u0647\u062f\u0643 \u0648\u0648\u0639\u062f\u0643 \u0645\u0627 \u0627\u0633\u062a\u0637\u0639\u062a",fr:"O Allah, Tu es mon Seigneur, il n\u2019y a de divinit\u00e9 que Toi. Tu m\u2019as cr\u00e9\u00e9 et je suis Ton serviteur. Je m\u2019en tiens \u00e0 Ton pacte et \u00e0 Ta promesse autant que je le peux."},
-        {type:"dua",ref:"Muslim 2692",ar:"\u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0627\u0644\u0644\u0651\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0647 \u0644\u0647 \u0627\u0644\u0645\u0644\u0643 \u0648\u0644\u0647 \u0627\u0644\u062d\u0645\u062f \u0648\u0647\u0648 \u0639\u0644\u0649 \u0643\u0644\u0651 \u0634\u064a\u0621 \u0642\u062f\u064a\u0631",fr:"Nulle divinit\u00e9 except\u00e9 Allah, Seul sans associ\u00e9. A Lui le royaume, \u00e0 Lui la louange et Il est capable de toute chose. (10 fois)"},
-        {type:"dua",ref:"Muslim 2691",ar:"\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0651\u0647 \u0648\u0628\u062d\u0645\u062f\u0647",fr:"Gloire \u00e0 Allah et louange \u00e0 Lui. (100 fois le matin : efface les p\u00e9ch\u00e9s m\u00eame s\u2019ils \u00e9galaient l\u2019\u00e9cume de la mer)"},
-        {type:"dua",ref:"Abu Dawud 5088",ar:"\u0628\u0633\u0645 \u0627\u0644\u0644\u0651\u0647 \u0627\u0644\u0651\u0630\u064a \u0644\u0627 \u064a\u0636\u0631\u0651 \u0645\u0639 \u0627\u0633\u0645\u0647 \u0634\u064a\u0621 \u0641\u064a \u0627\u0644\u0623\u0631\u0636 \u0648\u0644\u0627 \u0641\u064a \u0627\u0644\u0633\u0651\u0645\u0627\u0621 \u0648\u0647\u0648 \u0627\u0644\u0633\u0651\u0645\u064a\u0639 \u0627\u0644\u0639\u0644\u064a\u0645",fr:"Au nom d\u2019Allah, avec le nom de Qui rien ne peut nuire sur terre ni au ciel, et Il est l\u2019Audient, l\u2019Omniscient. (3 fois)"}
+        {type:"dua",ref:"Al-Baqarah 2:255 — Sahîh Al-Kalim At-Tayyib n° 22",ar:"اللهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلاَّ بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ",fr:"Allah ! Point de divinité à part Lui, le Vivant, Celui qui n'a besoin de rien et dont toute chose dépend. Ni somnolence ni sommeil ne Le saisissent. Lui appartient tout ce qui est dans les cieux et sur terre. Qui peut intercéder auprès de Lui sans Sa permission ? Il sait ce qui est devant eux et derrière eux. Ils n'embrassent de Sa science que ce qu'Il veut. Son Trône s'étend sur les cieux et la terre dont la garde ne Lui pèse aucunement. Il est le Très-Haut, le Très-Grand."},
+        {type:"verset",ref:"Sourate 112 (Al-Ikhlas) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ هُوَ اللهُ أَحَدٌ ۞ اللهُ الصَّمَدُ ۞ لَمْ يَلِدْ وَلَمْ يُولَدْ ۞ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ",fr:"Dis : Il est Allah, Unique ۞ Allah, le Seul à être imploré et dont tout le monde dépend ۞ Il n'a pas engendré et n'a pas été engendré ۞ Et nul n'est égal à Lui. (3 fois)"},
+        {type:"verset",ref:"Sourate 113 (Al-Falaq) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۞ مِنْ شَرِّ مَا خَلَقَ ۞ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ۞ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۞ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ",fr:"Dis : Je cherche protection auprès du Seigneur de l'aube naissante ۞ Contre le mal de ce qu'Il a créé ۞ Contre le mal de l'obscurité quand elle s'étend ۞ Contre le mal des souffleuses dans les nœuds ۞ Et contre le mal de l'envieux quand il envie. (3 fois)"},
+        {type:"verset",ref:"Sourate 114 (An-Nas) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۞ مَلِكِ النَّاسِ ۞ إِلَهِ النَّاسِ ۞ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۞ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۞ مِنَ الْجِنَّةِ وَالنَّاسِ",fr:"Dis : Je cherche protection auprès du Seigneur des hommes ۞ Le Souverain des hommes ۞ La divinité des hommes ۞ Contre le mal du tentateur sournois ۞ Qui murmure dans les poitrines des hommes ۞ Qu'il soit parmi les djinns ou les hommes. (3 fois)"},
+        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3388 — 3 fois",ar:"بِسْمِ اللهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",fr:"Au nom d'Allah, tel qu'en compagnie de Son Nom rien sur Terre ni au ciel ne peut nuire, Lui l'Audient, l'Omniscient. (3 fois)"},
+        {type:"dua",ref:"As-Sahîhah n° 262",ar:"اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ",fr:"Ô Allah ! C'est par Toi que nous nous retrouvons au matin et c'est par Toi que nous nous retrouvons au soir ; c'est par Toi que nous vivons, c'est par Toi que nous mourons, et c'est vers Toi que sera la résurrection."},
+        {type:"dua",ref:"Sahîh Muslim n° 2723",ar:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ للهِ وَالْحَمْدُ للهِ لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ وَأَعُوذُ بِكَ مِنْ شَرِّ هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ",fr:"Nous voilà au matin et le règne appartient à Allah. Louange à Allah. Il n'y a aucune divinité en dehors d'Allah, Seul, sans associé. À Lui le règne et à Lui la louange. Il est Omnipotent. Ô mon Seigneur ! Je Te demande le bien de ce jour et le bien de ce qui vient après. Je cherche Ta protection contre le mal de ce jour et de ce qui vient après. Mon Seigneur, je cherche Ta protection contre la paresse et la déchéance de la vieillesse. Mon Seigneur, je cherche Ta protection contre le châtiment du Feu et contre le châtiment de la tombe."},
+        {type:"dua",ref:"Sahîh Al-Jâmi' n° 352",ar:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ للهِ رَبِّ الْعَالَمِينَ اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ فَتْحَهُ وَنَصْرَهُ وَنُورَهُ وَبَرَكَتَهُ وَهُدَاهُ وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهِ وَشَرِّ مَا بَعْدَهُ",fr:"Nous voilà au matin et la royauté appartient à Allah, le Seigneur de l'Univers. Ô Allah ! Je Te demande le bien de ce jour : ses conquêtes, ses victoires, sa lumière, sa bénédiction et sa guidée. Et je cherche Ta protection contre le mal de ce qui se trouve en ce jour et le mal de ce qui vient après lui."},
+        {type:"dua",ref:"Sahîh Al-Bukhârî n° 5947 — Sayyid al-Istighfar",ar:"اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ",fr:"Ô Allah ! Tu es mon Seigneur. Il n'y a aucune divinité en dehors de Toi. Tu m'as créé et je suis Ton serviteur. Je m'en tiens à Ton pacte et à Ta promesse autant que je le peux. Je cherche Ta protection contre le mal de ce que j'ai commis. Je reconnais Tes bienfaits sur moi et je reconnais mes péchés ; pardonne-moi, car nul ne pardonne les péchés en dehors de Toi."},
+        {type:"dua",ref:"Sahîh Muslim n° 2692 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",fr:"Nulle divinité excepté Allah, Seul sans associé. À Lui le royaume, à Lui la louange et Il est Omnipotent. (10 fois)"},
+        {type:"dua",ref:"Sahîh Muslim n° 2691 — 100 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",fr:"Gloire à Allah et louange à Lui. (100 fois le matin : efface les péchés même s'ils égalaient l'écume de la mer)"},
+        {type:"dua",ref:"Abu Dawud 5069",ar:"اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",fr:"Ô Allah, tout bienfait qui m'atteint ce matin ou atteint l'une de Tes créatures vient de Toi Seul, sans associé. À Toi la louange et à Toi la gratitude."}
       ]
     },
     {
@@ -4794,13 +5160,18 @@
       quote: "Les adhkar du soir, protection du croyant jusqu\u2019\u00e0 l\u2019aube.",
       articleTitle: "Adhkar al-Massa",
       entries: [
-        {type:"dua",ref:"Al-Baqarah 2:255 (Ayat al-Kursi)",ar:"\u0627\u0644\u0644\u0651\u0647 \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0647\u0648 \u0627\u0644\u062d\u064a\u0651 \u0627\u0644\u0642\u064a\u0651\u0648\u0645 \u0644\u0627 \u062a\u0623\u062e\u0630\u0647 \u0633\u0646\u0629 \u0648\u0644\u0627 \u0646\u0648\u0645",fr:"Allah ! Point de divinit\u00e9 \u00e0 part Lui, le Vivant, Celui qui subsiste par Lui-m\u00eame."},
-        {type:"dua",ref:"Muslim 2723",ar:"\u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0623\u0645\u0633\u0649 \u0627\u0644\u0645\u0644\u0643 \u0644\u0644\u0651\u0647 \u0648\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0651\u0647 \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0627\u0644\u0644\u0651\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0647",fr:"Nous voil\u00e0 au soir et le royaume appartient \u00e0 Allah. Louange \u00e0 Allah. Nulle divinit\u00e9 except\u00e9 Allah, Seul, sans associ\u00e9."},
-        {type:"dua",ref:"Abu Dawud 5071",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0628\u0643 \u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0628\u0643 \u0623\u0635\u0628\u062d\u0646\u0627 \u0648\u0628\u0643 \u0646\u062d\u064a\u0627 \u0648\u0628\u0643 \u0646\u0645\u0648\u062a \u0648\u0625\u0650\u0644\u064a\u0643 \u0627\u0644\u0645\u0635\u064a\u0631",fr:"O Allah, c\u2019est par Toi que nous arrivons au soir, par Toi au matin, par Toi nous vivons, par Toi nous mourons et vers Toi est le devenir."},
-        {type:"dua",ref:"Abu Dawud 5069",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0645\u0627 \u0623\u0645\u0633\u0649 \u0628\u064a \u0645\u0646 \u0646\u0639\u0645\u0629 \u0623\u0648 \u0628\u0623\u062d\u062f \u0645\u0646 \u062e\u0644\u0642\u0643 \u0641\u0645\u0646\u0643 \u0648\u062d\u062f\u0643 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0643",fr:"O Allah, tout bienfait qui m\u2019atteint ce soir ou atteint l\u2019une de Tes cr\u00e9atures vient de Toi Seul."},
-        {type:"dua",ref:"Bukhari 6306 (Sayyid al-Istighfar)",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0623\u0646\u062a \u0631\u0628\u0651\u064a \u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0623\u0646\u062a \u062e\u0644\u0642\u062a\u0646\u064a \u0648\u0623\u0646\u0627 \u0639\u0628\u062f\u0643",fr:"O Allah, Tu es mon Seigneur, il n\u2019y a de divinit\u00e9 que Toi. Tu m\u2019as cr\u00e9\u00e9 et je suis Ton serviteur."},
-        {type:"dua",ref:"Muslim 2709",ar:"\u0623\u0639\u0648\u0630 \u0628\u0643\u0644\u0645\u0627\u062a \u0627\u0644\u0644\u0651\u0647 \u0627\u0644\u062a\u0651\u0627\u0645\u0651\u0627\u062a \u0645\u0646 \u0634\u0631\u0651 \u0645\u0627 \u062e\u0644\u0642",fr:"Je cherche refuge dans les paroles parfaites d\u2019Allah contre le mal de ce qu\u2019Il a cr\u00e9\u00e9. (3 fois le soir)"},
-        {type:"dua",ref:"Abu Dawud 5088",ar:"\u0628\u0633\u0645 \u0627\u0644\u0644\u0651\u0647 \u0627\u0644\u0651\u0630\u064a \u0644\u0627 \u064a\u0636\u0631\u0651 \u0645\u0639 \u0627\u0633\u0645\u0647 \u0634\u064a\u0621 \u0641\u064a \u0627\u0644\u0623\u0631\u0636 \u0648\u0644\u0627 \u0641\u064a \u0627\u0644\u0633\u0651\u0645\u0627\u0621",fr:"Au nom d\u2019Allah avec le nom de Qui rien ne peut nuire sur terre ni au ciel. (3 fois)"}
+        {type:"dua",ref:"Al-Baqarah 2:255 — Sahîh Al-Kalim At-Tayyib n° 22",ar:"اللهُ لاَ إِلَهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلاَّ بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ",fr:"Allah ! Point de divinité à part Lui, le Vivant, Celui qui n'a besoin de rien et dont toute chose dépend. Ni somnolence ni sommeil ne Le saisissent. Lui appartient tout ce qui est dans les cieux et sur terre. Qui peut intercéder auprès de Lui sans Sa permission ? Il sait ce qui est devant eux et derrière eux. Ils n'embrassent de Sa science que ce qu'Il veut. Son Trône s'étend sur les cieux et la terre dont la garde ne Lui pèse aucunement. Il est le Très-Haut, le Très-Grand."},
+        {type:"verset",ref:"Sourate 112 (Al-Ikhlas) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ هُوَ اللهُ أَحَدٌ ۞ اللهُ الصَّمَدُ ۞ لَمْ يَلِدْ وَلَمْ يُولَدْ ۞ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ",fr:"Dis : Il est Allah, Unique ۞ Allah, le Seul à être imploré et dont tout le monde dépend ۞ Il n'a pas engendré et n'a pas été engendré ۞ Et nul n'est égal à Lui. (3 fois)"},
+        {type:"verset",ref:"Sourate 113 (Al-Falaq) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۞ مِنْ شَرِّ مَا خَلَقَ ۞ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ۞ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۞ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ",fr:"Dis : Je cherche protection auprès du Seigneur de l'aube naissante ۞ Contre le mal de ce qu'Il a créé ۞ Contre le mal de l'obscurité quand elle s'étend ۞ Contre le mal des souffleuses dans les nœuds ۞ Et contre le mal de l'envieux quand il envie. (3 fois)"},
+        {type:"verset",ref:"Sourate 114 (An-Nas) — 3 fois — Sahîh At-Tirmidhî n° 3575",ar:"قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۞ مَلِكِ النَّاسِ ۞ إِلَهِ النَّاسِ ۞ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۞ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۞ مِنَ الْجِنَّةِ وَالنَّاسِ",fr:"Dis : Je cherche protection auprès du Seigneur des hommes ۞ Le Souverain des hommes ۞ La divinité des hommes ۞ Contre le mal du tentateur sournois ۞ Qui murmure dans les poitrines des hommes ۞ Qu'il soit parmi les djinns ou les hommes. (3 fois)"},
+        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3388 — 3 fois",ar:"بِسْمِ اللهِ الَّذِي لاَ يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الأَرْضِ وَلاَ فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",fr:"Au nom d'Allah, tel qu'en compagnie de Son Nom rien sur Terre ni au ciel ne peut nuire, Lui l'Audient, l'Omniscient. (3 fois)"},
+        {type:"dua",ref:"Sahîh Muslim n° 2709 — 3 fois",ar:"أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",fr:"Je me mets sous la protection des paroles parfaites d'Allah contre le mal de ce qu'Il a créé. (3 fois)"},
+        {type:"dua",ref:"As-Sahîhah n° 262",ar:"اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ",fr:"Ô Allah ! C'est par Toi que nous nous retrouvons au soir et c'est par Toi que nous nous retrouvons au matin ; c'est par Toi que nous vivons, c'est par Toi que nous mourons, et c'est vers Toi que sera le retour."},
+        {type:"dua",ref:"Sahîh Muslim n° 2723",ar:"أَمْسَيْنَا وَأَمْسَى الْمُلْكُ للهِ وَالْحَمْدُ للهِ لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا وَأَعُوذُ بِكَ مِنْ شَرِّ هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ",fr:"Nous voilà au soir et le règne appartient à Allah. Louange à Allah. Il n'y a aucune divinité en dehors d'Allah, Seul, sans associé. À Lui le règne et à Lui la louange. Il est Omnipotent. Ô mon Seigneur ! Je Te demande le bien de cette nuit et le bien de ce qui vient après. Je cherche Ta protection contre le mal de cette nuit et de ce qui vient après. Mon Seigneur, je cherche Ta protection contre la paresse et la déchéance de la vieillesse. Mon Seigneur, je cherche Ta protection contre le châtiment du Feu et contre le châtiment de la tombe."},
+        {type:"dua",ref:"Sahîh Al-Bukhârî n° 5947 — Sayyid al-Istighfar",ar:"اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ",fr:"Ô Allah ! Tu es mon Seigneur. Il n'y a aucune divinité en dehors de Toi. Tu m'as créé et je suis Ton serviteur. Je m'en tiens à Ton pacte et à Ta promesse autant que je le peux. Je cherche Ta protection contre le mal de ce que j'ai commis. Je reconnais Tes bienfaits sur moi et je reconnais mes péchés ; pardonne-moi, car nul ne pardonne les péchés en dehors de Toi."},
+        {type:"dua",ref:"Sahîh Muslim n° 2692 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",fr:"Nulle divinité excepté Allah, Seul sans associé. À Lui le royaume, à Lui la louange et Il est Omnipotent. (10 fois)"},
+        {type:"dua",ref:"Sahîh Muslim n° 2691 — 100 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",fr:"Gloire à Allah et louange à Lui. (100 fois le soir : efface les péchés même s'ils égalaient l'écume de la mer)"},
+        {type:"dua",ref:"Abu Dawud 5069",ar:"اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",fr:"Ô Allah, tout bienfait qui m'atteint ce soir ou atteint l'une de Tes créatures vient de Toi Seul, sans associé. À Toi la louange et à Toi la gratitude."}
       ]
     },
     {
@@ -4812,12 +5183,12 @@
       quote: "En Ton nom, \u00f4 Allah, je vis et je meurs.",
       articleTitle: "Adhkar an-Nawm",
       entries: [
-        {type:"dua",ref:"Bukhari 6314",ar:"\u0628\u0627\u0633\u0645\u0643 \u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0623\u0645\u0648\u062a \u0648\u0623\u062d\u064a\u0627",fr:"En Ton nom, \u00f4 Allah, je meurs et je vis."},
-        {type:"dua",ref:"Bukhari 7393",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u064a \u0623\u0633\u0644\u0645\u062a \u0646\u0641\u0633\u064a \u0625\u0650\u0644\u064a\u0643 \u0648\u0641\u0648\u0651\u0636\u062a \u0623\u0645\u0631\u064a \u0625\u0650\u0644\u064a\u0643 \u0648\u0648\u062c\u0651\u0647\u062a \u0648\u062c\u0647\u064a \u0625\u0650\u0644\u064a\u0643",fr:"O Allah, je me suis soumis \u00e0 Toi, je T\u2019ai confi\u00e9 mon affaire, j\u2019ai tourn\u00e9 mon visage vers Toi."},
-        {type:"dua",ref:"Abu Dawud 5051",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0642\u0646\u064a \u0639\u0630\u0627\u0628\u0643 \u064a\u0648\u0645 \u062a\u0628\u0639\u062b \u0639\u0628\u0627\u062f\u0643",fr:"O Allah, pr\u00e9serve-moi de Ton ch\u00e2timent le jour o\u00f9 Tu ressusciteras Tes serviteurs."},
-        {type:"dua",ref:"Al-Mulk 67:1-2 (Sourate al-Mulk)",ar:"\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u0651\u0630\u064a \u0628\u064a\u062f\u0647 \u0627\u0644\u0645\u0644\u0643 \u0648\u0647\u0648 \u0639\u0644\u0649 \u0643\u0644\u0651 \u0634\u064a\u0621 \u0642\u062f\u064a\u0631",fr:"B\u00e9ni soit Celui dans la main de Qui est la royaut\u00e9 et qui est Omnipotent. (Lire sourate al-Mulk avant de dormir)"},
-        {type:"dua",ref:"Bukhari 5017",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0631\u0628\u0651 \u0627\u0644\u0633\u0651\u0645\u0627\u0648\u0627\u062a \u0627\u0644\u0633\u0651\u0628\u0639 \u0648\u0631\u0628\u0651 \u0627\u0644\u0639\u0631\u0634 \u0627\u0644\u0639\u0638\u064a\u0645 \u0631\u0628\u0651\u0646\u0627 \u0648\u0631\u0628\u0651 \u0643\u0644\u0651 \u0634\u064a\u0621",fr:"O Allah, Seigneur des sept cieux et du Tr\u00f4ne immense, notre Seigneur et le Seigneur de toute chose."},
-        {type:"dua",ref:"Muslim 2712 (Tasbi7 avant le sommeil)",ar:"\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0651\u0647 \u0663\u0663 \u0648\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0651\u0647 \u0663\u0663 \u0648\u0627\u0644\u0644\u0651\u0647 \u0623\u0643\u0628\u0631 \u0663\u0664",fr:"SubhanAllah 33 fois, Alhamdulillah 33 fois, Allahu Akbar 34 fois."}
+        {type:"dua",ref:"Bukhari 6314",ar:"\u0628\u0650\u0627\u0633\u0652\u0645\u0650\u0643\u064e \u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0623\u064e\u0645\u064f\u0648\u062a\u064f \u0648\u064e\u0623\u064e\u062d\u0652\u064a\u064e\u0627",fr:"En Ton nom, \u00f4 Allah, je meurs et je vis."},
+        {type:"dua",ref:"Bukhari 7393",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0651\u0650\u064a \u0623\u064e\u0633\u0652\u0644\u064e\u0645\u0652\u062a\u064f \u0646\u064e\u0641\u0652\u0633\u0650\u064a \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0648\u064e\u0641\u064e\u0648\u0651\u064e\u0636\u0652\u062a\u064f \u0623\u064e\u0645\u0652\u0631\u0650\u064a \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0648\u064e\u0648\u064e\u062c\u0651\u064e\u0647\u0652\u062a\u064f \u0648\u064e\u062c\u0652\u0647\u0650\u064a \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0648\u064e\u0623\u064e\u0644\u0652\u062c\u064e\u0623\u0652\u062a\u064f \u0638\u064e\u0647\u0652\u0631\u0650\u064a \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0631\u064e\u0647\u0652\u0628\u064e\u0629\u064b \u0648\u064e\u0631\u064e\u063a\u0652\u0628\u064e\u0629\u064b \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0644\u064e\u0627 \u0645\u064e\u0644\u0652\u062c\u064e\u0623\u064e \u0648\u064e\u0644\u064e\u0627 \u0645\u064e\u0646\u0652\u062c\u064e\u0627 \u0645\u0650\u0646\u0652\u0643\u064e \u0625\u0650\u0644\u0651\u064e\u0627 \u0625\u0650\u0644\u064e\u064a\u0652\u0643\u064e \u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0622\u0645\u064e\u0646\u0652\u062a\u064f \u0628\u0650\u0643\u0650\u062a\u064e\u0627\u0628\u0650\u0643\u064e \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u0623\u064e\u0646\u0652\u0632\u064e\u0644\u0652\u062a\u064e \u0648\u064e\u0628\u0650\u0646\u064e\u0628\u0650\u064a\u0651\u0650\u0643\u064e \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u0623\u064e\u0631\u0652\u0633\u064e\u0644\u0652\u062a\u064e",fr:"O Allah, je me suis soumis \u00e0 Toi, je T\u2019ai confi\u00e9 mon affaire, j\u2019ai tourn\u00e9 mon visage vers Toi."},
+        {type:"dua",ref:"Abu Dawud 5051",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0642\u0650\u0646\u0650\u064a \u0639\u064e\u0630\u064e\u0627\u0628\u064e\u0643\u064e \u064a\u064e\u0648\u0652\u0645\u064e \u062a\u064e\u0628\u0652\u0639\u064e\u062b\u064f \u0639\u0650\u0628\u064e\u0627\u062f\u064e\u0643\u064e",fr:"O Allah, pr\u00e9serve-moi de Ton ch\u00e2timent le jour o\u00f9 Tu ressusciteras Tes serviteurs."},
+        {type:"dua",ref:"Al-Mulk 67:1-2 (Sourate al-Mulk)",ar:"\u062a\u064e\u0628\u064e\u0627\u0631\u064e\u0643\u064e \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u0628\u0650\u064a\u064e\u062f\u0650\u0647\u0650 \u0627\u0644\u0652\u0645\u064f\u0644\u0652\u0643\u064f \u0648\u064e\u0647\u064f\u0648\u064e \u0639\u064e\u0644\u064e\u0649 \u0643\u064f\u0644\u0651\u0650 \u0634\u064e\u064a\u0652\u0621\u0613 \u0642\u064e\u062f\u0650\u064a\u0631\u064c",fr:"B\u00e9ni soit Celui dans la main de Qui est la royaut\u00e9 et qui est Omnipotent. (Lire sourate al-Mulk avant de dormir)"},
+        {type:"dua",ref:"Bukhari 5017",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0631\u064e\u0628\u0651\u064e \u0627\u0644\u0633\u0651\u064e\u0645\u064e\u0627\u0648\u064e\u0627\u062a\u0650 \u0627\u0644\u0633\u0651\u064e\u0628\u0652\u0639\u0650 \u0648\u064e\u0631\u064e\u0628\u0651\u064e \u0627\u0644\u0652\u0639\u064e\u0631\u0652\u0634\u0650 \u0627\u0644\u0652\u0639\u064e\u0638\u0650\u064a\u0645\u0650 \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0648\u064e\u0631\u064e\u0628\u0651\u064e \u0643\u064f\u0644\u0651\u0650 \u0634\u064e\u064a\u0652\u0621\u0613 \u0641\u064e\u0627\u0644\u0650\u0642\u064e \u0627\u0644\u0652\u062d\u064e\u0628\u0651\u0650 \u0648\u064e\u0627\u0644\u0646\u0651\u064e\u0648\u064e\u0649 \u0645\u064f\u0646\u064e\u0632\u0651\u0650\u0644\u064e \u0627\u0644\u062a\u0651\u064e\u0648\u0652\u0631\u064e\u0627\u0629\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0646\u0652\u062c\u0650\u064a\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0641\u064f\u0631\u0652\u0642\u064e\u0627\u0646\u0650 \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0643\u064f\u0644\u0651\u0650 \u0634\u064e\u064a\u0652\u0621\u0613 \u0623\u064e\u0646\u0652\u062a\u064e \u0622\u062e\u0650\u0630\u064c \u0628\u0650\u0646\u064e\u0627\u0635\u0650\u064a\u064e\u062a\u0650\u0647\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0652\u0623\u064e\u0648\u0651\u064e\u0644\u064f \u0641\u064e\u0644\u064e\u064a\u0652\u0633\u064e \u0642\u064e\u0628\u0652\u0644\u064e\u0643\u064e \u0634\u064e\u064a\u0652\u0621\u064c \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0652\u0622\u062e\u0650\u0631\u064f \u0641\u064e\u0644\u064e\u064a\u0652\u0633\u064e \u0628\u064e\u0639\u0652\u062f\u064e\u0643\u064e \u0634\u064e\u064a\u0652\u0621\u064c \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0638\u0651\u064e\u0627\u0647\u0650\u0631\u064f \u0641\u064e\u0644\u064e\u064a\u0652\u0633\u064e \u0641\u064e\u0648\u0652\u0642\u064e\u0643\u064e \u0634\u064e\u064a\u0652\u0621\u064c \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0652\u0628\u064e\u0627\u0637\u0650\u0646\u064f \u0641\u064e\u0644\u064e\u064a\u0652\u0633\u064e \u062f\u064f\u0648\u0646\u064e\u0643\u064e \u0634\u064e\u064a\u0652\u0621\u064c \u0627\u0642\u0652\u0636\u0650 \u0639\u064e\u0646\u0651\u064e\u0627 \u0627\u0644\u062f\u0651\u064e\u064a\u0652\u0646\u064e \u0648\u064e\u0623\u064e\u063a\u0652\u0646\u0650\u0646\u064e\u0627 \u0645\u0650\u0646\u064e \u0627\u0644\u0652\u0641\u064e\u0642\u0652\u0631\u0650",fr:"O Allah, Seigneur des sept cieux et du Tr\u00f4ne immense, notre Seigneur et le Seigneur de toute chose."},
+        {type:"dua",ref:"Muslim 2712 (Tasbi7 avant le sommeil)",ar:"\u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0663\u0663 \u0648\u064e\u0627\u0644\u0652\u062d\u064e\u0645\u0652\u062f\u064f \u0644\u0650\u0644\u0644\u0651\u064e\u0647\u0650 \u0663\u0663 \u0648\u064e\u0627\u0644\u0644\u0651\u064e\u0647\u064f \u0623\u064e\u0643\u0652\u0628\u064e\u0631\u064f \u0663\u0664",fr:"SubhanAllah 33 fois, Alhamdulillah 33 fois, Allahu Akbar 34 fois."}
       ]
     },
     {
@@ -4829,11 +5200,11 @@
       quote: "Cherche refuge aupr\u00e8s du Seigneur de l\u2019aube naissante.",
       articleTitle: "Invocations de protection",
       entries: [
-        {type:"dua",ref:"Muslim 2709",ar:"\u0623\u0639\u0648\u0630 \u0628\u0643\u0644\u0645\u0627\u062a \u0627\u0644\u0644\u0651\u0647 \u0627\u0644\u062a\u0651\u0627\u0645\u0651\u0627\u062a \u0645\u0646 \u0634\u0631\u0651 \u0645\u0627 \u062e\u0644\u0642",fr:"Je cherche refuge dans les paroles parfaites d\u2019Allah contre le mal de ce qu\u2019Il a cr\u00e9\u00e9."},
-        {type:"dua",ref:"Abu Dawud 5088",ar:"\u0628\u0633\u0645 \u0627\u0644\u0644\u0651\u0647 \u0627\u0644\u0651\u0630\u064a \u0644\u0627 \u064a\u0636\u0631\u0651 \u0645\u0639 \u0627\u0633\u0645\u0647 \u0634\u064a\u0621 \u0641\u064a \u0627\u0644\u0623\u0631\u0636 \u0648\u0644\u0627 \u0641\u064a \u0627\u0644\u0633\u0651\u0645\u0627\u0621 \u0648\u0647\u0648 \u0627\u0644\u0633\u0651\u0645\u064a\u0639 \u0627\u0644\u0639\u0644\u064a\u0645",fr:"Au nom d\u2019Allah, avec le nom de Qui rien ne peut nuire sur terre ni au ciel, et Il est l\u2019Audient, l\u2019Omniscient. (3 fois)"},
+        {type:"dua",ref:"Muslim 2709",ar:"\u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e\u0644\u0650\u0645\u064e\u0627\u062a\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0627\u0644\u062a\u0651\u064e\u0627\u0645\u0651\u064e\u0627\u062a\u0650 \u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0645\u064e\u0627 \u062e\u064e\u0644\u064e\u0642\u064e",fr:"Je cherche refuge dans les paroles parfaites d\u2019Allah contre le mal de ce qu\u2019Il a cr\u00e9\u00e9."},
+        {type:"dua",ref:"Abu Dawud 5088",ar:"\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u0644\u064e\u0627 \u064a\u064e\u0636\u064f\u0631\u0651\u064f \u0645\u064e\u0639\u064e \u0627\u0633\u0652\u0645\u0650\u0647\u0650 \u0634\u064e\u064a\u0652\u0621\u064c \u0641\u0650\u064a \u0627\u0644\u0652\u0623\u064e\u0631\u0652\u0636\u0650 \u0648\u064e\u0644\u064e\u0627 \u0641\u0650\u064a \u0627\u0644\u0633\u0651\u064e\u0645\u064e\u0627\u0621\u0650 \u0648\u064e\u0647\u064f\u0648\u064e \u0627\u0644\u0633\u0651\u064e\u0645\u0650\u064a\u0639\u064f \u0627\u0644\u0652\u0639\u064e\u0644\u0650\u064a\u0645\u064f",fr:"Au nom d\u2019Allah, avec le nom de Qui rien ne peut nuire sur terre ni au ciel, et Il est l\u2019Audient, l\u2019Omniscient. (3 fois)"},
         {type:"dua",ref:"Al-Falaq 113:1-5",ar:"\u0642\u0644 \u0623\u0639\u0648\u0630 \u0628\u0631\u0628\u0651 \u0627\u0644\u0641\u0644\u0642 \u0645\u0646 \u0634\u0631\u0651 \u0645\u0627 \u062e\u0644\u0642",fr:"Dis : \u00abJe cherche refuge aupr\u00e8s du Seigneur de l\u2019aube naissante, contre le mal de ce qu\u2019Il a cr\u00e9\u00e9.\u00bb (Sourate al-Falaq)"},
-        {type:"dua",ref:"An-Nas 114:1-6",ar:"\u0642\u0644 \u0623\u0639\u0648\u0630 \u0628\u0631\u0628\u0651 \u0627\u0644\u0646\u0651\u0627\u0633 \u0645\u0644\u0643 \u0627\u0644\u0646\u0651\u0627\u0633 \u0625\u0650\u0644\u0647 \u0627\u0644\u0646\u0651\u0627\u0633",fr:"Dis : \u00abJe cherche refuge aupr\u00e8s du Seigneur des hommes, le Roi des hommes, le Dieu des hommes.\u00bb (Sourate an-Nas)"},
-        {type:"dua",ref:"Tirmidhi 3528",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u064a \u0623\u0639\u0648\u0630 \u0628\u0643 \u0645\u0646 \u0634\u0631\u0651 \u0633\u0645\u0639\u064a \u0648\u0645\u0646 \u0634\u0631\u0651 \u0628\u0635\u0631\u064a \u0648\u0645\u0646 \u0634\u0631\u0651 \u0644\u0633\u0627\u0646\u064a \u0648\u0645\u0646 \u0634\u0631\u0651 \u0642\u0644\u0628\u064a",fr:"O Allah, je cherche refuge aupr\u00e8s de Toi contre le mal de mon ou\u00efe, de ma vue, de ma langue et de mon c\u0153ur."}
+        {type:"dua",ref:"An-Nas 114:1-6",ar:"\u0642\u064f\u0644\u0652 \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0631\u064e\u0628\u0651\u0650 \u0627\u0644\u0646\u0651\u064e\u0627\u0633\u0650 \u06de \u0645\u064e\u0644\u0650\u0643\u0650 \u0627\u0644\u0646\u0651\u064e\u0627\u0633\u0650 \u06de \u0625\u0650\u0644\u064e\u0647\u0650 \u0627\u0644\u0646\u0651\u064e\u0627\u0633\u0650 \u06de \u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0627\u0644\u0652\u0648\u064e\u0633\u0652\u0648\u064e\u0627\u0633\u0650 \u0627\u0644\u0652\u062e\u064e\u0646\u0651\u064e\u0627\u0633\u0650 \u06de \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u064a\u064f\u0648\u064e\u0633\u0652\u0648\u0650\u0633\u064f \u0641\u0650\u064a \u0635\u064f\u062f\u064f\u0648\u0631\u0650 \u0627\u0644\u0646\u0651\u064e\u0627\u0633\u0650 \u06de \u0645\u0650\u0646\u064e \u0627\u0644\u0652\u062c\u0650\u0646\u0651\u064e\u0629\u0650 \u0648\u064e\u0627\u0644\u0646\u0651\u064e\u0627\u0633\u0650",fr:"Dis : \u00abJe cherche refuge aupr\u00e8s du Seigneur des hommes, le Roi des hommes, le Dieu des hommes.\u00bb (Sourate an-Nas)"},
+        {type:"dua",ref:"Tirmidhi 3528",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0650\u0651\u064a \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0633\u064e\u0645\u0652\u0639\u0650\u064a \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0628\u064e\u0635\u064e\u0631\u0650\u064a \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0644\u0650\u0633\u064e\u0627\u0646\u0650\u064a \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0642\u064e\u0644\u0652\u0628\u0650\u064a \u0648\u064e\u0645\u0650\u0646\u0652 \u0634\u064e\u0631\u0651\u0650 \u0645\u064e\u0646\u0650\u064a\u0651\u0650\u064a",fr:"O Allah, je cherche refuge aupr\u00e8s de Toi contre le mal de mon ou\u00efe, de ma vue, de ma langue et de mon c\u0153ur."}
       ]
     },
     {
@@ -4845,10 +5216,10 @@
       quote: "O Allah, je suis Ton serviteur, mon sort est dans Ta main.",
       articleTitle: "Du\u2019as contre la tristesse",
       entries: [
-        {type:"dua",ref:"Ahmad 3712",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u064a \u0639\u0628\u062f\u0643 \u0627\u0628\u0646 \u0639\u0628\u062f\u0643 \u0627\u0628\u0646 \u0623\u0645\u062a\u0643 \u0646\u0627\u0635\u064a\u062a\u064a \u0628\u064a\u062f\u0643 \u0645\u0627\u0636 \u0641\u064a\u0651 \u062d\u0643\u0645\u0643 \u0639\u062f\u0644 \u0641\u064a\u0651 \u0642\u0636\u0627\u0624\u0643",fr:"O Allah, je suis Ton serviteur, fils de Ton serviteur, fils de Ta servante. Mon sort est dans Ta main. Ton jugement s\u2019accomplit sur moi. Ton d\u00e9cret est juste \u00e0 mon \u00e9gard."},
+        {type:"dua",ref:"Ahmad 3712",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0650\u0651\u064a \u0639\u064e\u0628\u0652\u062f\u064f\u0643\u064e \u0627\u0628\u0652\u0646\u064f \u0639\u064e\u0628\u0652\u062f\u0650\u0643\u064e \u0627\u0628\u0652\u0646\u064f \u0623\u064e\u0645\u064e\u062a\u0650\u0643\u064e \u0646\u064e\u0627\u0635\u0650\u064a\u064e\u062a\u0650\u064a \u0628\u0650\u064a\u064e\u062f\u0650\u0643\u064e \u0645\u064e\u0627\u0636\u0613 \u0641\u0650\u064a\u064e\u0651 \u062d\u064f\u0643\u0652\u0645\u064f\u0643\u064e \u0639\u064e\u062f\u0652\u0644\u064c \u0641\u0650\u064a\u064e\u0651 \u0642\u064e\u0636\u064e\u0627\u0624\u064f\u0643\u064e \u0623\u064e\u0633\u0652\u0623\u064e\u0644\u064f\u0643\u064e \u0628\u0650\u0643\u064f\u0644\u0651\u0650 \u0627\u0633\u0652\u0645\u0613 \u0647\u064f\u0648\u064e \u0644\u064e\u0643\u064e \u0633\u064e\u0645\u0651\u064e\u064a\u0652\u062a\u064e \u0628\u0650\u0647\u0650 \u0646\u064e\u0641\u0652\u0633\u064e\u0643\u064e \u0623\u064e\u0648\u0652 \u0623\u064e\u0646\u0652\u0632\u064e\u0644\u0652\u062a\u064e\u0647\u064f \u0641\u0650\u064a \u0643\u0650\u062a\u064e\u0627\u0628\u0650\u0643\u064e \u0623\u064e\u0648\u0652 \u0639\u064e\u0644\u0651\u064e\u0645\u0652\u062a\u064e\u0647\u064f \u0623\u064e\u062d\u064e\u062f\u064b\u0627 \u0645\u0650\u0646\u0652 \u062e\u064e\u0644\u0652\u0642\u0650\u0643\u064e \u0623\u064e\u0648\u0650 \u0627\u0633\u0652\u062a\u064e\u0623\u0652\u062b\u064e\u0631\u0652\u062a\u064e \u0628\u0650\u0647\u0650 \u0641\u0650\u064a \u0639\u0650\u0644\u0652\u0645\u0650 \u0627\u0644\u0652\u063a\u064e\u064a\u0652\u0628\u0650 \u0639\u0650\u0646\u0652\u062f\u064e\u0643\u064e \u0623\u064e\u0646\u0652 \u062a\u064e\u062c\u0652\u0639\u064e\u0644\u064e \u0627\u0644\u0652\u0642\u064f\u0631\u0652\u0622\u0646\u064e \u0631\u064e\u0628\u0650\u064a\u0639\u064e \u0642\u064e\u0644\u0652\u0628\u0650\u064a \u0648\u064e\u0646\u064f\u0648\u0631\u064e \u0635\u064e\u062f\u0652\u0631\u0650\u064a \u0648\u064e\u062c\u064e\u0644\u064e\u0627\u0621\u064e \u062d\u064f\u0632\u0652\u0646\u0650\u064a \u0648\u064e\u0630\u064e\u0647\u064e\u0627\u0628\u064e \u0647\u064e\u0645\u0651\u0650\u064a",fr:"O Allah, je suis Ton serviteur, fils de Ton serviteur, fils de Ta servante. Mon sort est dans Ta main. Ton jugement s\u2019accomplit sur moi. Ton d\u00e9cret est juste \u00e0 mon \u00e9gard."},
         {type:"dua",ref:"Al-Anbiya 21:87",ar:"\u0644\u0627 \u0625\u0650\u0644\u0647 \u0625\u0650\u0644\u0651\u0627 \u0623\u0646\u062a \u0633\u0628\u062d\u0627\u0646\u0643 \u0625\u0650\u0646\u0651\u064a \u0643\u0646\u062a \u0645\u0646 \u0627\u0644\u0638\u0651\u0627\u0644\u0645\u064a\u0646",fr:"Point de divinit\u00e9 \u00e0 part Toi ! Puret\u00e9 \u00e0 Toi ! J\u2019ai \u00e9t\u00e9 du nombre des injustes. (L\u2019invocation de Yunus)"},
-        {type:"dua",ref:"Abu Dawud 1525",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u064a \u0623\u0639\u0648\u0630 \u0628\u0643 \u0645\u0646 \u0627\u0644\u0647\u0645\u0651 \u0648\u0627\u0644\u062d\u0632\u0646 \u0648\u0627\u0644\u0639\u062c\u0632 \u0648\u0627\u0644\u0643\u0633\u0644 \u0648\u0627\u0644\u0628\u062e\u0644 \u0648\u0627\u0644\u062c\u0628\u0646 \u0648\u0636\u0644\u0639 \u0627\u0644\u062f\u0651\u064a\u0646 \u0648\u063a\u0644\u0628\u0629 \u0627\u0644\u0631\u0651\u062c\u0627\u0644",fr:"O Allah, je cherche refuge aupr\u00e8s de Toi contre le souci, la tristesse, l\u2019impuissance, la paresse, l\u2019avarice, la l\u00e2chet\u00e9, le fardeau des dettes et la domination des hommes."},
-        {type:"dua",ref:"Muslim 2721",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0631\u062d\u0645\u062a\u0643 \u0623\u0631\u062c\u0648 \u0641\u0644\u0627 \u062a\u0643\u0644\u0646\u064a \u0625\u0650\u0644\u0649 \u0646\u0641\u0633\u064a \u0637\u0631\u0641\u0629 \u0639\u064a\u0646 \u0648\u0623\u0635\u0644\u062d \u0644\u064a \u0634\u0623\u0646\u064a \u0643\u0644\u0651\u0647",fr:"O Allah, c\u2019est Ta mis\u00e9ricorde que j\u2019esp\u00e8re. Ne me laisse pas \u00e0 moi-m\u00eame un seul instant et am\u00e9liore toute ma situation."}
+        {type:"dua",ref:"Abu Dawud 1525",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0650\u0651\u064a \u0623\u064e\u0639\u064f\u0648\u0630\u064f \u0628\u0650\u0643\u064e \u0645\u0650\u0646\u064e \u0627\u0644\u0652\u0647\u064e\u0645\u0651\u0650 \u0648\u064e\u0627\u0644\u0652\u062d\u064e\u0632\u064e\u0646\u0650 \u0648\u064e\u0627\u0644\u0652\u0639\u064e\u062c\u0652\u0632\u0650 \u0648\u064e\u0627\u0644\u0652\u0643\u064e\u0633\u064e\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0628\u064f\u062e\u0652\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u062c\u064f\u0628\u0652\u0646\u0650 \u0648\u064e\u0636\u064e\u0644\u064e\u0639\u0650 \u0627\u0644\u062f\u0651\u064e\u064a\u0652\u0646\u0650 \u0648\u064e\u063a\u064e\u0644\u064e\u0628\u064e\u0629\u0650 \u0627\u0644\u0631\u0651\u0650\u062c\u064e\u0627\u0644\u0650",fr:"O Allah, je cherche refuge aupr\u00e8s de Toi contre le souci, la tristesse, l\u2019impuissance, la paresse, l\u2019avarice, la l\u00e2chet\u00e9, le fardeau des dettes et la domination des hommes."},
+        {type:"dua",ref:"Muslim 2721",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0631\u064e\u062d\u0652\u0645\u064e\u062a\u064e\u0643\u064e \u0623\u064e\u0631\u0652\u062c\u064f\u0648 \u0641\u064e\u0644\u064e\u0627 \u062a\u064e\u0643\u0650\u0644\u0652\u0646\u0650\u064a \u0625\u0650\u0644\u064e\u0649 \u0646\u064e\u0641\u0652\u0633\u0650\u064a \u0637\u064e\u0631\u0652\u0641\u064e\u0629\u064e \u0639\u064e\u064a\u0652\u0646\u0613 \u0648\u064e\u0623\u064e\u0635\u0652\u0644\u0650\u062d\u0652 \u0644\u0650\u064a \u0634\u064e\u0623\u0652\u0646\u0650\u064a \u0643\u064f\u0644\u0651\u064e\u0647\u064f",fr:"O Allah, c\u2019est Ta mis\u00e9ricorde que j\u2019esp\u00e8re. Ne me laisse pas \u00e0 moi-m\u00eame un seul instant et am\u00e9liore toute ma situation."}
       ]
     },
     {
@@ -4860,9 +5231,9 @@
       quote: "Trois invocations ne sont pas rejet\u00e9es, dont celle du voyageur.",
       articleTitle: "Du\u2019as du voyage",
       entries: [
-        {type:"dua",ref:"Muslim 1342",ar:"\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0651\u0630\u064a \u0633\u062e\u0651\u0631 \u0644\u0646\u0627 \u0647\u0630\u0627 \u0648\u0645\u0627 \u0643\u0646\u0651\u0627 \u0644\u0647 \u0645\u0642\u0631\u0646\u064a\u0646 \u0648\u0625\u0650\u0646\u0651\u0627 \u0625\u0650\u0644\u0649 \u0631\u0628\u0651\u0646\u0627 \u0644\u0645\u0646\u0642\u0644\u0628\u0648\u0646",fr:"Gloire \u00e0 Celui qui a mis ceci \u00e0 notre service alors que nous n\u2019\u00e9tions pas capables de le faire. Et c\u2019est vers notre Seigneur que nous retournerons."},
-        {type:"dua",ref:"Muslim 1342",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u0627 \u0646\u0633\u0623\u0644\u0643 \u0641\u064a \u0633\u0641\u0631\u0646\u0627 \u0647\u0630\u0627 \u0627\u0644\u0628\u0631\u0651 \u0648\u0627\u0644\u062a\u0651\u0642\u0648\u0649 \u0648\u0645\u0646 \u0627\u0644\u0639\u0645\u0644 \u0645\u0627 \u062a\u0631\u0636\u0649",fr:"O Allah, nous Te demandons dans ce voyage la pi\u00e9t\u00e9, la crainte, et les \u0153uvres dont Tu es satisfait."},
-        {type:"dua",ref:"Muslim 1342",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0647\u0648\u0651\u0646 \u0639\u0644\u064a\u0646\u0627 \u0633\u0641\u0631\u0646\u0627 \u0647\u0630\u0627 \u0648\u0627\u0637\u0648\u0650 \u0639\u0646\u0651\u0627 \u0628\u0639\u062f\u0647",fr:"O Allah, facilite-nous ce voyage et rapproche-nous de sa destination."}
+        {type:"dua",ref:"Muslim 1342",ar:"\u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e \u0627\u0644\u0651\u064e\u0630\u0650\u064a \u0633\u064e\u062e\u0651\u064e\u0631\u064e \u0644\u064e\u0646\u064e\u0627 \u0647\u064e\u0630\u064e\u0627 \u0648\u064e\u0645\u064e\u0627 \u0643\u064f\u0646\u0651\u064e\u0627 \u0644\u064e\u0647\u064f \u0645\u064f\u0642\u0652\u0631\u0650\u0646\u0650\u064a\u0646\u064e \u0648\u064e\u0625\u0650\u0646\u0651\u064e\u0627 \u0625\u0650\u0644\u064e\u0649 \u0631\u064e\u0628\u0651\u0650\u0646\u064e\u0627 \u0644\u064e\u0645\u064f\u0646\u0652\u0642\u064e\u0644\u0650\u0628\u064f\u0648\u0646\u064e",fr:"Gloire \u00e0 Celui qui a mis ceci \u00e0 notre service alors que nous n\u2019\u00e9tions pas capables de le faire. Et c\u2019est vers notre Seigneur que nous retournerons."},
+        {type:"dua",ref:"Muslim 1342",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0651\u064e\u0627 \u0646\u064e\u0633\u0652\u0623\u064e\u0644\u064f\u0643\u064e \u0641\u0650\u064a \u0633\u064e\u0641\u064e\u0631\u0650\u0646\u064e\u0627 \u0647\u064e\u0630\u064e\u0627 \u0627\u0644\u0652\u0628\u0650\u0631\u0651\u064e \u0648\u064e\u0627\u0644\u062a\u0651\u064e\u0642\u0652\u0648\u064e\u0649 \u0648\u064e\u0645\u0650\u0646\u064e \u0627\u0644\u0652\u0639\u064e\u0645\u064e\u0644\u0650 \u0645\u064e\u0627 \u062a\u064e\u0631\u0652\u0636\u064e\u0649",fr:"O Allah, nous Te demandons dans ce voyage la pi\u00e9t\u00e9, la crainte, et les \u0153uvres dont Tu es satisfait."},
+        {type:"dua",ref:"Muslim 1342",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0647\u064e\u0648\u0651\u0650\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0633\u064e\u0641\u064e\u0631\u064e\u0646\u064e\u0627 \u0647\u064e\u0630\u064e\u0627 \u0648\u064e\u0627\u0637\u0652\u0648\u0650 \u0639\u064e\u0646\u0651\u064e\u0627 \u0628\u064f\u0639\u0652\u062f\u064e\u0647\u064f",fr:"O Allah, facilite-nous ce voyage et rapproche-nous de sa destination."}
       ]
     },
     {
@@ -4874,8 +5245,8 @@
       quote: "Consulte ton Seigneur avant toute d\u00e9cision importante.",
       articleTitle: "Pri\u00e8re de consultation",
       entries: [
-        {type:"dua",ref:"Bukhari 1166",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646\u0651\u064a \u0623\u0633\u062a\u062e\u064a\u0631\u0643 \u0628\u0639\u0644\u0645\u0643 \u0648\u0623\u0633\u062a\u0642\u062f\u0631\u0643 \u0628\u0642\u062f\u0631\u062a\u0643 \u0648\u0623\u0633\u0623\u0644\u0643 \u0645\u0646 \u0641\u0636\u0644\u0643 \u0627\u0644\u0639\u0638\u064a\u0645 \u0641\u0625\u0650\u0646\u0651\u0643 \u062a\u0642\u062f\u0631 \u0648\u0644\u0627 \u0623\u0642\u062f\u0631 \u0648\u062a\u0639\u0644\u0645 \u0648\u0644\u0627 \u0623\u0639\u0644\u0645 \u0648\u0623\u0646\u062a \u0639\u0644\u0651\u0627\u0645 \u0627\u0644\u063a\u064a\u0648\u0628",fr:"O Allah, je Te consulte par Ta science et je Te demande de m\u2019accorder le pouvoir par Ta puissance, et je Te demande de Ta gr\u00e2ce immense. Car Tu es capable et je ne suis pas capable, Tu sais et je ne sais pas, et Tu es le Grand Connaisseur de l\u2019invisible."},
-        {type:"dua",ref:"Bukhari 1166 (suite)",ar:"\u0627\u0644\u0644\u0651\u0647\u0645\u0651 \u0625\u0650\u0646 \u0643\u0646\u062a \u062a\u0639\u0644\u0645 \u0623\u0646\u0651 \u0647\u0630\u0627 \u0627\u0644\u0623\u0645\u0631 \u062e\u064a\u0631 \u0644\u064a \u0641\u064a \u062f\u064a\u0646\u064a \u0648\u0645\u0639\u0627\u0634\u064a \u0648\u0639\u0627\u0642\u0628\u0629 \u0623\u0645\u0631\u064a \u0641\u0627\u0642\u062f\u0631\u0647 \u0644\u064a \u0648\u064a\u0633\u0651\u0631\u0647 \u0644\u064a \u062b\u0645\u0651 \u0628\u0627\u0631\u0643 \u0644\u064a \u0641\u064a\u0647",fr:"O Allah, si Tu sais que cette affaire est un bien pour ma religion, ma vie et ma destin\u00e9e, d\u00e9cr\u00e8te-la pour moi, facilite-la moi et b\u00e9nis-la moi."}
+        {type:"dua",ref:"Bukhari 1166",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0650\u0651\u064a \u0623\u064e\u0633\u0652\u062a\u064e\u062e\u0650\u064a\u0631\u064f\u0643\u064e \u0628\u0650\u0639\u0650\u0644\u0652\u0645\u0650\u0643\u064e \u0648\u064e\u0623\u064e\u0633\u0652\u062a\u064e\u0642\u0652\u062f\u0650\u0631\u064f\u0643\u064e \u0628\u0650\u0642\u064f\u062f\u0652\u0631\u064e\u062a\u0650\u0643\u064e \u0648\u064e\u0623\u064e\u0633\u0652\u0623\u064e\u0644\u064f\u0643\u064e \u0645\u0650\u0646\u0652 \u0641\u064e\u0636\u0652\u0644\u0650\u0643\u064e \u0627\u0644\u0652\u0639\u064e\u0638\u0650\u064a\u0645\u0650 \u0641\u064e\u0625\u0650\u0646\u0651\u064e\u0643\u064e \u062a\u064e\u0642\u0652\u062f\u0650\u0631\u064f \u0648\u064e\u0644\u064e\u0627 \u0623\u064e\u0642\u0652\u062f\u0650\u0631\u064f \u0648\u064e\u062a\u064e\u0639\u0652\u0644\u064e\u0645\u064f \u0648\u064e\u0644\u064e\u0627 \u0623\u064e\u0639\u0652\u0644\u064e\u0645\u064f \u0648\u064e\u0623\u064e\u0646\u0652\u062a\u064e \u0639\u064e\u0644\u0651\u064e\u0627\u0645\u064f \u0627\u0644\u0652\u063a\u064f\u064a\u064f\u0648\u0628\u0650",fr:"O Allah, je Te consulte par Ta science et je Te demande de m\u2019accorder le pouvoir par Ta puissance, et je Te demande de Ta gr\u00e2ce immense. Car Tu es capable et je ne suis pas capable, Tu sais et je ne sais pas, et Tu es le Grand Connaisseur de l\u2019invisible."},
+        {type:"dua",ref:"Bukhari 1166 (suite)",ar:"\u0627\u0644\u0644\u0651\u064e\u0647\u064f\u0645\u0651\u064e \u0625\u0650\u0646\u0652 \u0643\u064f\u0646\u0652\u062a\u064e \u062a\u064e\u0639\u0652\u0644\u064e\u0645\u064f \u0623\u064e\u0646\u0651\u064e \u0647\u064e\u0630\u064e\u0627 \u0627\u0644\u0652\u0623\u064e\u0645\u0652\u0631\u064e \u062e\u064e\u064a\u0652\u0631\u064c \u0644\u0650\u064a \u0641\u0650\u064a \u062f\u0650\u064a\u0646\u0650\u064a \u0648\u064e\u0645\u064e\u0639\u064e\u0627\u0634\u0650\u064a \u0648\u064e\u0639\u064e\u0627\u0642\u0650\u0628\u064e\u0629\u0650 \u0623\u064e\u0645\u0652\u0631\u0650\u064a \u0641\u064e\u0627\u0642\u0652\u062f\u064f\u0631\u0652\u0647\u064f \u0644\u0650\u064a \u0648\u064e\u064a\u064e\u0633\u0651\u0650\u0631\u0652\u0647\u064f \u0644\u0650\u064a \u062b\u064f\u0645\u0651\u064e \u0628\u064e\u0627\u0631\u0650\u0643\u0652 \u0644\u0650\u064a \u0641\u0650\u064a\u0647\u0650 \u0648\u064e\u0625\u0650\u0646\u0652 \u0643\u064f\u0646\u0652\u062a\u064e \u062a\u064e\u0639\u0652\u0644\u064e\u0645\u064f \u0623\u064e\u0646\u0651\u064e \u0647\u064e\u0630\u064e\u0627 \u0627\u0644\u0652\u0623\u064e\u0645\u0652\u0631\u064e \u0634\u064e\u0631\u064c \u0644\u0650\u064a \u0641\u0650\u064a \u062f\u0650\u064a\u0646\u0650\u064a \u0648\u064e\u0645\u064e\u0639\u064e\u0627\u0634\u0650\u064a \u0648\u064e\u0639\u064e\u0627\u0642\u0650\u0628\u064e\u0629\u0650 \u0623\u064e\u0645\u0652\u0631\u0650\u064a \u0641\u064e\u0627\u0635\u0652\u0631\u0650\u0641\u0652\u0647\u064f \u0639\u064e\u0646\u0651\u0650\u064a \u0648\u064e\u0627\u0635\u0652\u0631\u0650\u0641\u0652\u0646\u0650\u064a \u0639\u064e\u0646\u0652\u0647\u064f \u0648\u064e\u0627\u0642\u0652\u062f\u064f\u0631\u0652 \u0644\u0650\u064a \u0627\u0644\u0652\u062e\u064e\u064a\u0652\u0631\u064e \u062d\u064e\u064a\u0652\u062b\u064f \u0643\u064e\u0627\u0646\u064e \u062b\u064f\u0645\u0651\u064e \u0623\u064e\u0631\u0652\u0636\u0650\u0646\u0650\u064a \u0628\u0650\u0647\u0650",fr:"O Allah, si Tu sais que cette affaire est un bien pour ma religion, ma vie et ma destin\u00e9e, d\u00e9cr\u00e8te-la pour moi, facilite-la moi et b\u00e9nis-la moi."}
       ]
     },
     {
@@ -4887,22 +5258,22 @@
       quote: "Notre Seigneur, accorde-nous le bien ici-bas et dans l\u2019au-del\u00e0.",
       articleTitle: "Les Rabbana du Coran",
       entries: [
-        {type:"verset",ref:"Al-Baqarah 2:127",ar:"\u0631\u0628\u0651\u0646\u0627 \u062a\u0642\u0628\u0651\u0644 \u0645\u0646\u0651\u0627 \u0625\u0650\u0646\u0651\u0643 \u0623\u0646\u062a \u0627\u0644\u0633\u0651\u0645\u064a\u0639 \u0627\u0644\u0639\u0644\u064a\u0645",fr:"Notre Seigneur, accepte ceci de notre part, car c\u2019est Toi l\u2019Audient, l\u2019Omniscient."},
-        {type:"verset",ref:"Al-Baqarah 2:128",ar:"\u0631\u0628\u0651\u0646\u0627 \u0648\u0627\u062c\u0639\u0644\u0646\u0627 \u0645\u0633\u0644\u0645\u064a\u0646 \u0644\u0643 \u0648\u0645\u0646 \u0630\u0631\u0651\u064a\u062a\u0646\u0627 \u0623\u0645\u0651\u0629 \u0645\u0633\u0644\u0645\u0629 \u0644\u0643",fr:"Notre Seigneur, fais de nous des soumis \u00e0 Toi et de notre descendance une communaut\u00e9 soumise \u00e0 Toi."},
-        {type:"verset",ref:"Al-Baqarah 2:201",ar:"\u0631\u0628\u0651\u0646\u0627 \u0622\u062a\u0646\u0627 \u0641\u064a \u0627\u0644\u062f\u0651\u0646\u064a\u0627 \u062d\u0633\u0646\u0629 \u0648\u0641\u064a \u0627\u0644\u0622\u062e\u0631\u0629 \u062d\u0633\u0646\u0629 \u0648\u0642\u0646\u0627 \u0639\u0630\u0627\u0628 \u0627\u0644\u0646\u0651\u0627\u0631",fr:"Notre Seigneur, accorde-nous un bien ici-bas et un bien dans l\u2019au-del\u00e0, et pr\u00e9serve-nous du ch\u00e2timent du Feu."},
-        {type:"verset",ref:"Al-Baqarah 2:250",ar:"\u0631\u0628\u0651\u0646\u0627 \u0623\u0641\u0631\u063a \u0639\u0644\u064a\u0646\u0627 \u0635\u0628\u0631\u0627 \u0648\u062b\u0628\u0651\u062a \u0623\u0642\u062f\u0627\u0645\u0646\u0627 \u0648\u0627\u0646\u0635\u0631\u0646\u0627 \u0639\u0644\u0649 \u0627\u0644\u0642\u0648\u0645 \u0627\u0644\u0643\u0627\u0641\u0631\u064a\u0646",fr:"Notre Seigneur, d\u00e9verse sur nous la patience, affermis nos pas et donne-nous la victoire."},
-        {type:"verset",ref:"Al-Baqarah 2:286",ar:"\u0631\u0628\u0651\u0646\u0627 \u0644\u0627 \u062a\u0624\u0627\u062e\u0630\u0646\u0627 \u0625\u0650\u0646 \u0646\u0633\u064a\u0646\u0627 \u0623\u0648 \u0623\u062e\u0637\u0623\u0646\u0627",fr:"Notre Seigneur, ne nous ch\u00e2tie pas s\u2019il nous arrive d\u2019oublier ou de commettre une erreur."},
-        {type:"verset",ref:"Al Imran 3:8",ar:"\u0631\u0628\u0651\u0646\u0627 \u0644\u0627 \u062a\u0632\u063a \u0642\u0644\u0648\u0628\u0646\u0627 \u0628\u0639\u062f \u0625\u0650\u0630 \u0647\u062f\u064a\u062a\u0646\u0627 \u0648\u0647\u0628 \u0644\u0646\u0627 \u0645\u0646 \u0644\u062f\u0646\u0643 \u0631\u062d\u0645\u0629",fr:"Notre Seigneur, ne fais pas d\u00e9vier nos c\u0153urs apr\u00e8s nous avoir guid\u00e9s, et accorde-nous Ta mis\u00e9ricorde."},
-        {type:"verset",ref:"Al Imran 3:16",ar:"\u0631\u0628\u0651\u0646\u0627 \u0625\u0650\u0646\u0651\u0646\u0627 \u0622\u0645\u0646\u0651\u0627 \u0641\u0627\u063a\u0641\u0631 \u0644\u0646\u0627 \u0630\u0646\u0648\u0628\u0646\u0627 \u0648\u0642\u0646\u0627 \u0639\u0630\u0627\u0628 \u0627\u0644\u0646\u0651\u0627\u0631",fr:"Notre Seigneur, nous avons cru. Pardonne-nous nos p\u00e9ch\u00e9s et pr\u00e9serve-nous du ch\u00e2timent du Feu."},
-        {type:"verset",ref:"Al Imran 3:53",ar:"\u0631\u0628\u0651\u0646\u0627 \u0622\u0645\u0646\u0651\u0627 \u0628\u0645\u0627 \u0623\u0646\u0632\u0644\u062a \u0648\u0627\u062a\u0651\u0628\u0639\u0646\u0627 \u0627\u0644\u0631\u0651\u0633\u0648\u0644 \u0641\u0627\u0643\u062a\u0628\u0646\u0627 \u0645\u0639 \u0627\u0644\u0634\u0651\u0627\u0647\u062f\u064a\u0646",fr:"Notre Seigneur, nous avons cru en ce que Tu as r\u00e9v\u00e9l\u00e9 et suivi le messager. Inscris-nous parmi les t\u00e9moins."},
-        {type:"verset",ref:"Al Imran 3:147",ar:"\u0631\u0628\u0651\u0646\u0627 \u0627\u063a\u0641\u0631 \u0644\u0646\u0627 \u0630\u0646\u0648\u0628\u0646\u0627 \u0648\u0625\u0650\u0633\u0631\u0627\u0641\u0646\u0627 \u0641\u064a \u0623\u0645\u0631\u0646\u0627 \u0648\u062b\u0628\u0651\u062a \u0623\u0642\u062f\u0627\u0645\u0646\u0627",fr:"Notre Seigneur, pardonne-nous nos p\u00e9ch\u00e9s et nos exc\u00e8s, affermis nos pas."},
-        {type:"verset",ref:"Al Imran 3:191",ar:"\u0631\u0628\u0651\u0646\u0627 \u0645\u0627 \u062e\u0644\u0642\u062a \u0647\u0630\u0627 \u0628\u0627\u0637\u0644\u0627 \u0633\u0628\u062d\u0627\u0646\u0643 \u0641\u0642\u0646\u0627 \u0639\u0630\u0627\u0628 \u0627\u0644\u0646\u0651\u0627\u0631",fr:"Notre Seigneur, Tu n\u2019as pas cr\u00e9\u00e9 cela en vain. Gloire \u00e0 Toi ! Pr\u00e9serve-nous du ch\u00e2timent du Feu."},
-        {type:"verset",ref:"Al-A\u2019raf 7:23",ar:"\u0631\u0628\u0651\u0646\u0627 \u0638\u0644\u0645\u0646\u0627 \u0623\u0646\u0641\u0633\u0646\u0627 \u0648\u0625\u0650\u0646 \u0644\u0645 \u062a\u063a\u0641\u0631 \u0644\u0646\u0627 \u0648\u062a\u0631\u062d\u0645\u0646\u0627 \u0644\u0646\u0643\u0648\u0646\u0646\u0651 \u0645\u0646 \u0627\u0644\u062e\u0627\u0633\u0631\u064a\u0646",fr:"Notre Seigneur, nous nous sommes fait du tort. Si Tu ne nous pardonnes pas et ne nous fais pas mis\u00e9ricorde, nous serons des perdants."},
-        {type:"verset",ref:"Al-Hashr 59:10",ar:"\u0631\u0628\u0651\u0646\u0627 \u0627\u063a\u0641\u0631 \u0644\u0646\u0627 \u0648\u0644\u0625\u0650\u062e\u0648\u0627\u0646\u0646\u0627 \u0627\u0644\u0651\u0630\u064a\u0646 \u0633\u0628\u0642\u0648\u0646\u0627 \u0628\u0627\u0644\u0625\u064a\u0645\u0627\u0646 \u0648\u0644\u0627 \u062a\u062c\u0639\u0644 \u0641\u064a \u0642\u0644\u0648\u0628\u0646\u0627 \u063a\u0644\u0651\u0627 \u0644\u0644\u0651\u0630\u064a\u0646 \u0622\u0645\u0646\u0648\u0627",fr:"Notre Seigneur, pardonne-nous ainsi qu\u2019\u00e0 nos fr\u00e8res qui nous ont pr\u00e9c\u00e9d\u00e9s dans la foi, et ne mets pas dans nos c\u0153urs de rancune envers les croyants."},
-        {type:"verset",ref:"At-Tahrim 66:8",ar:"\u0631\u0628\u0651\u0646\u0627 \u0623\u062a\u0645\u0645 \u0644\u0646\u0627 \u0646\u0648\u0631\u0646\u0627 \u0648\u0627\u063a\u0641\u0631 \u0644\u0646\u0627 \u0625\u0650\u0646\u0651\u0643 \u0639\u0644\u0649 \u0643\u0644\u0651 \u0634\u064a\u0621 \u0642\u062f\u064a\u0631",fr:"Notre Seigneur, parfais-nous notre lumi\u00e8re et pardonne-nous, car Tu es Omnipotent."},
-        {type:"verset",ref:"Al-Furqan 25:74",ar:"\u0631\u0628\u0651\u0646\u0627 \u0647\u0628 \u0644\u0646\u0627 \u0645\u0646 \u0623\u0632\u0648\u0627\u062c\u0646\u0627 \u0648\u0630\u0631\u0651\u064a\u0651\u0627\u062a\u0646\u0627 \u0642\u0631\u0651\u0629 \u0623\u0639\u064a\u0646 \u0648\u0627\u062c\u0639\u0644\u0646\u0627 \u0644\u0644\u0645\u062a\u0651\u0642\u064a\u0646 \u0625\u0650\u0645\u0627\u0645\u0627",fr:"Notre Seigneur, fais que nos \u00e9pouses et nos descendants soient la joie de nos yeux, et fais de nous des mod\u00e8les pour les pieux."},
-        {type:"verset",ref:"Ibrahim 14:40",ar:"\u0631\u0628\u0651 \u0627\u062c\u0639\u0644\u0646\u064a \u0645\u0642\u064a\u0645 \u0627\u0644\u0635\u0651\u0644\u0627\u0629 \u0648\u0645\u0646 \u0630\u0631\u0651\u064a\u062a\u064a \u0631\u0628\u0651\u0646\u0627 \u0648\u062a\u0642\u0628\u0651\u0644 \u062f\u0639\u0627\u0621",fr:"Seigneur ! Fais que j\u2019accomplisse assid\u00fbment la pri\u00e8re ainsi qu\u2019une partie de ma descendance. Notre Seigneur, exauce ma pri\u00e8re."},
-        {type:"verset",ref:"Ibrahim 14:41",ar:"\u0631\u0628\u0651\u0646\u0627 \u0627\u063a\u0641\u0631 \u0644\u064a \u0648\u0644\u0648\u0627\u0644\u062f\u064a\u0651 \u0648\u0644\u0644\u0645\u0624\u0645\u0646\u064a\u0646 \u064a\u0648\u0645 \u064a\u0642\u0648\u0645 \u0627\u0644\u062d\u0633\u0627\u0628",fr:"Notre Seigneur, pardonne-moi, \u00e0 mes parents et aux croyants le jour o\u00f9 se dressera le Compte."}
+        {type:"verset",ref:"Al-Baqarah 2:127",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u062a\u064e\u0642\u064e\u0628\u0651\u064e\u0644\u0652 \u0645\u0650\u0646\u0651\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0633\u0651\u064e\u0645\u0650\u064a\u0639\u064f \u0627\u0644\u0652\u0639\u064e\u0644\u0650\u064a\u0645\u064f",fr:"Notre Seigneur, accepte ceci de notre part, car c\u2019est Toi l\u2019Audient, l\u2019Omniscient."},
+        {type:"verset",ref:"Al-Baqarah 2:128",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u062c\u0652\u0639\u064e\u0644\u0652\u0646\u064e\u0627 \u0645\u064f\u0633\u0652\u0644\u0650\u0645\u064e\u064a\u0652\u0646\u0650 \u0644\u064e\u0643\u064e \u0648\u064e\u0645\u0650\u0646\u0652 \u0630\u064f\u0631\u0651\u0650\u064a\u0651\u064e\u062a\u0650\u0646\u064e\u0627 \u0623\u064f\u0645\u0651\u064e\u0629\u064b \u0645\u064f\u0633\u0652\u0644\u0650\u0645\u064e\u0629\u064b \u0644\u064e\u0643\u064e \u0648\u064e\u0623\u064e\u0631\u0650\u0646\u064e\u0627 \u0645\u064e\u0646\u064e\u0627\u0633\u0650\u0643\u064e\u0646\u064e\u0627 \u0648\u064e\u062a\u064f\u0628\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u062a\u0651\u064e\u0648\u0651\u064e\u0627\u0628\u064f \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u064f",fr:"Notre Seigneur, fais de nous des soumis \u00e0 Toi et de notre descendance une communaut\u00e9 soumise \u00e0 Toi."},
+        {type:"verset",ref:"Al-Baqarah 2:201",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0622\u062a\u0650\u0646\u064e\u0627 \u0641\u0650\u064a \u0627\u0644\u062f\u0651\u064f\u0646\u0652\u064a\u064e\u0627 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b \u0648\u064e\u0641\u0650\u064a \u0627\u0644\u0652\u0622\u062e\u0650\u0631\u064e\u0629\u0650 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b \u0648\u064e\u0642\u0650\u0646\u064e\u0627 \u0639\u064e\u0630\u064e\u0627\u0628\u064e \u0627\u0644\u0646\u0651\u064e\u0627\u0631\u0650",fr:"Notre Seigneur, accorde-nous un bien ici-bas et un bien dans l\u2019au-del\u00e0, et pr\u00e9serve-nous du ch\u00e2timent du Feu."},
+        {type:"verset",ref:"Al-Baqarah 2:250",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0623\u064e\u0641\u0652\u0631\u0650\u063a\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0635\u064e\u0628\u0652\u0631\u064b\u0627 \u0648\u064e\u062b\u064e\u0628\u0651\u0650\u062a\u0652 \u0623\u064e\u0642\u0652\u062f\u064e\u0627\u0645\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u0646\u0652\u0635\u064f\u0631\u0652\u0646\u064e\u0627 \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0652\u0642\u064e\u0648\u0652\u0645\u0650 \u0627\u0644\u0652\u0643\u064e\u0627\u0641\u0650\u0631\u0650\u064a\u0646\u064e",fr:"Notre Seigneur, d\u00e9verse sur nous la patience, affermis nos pas et donne-nous la victoire."},
+        {type:"verset",ref:"Al-Baqarah 2:286",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0644\u064e\u0627 \u062a\u064f\u0624\u064e\u0627\u062e\u0650\u0630\u0652\u0646\u064e\u0627 \u0625\u0650\u0646\u0652 \u0646\u064e\u0633\u0650\u064a\u0646\u064e\u0627 \u0623\u064e\u0648\u0652 \u0623\u064e\u062e\u0652\u0637\u064e\u0623\u0652\u0646\u064e\u0627 \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0648\u064e\u0644\u064e\u0627 \u062a\u064e\u062d\u0652\u0645\u0650\u0644\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0646\u064e\u0627 \u0625\u0650\u0635\u0652\u0631\u064b\u0627 \u0643\u064e\u0645\u064e\u0627 \u062d\u064e\u0645\u064e\u0644\u0652\u062a\u064e\u0647\u064f \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0651\u064e\u0630\u0650\u064a\u0646\u064e \u0645\u0650\u0646\u0652 \u0642\u064e\u0628\u0652\u0644\u0650\u0646\u064e\u0627 \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0648\u064e\u0644\u064e\u0627 \u062a\u064f\u062d\u064e\u0645\u0651\u0650\u0644\u0652\u0646\u064e\u0627 \u0645\u064e\u0627 \u0644\u064e\u0627 \u0637\u064e\u0627\u0642\u064e\u0629\u064e \u0644\u064e\u0646\u064e\u0627 \u0628\u0650\u0647\u0650 \u0648\u064e\u0627\u0639\u0652\u0641\u064f \u0639\u064e\u0646\u0651\u064e\u0627 \u0648\u064e\u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u0631\u0652\u062d\u064e\u0645\u0652\u0646\u064e\u0627 \u0623\u064e\u0646\u0652\u062a\u064e \u0645\u064e\u0648\u0652\u0644\u064e\u0627\u0646\u064e\u0627 \u0641\u064e\u0627\u0646\u0652\u0635\u064f\u0631\u0652\u0646\u064e\u0627 \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0652\u0642\u064e\u0648\u0652\u0645\u0650 \u0627\u0644\u0652\u0643\u064e\u0627\u0641\u0650\u0631\u0650\u064a\u0646\u064e",fr:"Notre Seigneur, ne nous ch\u00e2tie pas s\u2019il nous arrive d\u2019oublier ou de commettre une erreur."},
+        {type:"verset",ref:"Al Imran 3:8",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0644\u064e\u0627 \u062a\u064f\u0632\u0650\u063a\u0652 \u0642\u064f\u0644\u064f\u0648\u0628\u064e\u0646\u064e\u0627 \u0628\u064e\u0639\u0652\u062f\u064e \u0625\u0650\u0630\u0652 \u0647\u064e\u062f\u064e\u064a\u0652\u062a\u064e\u0646\u064e\u0627 \u0648\u064e\u0647\u064e\u0628\u0652 \u0644\u064e\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0644\u064e\u062f\u064f\u0646\u0652\u0643\u064e \u0631\u064e\u062d\u0652\u0645\u064e\u0629\u064b \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0652\u0648\u064e\u0647\u0651\u064e\u0627\u0628\u064f",fr:"Notre Seigneur, ne fais pas d\u00e9vier nos c\u0153urs apr\u00e8s nous avoir guid\u00e9s, et accorde-nous Ta mis\u00e9ricorde."},
+        {type:"verset",ref:"Al Imran 3:16",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0646\u064e\u0627 \u0622\u0645\u064e\u0646\u0651\u064e\u0627 \u0641\u064e\u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0630\u064f\u0646\u064f\u0648\u0628\u064e\u0646\u064e\u0627 \u0648\u064e\u0642\u0650\u0646\u064e\u0627 \u0639\u064e\u0630\u064e\u0627\u0628\u064e \u0627\u0644\u0646\u0651\u064e\u0627\u0631\u0650",fr:"Notre Seigneur, nous avons cru. Pardonne-nous nos p\u00e9ch\u00e9s et pr\u00e9serve-nous du ch\u00e2timent du Feu."},
+        {type:"verset",ref:"Al Imran 3:53",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0622\u0645\u064e\u0646\u0651\u064e\u0627 \u0628\u0650\u0645\u064e\u0627 \u0623\u064e\u0646\u0652\u0632\u064e\u0644\u0652\u062a\u064e \u0648\u064e\u0627\u062a\u0651\u064e\u0628\u064e\u0639\u0652\u0646\u064e\u0627 \u0627\u0644\u0631\u0651\u064e\u0633\u064f\u0648\u0644\u064e \u0641\u064e\u0627\u0643\u0652\u062a\u064f\u0628\u0652\u0646\u064e\u0627 \u0645\u064e\u0639\u064e \u0627\u0644\u0634\u0651\u064e\u0627\u0647\u0650\u062f\u0650\u064a\u0646\u064e",fr:"Notre Seigneur, nous avons cru en ce que Tu as r\u00e9v\u00e9l\u00e9 et suivi le messager. Inscris-nous parmi les t\u00e9moins."},
+        {type:"verset",ref:"Al Imran 3:147",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0630\u064f\u0646\u064f\u0648\u0628\u064e\u0646\u064e\u0627 \u0648\u064e\u0625\u0650\u0633\u0652\u0631\u064e\u0627\u0641\u064e\u0646\u064e\u0627 \u0641\u0650\u064a \u0623\u064e\u0645\u0652\u0631\u0650\u0646\u064e\u0627 \u0648\u064e\u062b\u064e\u0628\u0651\u0650\u062a\u0652 \u0623\u064e\u0642\u0652\u062f\u064e\u0627\u0645\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u0646\u0652\u0635\u064f\u0631\u0652\u0646\u064e\u0627 \u0639\u064e\u0644\u064e\u0649 \u0627\u0644\u0652\u0642\u064e\u0648\u0652\u0645\u0650 \u0627\u0644\u0652\u0643\u064e\u0627\u0641\u0650\u0631\u0650\u064a\u0646\u064e",fr:"Notre Seigneur, pardonne-nous nos p\u00e9ch\u00e9s et nos exc\u00e8s, affermis nos pas."},
+        {type:"verset",ref:"Al Imran 3:191",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0645\u064e\u0627 \u062e\u064e\u0644\u064e\u0642\u0652\u062a\u064e \u0647\u064e\u0630\u064e\u0627 \u0628\u064e\u0627\u0637\u0650\u0644\u064b\u0627 \u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e\u0643\u064e \u0641\u064e\u0642\u0650\u0646\u064e\u0627 \u0639\u064e\u0630\u064e\u0627\u0628\u064e \u0627\u0644\u0646\u0651\u064e\u0627\u0631\u0650",fr:"Notre Seigneur, Tu n\u2019as pas cr\u00e9\u00e9 cela en vain. Gloire \u00e0 Toi ! Pr\u00e9serve-nous du ch\u00e2timent du Feu."},
+        {type:"verset",ref:"Al-A\u2019raf 7:23",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0638\u064e\u0644\u064e\u0645\u0652\u0646\u064e\u0627 \u0623\u064e\u0646\u0652\u0641\u064f\u0633\u064e\u0646\u064e\u0627 \u0648\u064e\u0625\u0650\u0646\u0652 \u0644\u064e\u0645\u0652 \u062a\u064e\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u062a\u064e\u0631\u0652\u062d\u064e\u0645\u0652\u0646\u064e\u0627 \u0644\u064e\u0646\u064e\u0643\u064f\u0648\u0646\u064e\u0646\u0651\u064e \u0645\u0650\u0646\u064e \u0627\u0644\u0652\u062e\u064e\u0627\u0633\u0650\u0631\u0650\u064a\u0646\u064e",fr:"Notre Seigneur, nous nous sommes fait du tort. Si Tu ne nous pardonnes pas et ne nous fais pas mis\u00e9ricorde, nous serons des perdants."},
+        {type:"verset",ref:"Al-Hashr 59:10",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0648\u064e\u0644\u0650\u0625\u0650\u062e\u0652\u0648\u064e\u0627\u0646\u0650\u0646\u064e\u0627 \u0627\u0644\u0651\u064e\u0630\u0650\u064a\u0646\u064e \u0633\u064e\u0628\u064e\u0642\u064f\u0648\u0646\u064e\u0627 \u0628\u0650\u0627\u0644\u0652\u0625\u0650\u064a\u0645\u064e\u0627\u0646\u0650 \u0648\u064e\u0644\u064e\u0627 \u062a\u064e\u062c\u0652\u0639\u064e\u0644\u0652 \u0641\u0650\u064a \u0642\u064f\u0644\u064f\u0648\u0628\u0650\u0646\u064e\u0627 \u063a\u0650\u0644\u0651\u064b\u0627 \u0644\u0650\u0644\u0651\u064e\u0630\u0650\u064a\u0646\u064e \u0622\u0645\u064e\u0646\u064f\u0648\u0627 \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0631\u064e\u0621\u064f\u0648\u0641\u064c \u0631\u064e\u062d\u0650\u064a\u0645\u064c",fr:"Notre Seigneur, pardonne-nous ainsi qu\u2019\u00e0 nos fr\u00e8res qui nous ont pr\u00e9c\u00e9d\u00e9s dans la foi, et ne mets pas dans nos c\u0153urs de rancune envers les croyants."},
+        {type:"verset",ref:"At-Tahrim 66:8",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0623\u064e\u062a\u0652\u0645\u0650\u0645\u0652 \u0644\u064e\u0646\u064e\u0627 \u0646\u064f\u0648\u0631\u064e\u0646\u064e\u0627 \u0648\u064e\u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u064e\u0646\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0639\u064e\u0644\u064e\u0649 \u0643\u064f\u0644\u0651\u0650 \u0634\u064e\u064a\u0652\u0621\u0613 \u0642\u064e\u062f\u0650\u064a\u0631\u064c",fr:"Notre Seigneur, parfais-nous notre lumi\u00e8re et pardonne-nous, car Tu es Omnipotent."},
+        {type:"verset",ref:"Al-Furqan 25:74",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0647\u064e\u0628\u0652 \u0644\u064e\u0646\u064e\u0627 \u0645\u0650\u0646\u0652 \u0623\u064e\u0632\u0652\u0648\u064e\u0627\u062c\u0650\u0646\u064e\u0627 \u0648\u064e\u0630\u064f\u0631\u0651\u0650\u064a\u0651\u064e\u0627\u062a\u0650\u0646\u064e\u0627 \u0642\u064f\u0631\u0651\u064e\u0629\u064e \u0623\u064e\u0639\u0652\u064a\u064f\u0646\u0613 \u0648\u064e\u0627\u062c\u0652\u0639\u064e\u0644\u0652\u0646\u064e\u0627 \u0644\u0650\u0644\u0652\u0645\u064f\u062a\u0651\u064e\u0642\u0650\u064a\u0646\u064e \u0625\u0650\u0645\u064e\u0627\u0645\u064b\u0627",fr:"Notre Seigneur, fais que nos \u00e9pouses et nos descendants soient la joie de nos yeux, et fais de nous des mod\u00e8les pour les pieux."},
+        {type:"verset",ref:"Ibrahim 14:40",ar:"\u0631\u064e\u0628\u0651\u0650 \u0627\u062c\u0652\u0639\u064e\u0644\u0652\u0646\u0650\u064a \u0645\u064f\u0642\u0650\u064a\u0645\u064e \u0627\u0644\u0635\u0651\u064e\u0644\u064e\u0627\u0629\u0650 \u0648\u064e\u0645\u0650\u0646\u0652 \u0630\u064f\u0631\u0651\u0650\u064a\u0651\u064e\u062a\u0650\u064a \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0648\u064e\u062a\u064e\u0642\u064e\u0628\u0651\u064e\u0644\u0652 \u062f\u064f\u0639\u064e\u0627\u0621\u0650",fr:"Seigneur ! Fais que j\u2019accomplisse assid\u00fbment la pri\u00e8re ainsi qu\u2019une partie de ma descendance. Notre Seigneur, exauce ma pri\u00e8re."},
+        {type:"verset",ref:"Ibrahim 14:41",ar:"\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0627\u063a\u0652\u0641\u0650\u0631\u0652 \u0644\u0650\u064a \u0648\u064e\u0644\u0650\u0648\u064e\u0627\u0644\u0650\u062f\u064e\u064a\u064e\u0651 \u0648\u064e\u0644\u0650\u0644\u0652\u0645\u064f\u0624\u0652\u0645\u0650\u0646\u0650\u064a\u0646\u064e \u064a\u064e\u0648\u0652\u0645\u064e \u064a\u064e\u0642\u064f\u0648\u0645\u064f \u0627\u0644\u0652\u062d\u0650\u0633\u064e\u0627\u0628\u064f",fr:"Notre Seigneur, pardonne-moi, \u00e0 mes parents et aux croyants le jour o\u00f9 se dressera le Compte."}
       ]
     }
   ];
@@ -4915,9 +5286,14 @@
     DUA_CATEGORIES.forEach(function(cat, idx) {
       var card = document.createElement("div");
       card.className = "dua-card";
-      card.innerHTML = '<div class="dua-card-icon">' + cat.icon + '</div>' +
-        '<div class="dua-card-name">' + cat.name + '</div>' +
-        '<div class="dua-card-count">' + cat.entries.length + ' invocations</div>';
+      var num = String(idx + 1).padStart(2, "0");
+      card.innerHTML =
+        '<span class="dua-card-num">' + num + '</span>' +
+        '<div class="dua-card-body">' +
+          '<div class="dua-card-name">' + cat.name + '</div>' +
+          '<div class="dua-card-count">' + cat.entries.length + ' invocations</div>' +
+        '</div>' +
+        '<span class="dua-card-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
       card.addEventListener("click", function() { openDuaDetail(idx); });
       grid.appendChild(card);
     });
@@ -4967,6 +5343,961 @@
 
   function closeDuaDetail() {
     _closeBack("dua-overlay");
+  }
+
+  // ============================================================
+  // KHATM SYSTEM
+  // ============================================================
+
+  var KHATM_KEY = "qurani-khatm";
+  var KHATM_HISTORY_KEY = "qurani-khatm-history";
+  var khatm = null;
+  var _khatmLandingRefresh = null; // set by initKhatmLanding, called after completeKrSurah
+  var kwFromStart = true;
+  var kwStartSurahIdx = 0;
+  var kwSelectedSurahIdx = -1;
+
+  function loadKhatm() {
+    try {
+      var raw = localStorage.getItem(KHATM_KEY);
+      if (raw) { khatm = JSON.parse(raw); return; }
+    } catch(e) {}
+    khatm = null;
+  }
+  function saveKhatm() {
+    if (khatm) localStorage.setItem(KHATM_KEY, JSON.stringify(khatm));
+  }
+
+  // ---- PROGRESS HELPERS ----
+  function getKhatmProgress() {
+    if (!khatm || !khatm.active || !surahs.length) return null;
+    var totalVerses = 0;
+    var doneVerses = 0;
+    surahs.forEach(function(s, i) {
+      var count = s.ayahs.length;
+      if (s.surahNumber !== 1 && s.surahNumber !== 9) count -= 1;
+      totalVerses += count;
+      if (i < khatm.surahIdx) {
+        doneVerses += count;
+      } else if (i === khatm.surahIdx) {
+        doneVerses += khatm.ayahIdx;
+      }
+    });
+    var pct = totalVerses > 0 ? Math.round((doneVerses / totalVerses) * 1000) / 10 : 0;
+    var today = new Date();
+    var start = new Date(khatm.startDate + 'T00:00:00');
+    var elapsed = Math.floor((today - start) / 86400000);
+    var remaining = Math.max(0, khatm.goalDays - elapsed);
+    var surah = surahs[khatm.surahIdx];
+    var surahNum = surah ? surah.surahNumber : 1;
+    var translit = SURAH_TRANSLIT[surahNum] || ("Sourate " + surahNum);
+    var nameFr = SURAH_NAMES_FR[surahNum] || "";
+    var ayahNum = khatm.ayahIdx + 1;
+    return { pct: pct, remaining: remaining, translit: translit, nameFr: nameFr, surahNum: surahNum, ayahNum: ayahNum };
+  }
+
+  function renderKhatmProgress() {
+    var card = $("khatm-progress-card");
+    if (!card) return;
+    var p = getKhatmProgress();
+    if (!p) { card.classList.add("hidden"); return; }
+    card.classList.remove("hidden");
+    var pctLabel = $("kp-pct-label");
+    var locLabel = $("kp-loc-label");
+    var daysNum = $("kp-days-num");
+    if (pctLabel) pctLabel.textContent = p.pct + "% complété";
+    if (locLabel) locLabel.textContent = p.translit.toUpperCase() + " · " + p.ayahNum;
+    if (daysNum) daysNum.textContent = p.remaining;
+    var arc = $("kp-arc");
+    if (arc) {
+      var circ = 2 * Math.PI * 17;
+      arc.style.strokeDasharray = circ;
+      arc.style.strokeDashoffset = circ * (1 - p.pct / 100);
+    }
+  }
+
+  // ---- LANDING ----
+  function initKhatmLanding() {
+    loadKhatm();
+    // Hero background — use current khatm surah if active, else surah 1
+    var heroBg = $("khatm-hero-bg");
+    var _heroSurahNum = (khatm && khatm.active && surahs.length > 0 && surahs[khatm.surahIdx])
+      ? surahs[khatm.surahIdx].surahNumber : 1;
+    if (heroBg) heroBg.style.backgroundImage = "url('" + getSurahImg(_heroSurahNum) + "')";
+
+    // Update hero button label
+    var heroBtn = $("khatm-hero-btn");
+    var heroMenu = $("khatm-hero-menu");
+    var heroDrop = $("khatm-hero-dropdown");
+    var resetBtn = $("khatm-reset-btn");
+
+    function updateHeroState() {
+      // Update hero bg to match current khatm surah
+      var _hNum = (khatm && khatm.active && surahs.length > 0 && surahs[khatm.surahIdx])
+        ? surahs[khatm.surahIdx].surahNumber : 1;
+      if (heroBg) heroBg.style.backgroundImage = "url('" + getSurahImg(_hNum) + "')";
+
+      var activeHeader = $("kh-active-header");
+      var noKhatm = $("kh-no-khatm");
+
+      if (khatm && khatm.active) {
+        // Show "X jours jusqu'au khatm ···"
+        var daysEl = $("kh-days-title");
+        if (daysEl && khatm.startDate && khatm.goalDays) {
+          var elapsed = Math.floor((Date.now() - new Date(khatm.startDate).getTime()) / 86400000);
+          var left = Math.max(0, khatm.goalDays - elapsed);
+          daysEl.textContent = left + " jour" + (left !== 1 ? "s" : "") + " jusqu'au khatm";
+        }
+        if (activeHeader) activeHeader.classList.remove("hidden");
+        if (noKhatm) noKhatm.classList.add("hidden");
+        heroBtn.textContent = "CONTINUER MA LECTURE";
+        heroBtn.classList.remove("has-khatm"); // white pill (active state)
+        if (heroMenu) heroMenu.classList.add("visible");
+      } else {
+        if (activeHeader) activeHeader.classList.add("hidden");
+        if (noKhatm) noKhatm.classList.remove("hidden");
+        heroBtn.textContent = "COMMENCER MON KHATM";
+        heroBtn.classList.remove("has-khatm");
+        if (heroMenu) heroMenu.classList.remove("visible");
+        if (heroDrop) heroDrop.classList.remove("visible");
+      }
+      renderKhatmProgress();
+    }
+    _khatmLandingRefresh = updateHeroState; // expose for completeKrSurah
+
+    if (heroBtn) {
+      updateHeroState();
+      heroBtn.addEventListener("click", function() {
+        if (khatm && khatm.active) {
+          openKhatmReader(khatm.surahIdx, khatm.ayahIdx, khatm.goalDays);
+        } else {
+          openKhatmWizard();
+        }
+      });
+    }
+
+    if (heroMenu && heroDrop) {
+      heroMenu.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (!heroDrop.classList.contains("visible")) {
+          // Position dropdown below the ··· button
+          var rect = heroMenu.getBoundingClientRect();
+          heroDrop.style.top = (rect.bottom + 8) + "px";
+          heroDrop.style.left = "20px";
+        }
+        heroDrop.classList.toggle("visible");
+      });
+      document.addEventListener("click", function(e) {
+        if (heroDrop && !heroDrop.contains(e.target) && e.target !== heroMenu) {
+          heroDrop.classList.remove("visible");
+        }
+      });
+    }
+
+    // Historique button
+    var histBtn = $("kh-history-btn");
+    if (histBtn) {
+      histBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (heroDrop) heroDrop.classList.remove("visible");
+        openKhatmHistory();
+      });
+    }
+
+    // Supprimer button → open delete sheet (NOT directly delete)
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (heroDrop) heroDrop.classList.remove("visible");
+        openKhatmDeleteSheet(updateHeroState);
+      });
+    }
+
+    // Progress card click → open reader
+    var progressCard = $("khatm-progress-card");
+    if (progressCard) {
+      progressCard.addEventListener("click", function() {
+        if (khatm && khatm.active) {
+          openKhatmReader(khatm.surahIdx, khatm.ayahIdx, khatm.goalDays);
+        }
+      });
+    }
+
+    // Build surah list
+    var wrap = $("khatm-surah-wrap");
+    if (!wrap || !surahs.length) return;
+    surahs.forEach(function(s, idx) {
+      var num = s.surahNumber;
+      var item = document.createElement("div");
+      item.className = "kh-surah-item";
+      // Image as background — makes connection to reader background obvious
+      item.style.backgroundImage = "url('" + getSurahImg(num) + "')";
+
+      // Number badge
+      var numEl = document.createElement("span");
+      numEl.className = "kh-surah-num";
+      numEl.textContent = num;
+
+      var info = document.createElement("div");
+      info.className = "kh-surah-info";
+
+      var name = document.createElement("span");
+      name.className = "kh-surah-name";
+      name.textContent = SURAH_TRANSLIT[num] || ("Sourate " + num);
+
+      var meta = document.createElement("span");
+      meta.className = "kh-surah-meta";
+      var vc = s.ayahs.length;
+      if (num !== 1 && num !== 9) vc -= 1;
+      meta.textContent = (SURAH_NAMES_FR[num] || "").toUpperCase() + " · " + vc + " VERSETS";
+
+      var chev = document.createElement("span");
+      chev.className = "kh-surah-chevron";
+      chev.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+      info.appendChild(name);
+      info.appendChild(meta);
+      item.appendChild(numEl);
+      item.appendChild(info);
+      item.appendChild(chev);
+
+      item.addEventListener("click", function() {
+        openKhatmReader(idx, 0, 0);
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  // ---- WIZARD ----
+  function openKhatmWizard() {
+    var w = $("khatm-wizard");
+    w.classList.remove("hidden");
+    showKwStep("start");
+  }
+  function closeKhatmWizard() {
+    $("khatm-wizard").classList.add("hidden");
+  }
+  function showKwStep(step) {
+    ["kw-step-start","kw-step-ayah","kw-step-goal"].forEach(function(id) {
+      $(id).classList.add("hidden");
+    });
+    $("kw-step-" + step).classList.remove("hidden");
+  }
+  function updateKwGoalSub() {
+    var sub = $("kw-goal-sub");
+    if (!sub) return;
+    if (kwFromStart) {
+      sub.textContent = "Vous commencez depuis le début";
+    } else {
+      var s = surahs[kwStartSurahIdx];
+      if (!s) return;
+      var ayahNum = parseInt(($("kw-ayah-input") || {}).value, 10) || 1;
+      sub.textContent = "Vous commencez depuis " +
+        (SURAH_TRANSLIT[s.surahNumber] || "Sourate " + s.surahNumber) +
+        " " + s.surahNumber + "." + ayahNum;
+    }
+  }
+  function initKwSurahPicker() {
+    var list = $("kw-picker-list");
+    if (!list) return;
+    surahs.forEach(function(s, idx) {
+      var item = document.createElement("div");
+      item.className = "kw-picker-item";
+      var left = document.createElement("div");
+      var nm = document.createElement("span");
+      nm.className = "kw-picker-name";
+      nm.textContent = SURAH_TRANSLIT[s.surahNumber] || "Sourate " + s.surahNumber;
+      var sb = document.createElement("span");
+      sb.className = "kw-picker-sub";
+      sb.textContent = s.surahNumber + ". " + (SURAH_NAMES_FR[s.surahNumber] || "");
+      left.appendChild(nm);
+      left.appendChild(sb);
+      var chev = document.createElement("span");
+      chev.style.color = "rgba(255,255,255,0.25)";
+      chev.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+      item.appendChild(left);
+      item.appendChild(chev);
+      item.addEventListener("click", function() {
+        kwSelectedSurahIdx = idx;
+        kwStartSurahIdx = idx;
+        var disp = $("kw-surah-display");
+        if (disp) {
+          disp.textContent = s.surahNumber + ". " + (SURAH_TRANSLIT[s.surahNumber] || "Sourate " + s.surahNumber);
+          disp.classList.add("selected");
+        }
+        var ayahInput = $("kw-ayah-input");
+        if (ayahInput) {
+          var maxV = s.ayahs.length;
+          if (s.surahNumber !== 1 && s.surahNumber !== 9) maxV -= 1;
+          ayahInput.max = maxV;
+          ayahInput.value = 1;
+        }
+        $("kw-ayah-row").classList.remove("hidden");
+        $("kw-surah-picker").classList.add("hidden");
+      });
+      list.appendChild(item);
+    });
+  }
+  function initKhatmWizard() {
+    $("kw-close").addEventListener("click", closeKhatmWizard);
+    $("kw-from-start").addEventListener("click", function() {
+      kwFromStart = true;
+      kwStartSurahIdx = 0;
+      updateKwGoalSub();
+      showKwStep("goal");
+    });
+    $("kw-from-specific").addEventListener("click", function() {
+      kwFromStart = false;
+      kwSelectedSurahIdx = -1;
+      $("kw-surah-display").textContent = "Choisir une sourate";
+      $("kw-surah-display").classList.remove("selected");
+      $("kw-ayah-row").classList.add("hidden");
+      showKwStep("ayah");
+    });
+    $("kw-ayah-back").addEventListener("click", function() { showKwStep("start"); });
+    $("kw-surah-row").addEventListener("click", function() {
+      $("kw-surah-picker").classList.remove("hidden");
+    });
+    $("kw-ayah-continue").addEventListener("click", function() {
+      if (kwSelectedSurahIdx < 0) return;
+      updateKwGoalSub();
+      showKwStep("goal");
+    });
+    $("kw-goal-back").addEventListener("click", function() {
+      if (kwFromStart) showKwStep("start");
+      else showKwStep("ayah");
+    });
+    document.querySelectorAll(".kw-goal-opt").forEach(function(el) {
+      el.addEventListener("click", function() {
+        startKhatm(parseInt(el.dataset.days, 10));
+      });
+    });
+    initKwSurahPicker();
+  }
+  function startKhatm(goalDays) {
+    var surahIdx = kwStartSurahIdx;
+    var ayahIdx = 0;
+    if (!kwFromStart) {
+      var ayahNum = parseInt(($("kw-ayah-input") || {}).value, 10) || 1;
+      var s = surahs[surahIdx];
+      if (s) {
+        ayahIdx = (s.surahNumber === 1 || s.surahNumber === 9) ? ayahNum - 1 : ayahNum;
+      }
+    }
+    khatm = {
+      active: true,
+      surahIdx: surahIdx,
+      ayahIdx: ayahIdx,
+      startSurahIdx: surahIdx,
+      startAyahIdx: ayahIdx,
+      goalDays: goalDays,
+      startDate: getLocalDateStr(),
+      lang: "ar+fr",
+      textScale: 100
+    };
+    saveKhatm();
+    closeKhatmWizard();
+    openKhatmReader(surahIdx, ayahIdx, goalDays);
+    // Update hero button
+    var heroBtn = $("khatm-hero-btn");
+    var heroMenu = $("khatm-hero-menu");
+    if (heroBtn) {
+      heroBtn.textContent = "CONTINUER MON KHATM";
+      heroBtn.classList.add("has-khatm");
+    }
+    if (heroMenu) heroMenu.classList.add("visible");
+  }
+
+  // ---- READER ----
+  var krCurrentSurahIdx = 0;
+  var krLoadedUpTo = 0;
+  var krScrollEl = null;
+  var krScrollTimer = null;
+  var krSurahSections = [];
+  var krObserver = null;
+
+  function openKhatmReader(surahIdx, ayahIdx, goalDays) {
+    loadKhatm(); // refresh from storage
+    var overlay = $("khatm-reader");
+    overlay.classList.remove("hidden");
+    krCurrentSurahIdx = surahIdx;
+    krLoadedUpTo = surahIdx;
+    krScrollEl = $("kr-scroll");
+    krScrollEl.innerHTML = "";
+    krSurahSections = [];
+
+    updateKrHeader(surahIdx);
+    updateKrBg(surahIdx);
+    updateKrPanel(goalDays);
+    updateKrLangDisplay();
+    updateKrModeDisplay();
+
+    // Render only the starting surah (no preloading — user taps COMPLÉTER to advance)
+    appendKrSurah(surahIdx, ayahIdx);
+    // Prevent lazy-loading of next surahs
+    krLoadedUpTo = surahs.length - 1;
+
+    // Update reader progress bar
+    updateKrProgressBar();
+
+    // Log session start
+    startKhatmSession(surahIdx, ayahIdx);
+
+    setTimeout(function() {
+      // Scroll to starting ayah
+      if (ayahIdx > 0) {
+        var target = krScrollEl.querySelector(
+          "[data-si=\"" + surahIdx + "\"][data-ai=\"" + ayahIdx + "\"]"
+        );
+        if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+      }
+      krScrollEl.addEventListener("scroll", onKrScroll);
+      setupKrObserver();
+    }, 80);
+  }
+
+  function updateKrProgressBar() {
+    var bar = $("kr-progress-bar");
+    if (!bar) return;
+    var prog = getKhatmProgress();
+    var pct = prog ? prog.pct : 0;
+    bar.style.width = Math.max(pct, 0.5) + "%"; // min 0.5% so bar is always visible
+  }
+
+  function updateKrHeader(surahIdx) {
+    var s = surahs[surahIdx];
+    if (!s) return;
+    $("kr-surah-name").textContent = SURAH_TRANSLIT[s.surahNumber] || ("Sourate " + s.surahNumber);
+    $("kr-surah-sub").textContent = (SURAH_NAMES_FR[s.surahNumber] || "").toUpperCase();
+  }
+
+  function updateKrBg(surahIdx) {
+    var s = surahs[surahIdx];
+    if (!s) return;
+    $("kr-bg").style.backgroundImage = "url('" + getSurahImg(s.surahNumber) + "')";
+  }
+
+  function updateKrPanel(goalDays) {
+    if (!goalDays) {
+      $("kr-panel-title").textContent = "Lecture libre";
+      $("kr-panel-days").textContent = "";
+      return;
+    }
+    $("kr-panel-title").textContent = "Mon Khatm";
+    var startDate = khatm && khatm.startDate;
+    if (startDate) {
+      var elapsed = Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000);
+      var left = Math.max(0, goalDays - elapsed);
+      $("kr-panel-days").textContent = left + " jour" + (left !== 1 ? "s" : "") + " restant" + (left !== 1 ? "s" : "");
+    }
+  }
+
+  function updateKrLangDisplay() {
+    var lang = (khatm && khatm.lang) || "ar+fr";
+    var labels = { "ar": "ARABE", "fr": "FRANÇAIS", "ar+fr": "ARABE & FRANÇAIS" };
+    $("kr-lang-val").textContent = labels[lang] || lang;
+    document.querySelectorAll(".kr-lang-opt").forEach(function(o) {
+      o.classList.toggle("active", o.dataset.lang === lang);
+    });
+  }
+
+  function updateKrModeDisplay() {
+    var mode = (khatm && khatm.krMode) || "minimal";
+    var labels = {
+      "minimal": "MINIMAL",
+      "minimal-color": "MINIMAL · COULEURS",
+      "tajwid": "TAJWID",
+      "tajwid-color": "TAJWID · COULEURS"
+    };
+    var el = $("kr-mode-val");
+    if (el) el.textContent = labels[mode] || mode.toUpperCase();
+    document.querySelectorAll(".kr-mode-opt").forEach(function(o) {
+      o.classList.toggle("active", o.dataset.mode === mode);
+    });
+  }
+
+  function appendKrSurah(surahIdx, fromAyahIdx) {
+    var s = surahs[surahIdx];
+    var sFr = surahsFr[surahIdx];
+    if (!s) return;
+    var lang = (khatm && khatm.lang) || "ar+fr";
+    var scale = (khatm && khatm.textScale) || 100;
+    var arFontSize = (1.7 * scale / 100).toFixed(2) + "rem";
+    var krMode = (khatm && khatm.krMode) || "minimal";
+    var useColors = (krMode === "minimal-color" || krMode === "tajwid-color");
+    var useTajwid = (krMode === "tajwid" || krMode === "tajwid-color"); // keep waqf marks
+
+    var section = document.createElement("div");
+    section.className = "kr-surah-section";
+    section.dataset.sectionSurahIdx = surahIdx;
+
+    // Separator between surahs
+    if (fromAyahIdx === 0 && krSurahSections.length > 0) {
+      var sep = document.createElement("div");
+      sep.className = "kr-separator";
+      section.appendChild(sep);
+    }
+
+    // Surah banner header
+    if (fromAyahIdx === 0) {
+      var banner = document.createElement("div");
+      banner.className = "kr-surah-banner";
+      var bName = document.createElement("span");
+      bName.className = "kr-surah-banner-name";
+      bName.textContent = SURAH_TRANSLIT[s.surahNumber] || ("Sourate " + s.surahNumber);
+      var bSub = document.createElement("span");
+      bSub.className = "kr-surah-banner-sub";
+      bSub.textContent = SURAH_NAMES_FR[s.surahNumber] || "";
+      banner.appendChild(bName);
+      banner.appendChild(bSub);
+      section.appendChild(banner);
+    }
+
+    // Verses
+    var ayahs = s.ayahs;
+    var ayahsFr = sFr ? sFr.ayahs : null;
+    for (var i = fromAyahIdx; i < ayahs.length; i++) {
+      var verse = document.createElement("div");
+      verse.className = "kr-verse";
+      verse.dataset.si = surahIdx;
+      verse.dataset.ai = i;
+
+      var ref = document.createElement("div");
+      ref.className = "kr-verse-ref";
+      if (i === 0 && s.surahNumber !== 1 && s.surahNumber !== 9) {
+        ref.textContent = "\u2022"; // basmala bullet
+      } else {
+        var dispNum = (s.surahNumber === 1 || s.surahNumber === 9) ? i + 1 : i;
+        ref.textContent = s.surahNumber + "." + dispNum;
+      }
+      verse.appendChild(ref);
+
+      if (lang === "ar" || lang === "ar+fr") {
+        var ar = document.createElement("div");
+        ar.className = "kr-verse-ar";
+        ar.style.fontSize = arFontSize;
+        var rawText = ayahs[i];
+        if (useColors) {
+          // Render tajwid-colored spans
+          // Key format matches main reader: surah1&9 → 1-based, others → 0-based (basmala=0)
+          var ayahNum = (s.surahNumber === 1 || s.surahNumber === 9) ? (i + 1) : i;
+          var cacheKey = s.surahNumber + ":" + ayahNum;
+          var overlays = (tajwidData && tajwidData[cacheKey]) ? tajwidData[cacheKey] : null;
+          var segments = getSegmentsForAyah(cacheKey, rawText, overlays);
+          segments.forEach(function(seg) {
+            var segText = useTajwid ? seg.chars : stripWaqfMarks(seg.chars);
+            var sp = document.createElement("span");
+            if (seg.rule) sp.className = "tajwid-" + seg.rule;
+            sp.textContent = segText;
+            ar.appendChild(sp);
+          });
+          // Preload tajwid data if not yet available
+          if (!tajwidData && !tajwidLoading) loadTajwidOverlay();
+        } else {
+          ar.textContent = useTajwid ? rawText : stripWaqfMarks(rawText);
+        }
+        verse.appendChild(ar);
+      }
+      if ((lang === "fr" || lang === "ar+fr") && ayahsFr && ayahsFr[i]) {
+        var fr = document.createElement("div");
+        fr.className = "kr-verse-fr";
+        fr.textContent = ayahsFr[i];
+        verse.appendChild(fr);
+      }
+      section.appendChild(verse);
+    }
+
+    // Complete button at end of surah
+    var completeWrap = document.createElement("div");
+    completeWrap.className = "kr-complete-wrap";
+    var completeBtn = document.createElement("button");
+    completeBtn.className = "kr-complete-btn";
+    completeBtn.textContent = "COMPLÉTER";
+    completeBtn.dataset.si = String(surahIdx);
+    completeBtn.addEventListener("click", function() {
+      completeKrSurah(parseInt(this.dataset.si, 10), this);
+    });
+    completeWrap.appendChild(completeBtn);
+    section.appendChild(completeWrap);
+
+    krScrollEl.appendChild(section);
+    krSurahSections.push({ surahIdx: surahIdx, el: section });
+
+    // Update IntersectionObserver for new section
+    if (krObserver) krObserver.observe(section);
+  }
+
+  function completeKrSurah(surahIdx, btn) {
+    var nextIdx = surahIdx + 1;
+    var finished = nextIdx >= surahs.length;
+
+    // 1. Show loading spinner in button
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="kr-complete-loading"><span></span><span></span><span></span></span>';
+    }
+
+    // 2. After short delay → save, close reader, go to QURAN tab
+    setTimeout(function() {
+      // Update khatm state
+      if (finished) {
+        khatm.surahIdx = 0;
+        khatm.ayahIdx = 0;
+        khatm.active = false;
+      } else {
+        khatm.surahIdx = nextIdx;
+        khatm.ayahIdx = 0;
+      }
+      saveKhatm();
+
+      // Log session end BEFORE closing
+      finalizeKhatmSession();
+      // Close reader WITHOUT calling saveKrProgress (which would overwrite our state)
+      if (krObserver) { krObserver.disconnect(); krObserver = null; }
+      if (krScrollEl) krScrollEl.removeEventListener("scroll", onKrScroll);
+      $("khatm-reader").classList.add("hidden");
+      $("kr-panel").classList.add("hidden");
+      $("kr-lang-picker").classList.add("hidden");
+
+      // Navigate to QURAN tab
+      var tabBar = $("tab-bar");
+      if (tabBar) {
+        tabBar.querySelectorAll(".tab-bar-btn").forEach(function(b) { b.classList.remove("active"); });
+        var coranTab = tabBar.querySelector('[data-tab="coran"]');
+        if (coranTab) coranTab.classList.add("active");
+      }
+      document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.add("hidden"); });
+      var coranPanel = $("tab-coran");
+      if (coranPanel) coranPanel.classList.remove("hidden");
+
+      // Update progress card + dashboard card
+      renderKhatmProgress();
+      updateDashKhatmCard();
+
+      // Refresh hero state (bg image + button label + progress circle)
+      if (_khatmLandingRefresh) _khatmLandingRefresh();
+    }, 900);
+  }
+
+  function onKrScroll() {
+    // Lazy-load next surah when near bottom
+    var remaining = krScrollEl.scrollHeight - krScrollEl.scrollTop - krScrollEl.clientHeight;
+    if (remaining < 500 && krLoadedUpTo < surahs.length - 1) {
+      krLoadedUpTo++;
+      appendKrSurah(krLoadedUpTo, 0);
+    }
+    // Update progress bar live while scrolling
+    updateKrProgressBarFromScroll();
+    // Debounced progress save
+    clearTimeout(krScrollTimer);
+    krScrollTimer = setTimeout(saveKrProgress, 1200);
+  }
+
+  function updateKrProgressBarFromScroll() {
+    var bar = $("kr-progress-bar");
+    if (!bar || !khatm || !surahs.length) return;
+    // Compute progress based on current scroll position
+    var scrollTop = krScrollEl ? krScrollEl.scrollTop : 0;
+    var verses = krScrollEl ? krScrollEl.querySelectorAll(".kr-verse") : [];
+    var curSurahIdx = krCurrentSurahIdx;
+    var curAyahIdx = 0;
+    for (var i = 0; i < verses.length; i++) {
+      if (verses[i].offsetTop <= scrollTop + 80) {
+        curSurahIdx = parseInt(verses[i].dataset.si, 10);
+        curAyahIdx = parseInt(verses[i].dataset.ai, 10);
+      } else break;
+    }
+    // Calculate percentage
+    var totalVerses = 0;
+    var doneVerses = 0;
+    surahs.forEach(function(s, i) {
+      var count = s.ayahs.length;
+      if (s.surahNumber !== 1 && s.surahNumber !== 9) count -= 1;
+      totalVerses += count;
+      if (i < curSurahIdx) {
+        doneVerses += count;
+      } else if (i === curSurahIdx) {
+        doneVerses += curAyahIdx;
+      }
+    });
+    var pct = totalVerses > 0 ? Math.round((doneVerses / totalVerses) * 1000) / 10 : 0;
+    bar.style.width = Math.max(pct, 0.5) + "%"; // min 0.5% so bar is always visible
+  }
+
+  function setupKrObserver() {
+    if (krObserver) krObserver.disconnect();
+    krObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var idx = parseInt(entry.target.dataset.sectionSurahIdx, 10);
+          if (!isNaN(idx) && idx !== krCurrentSurahIdx) {
+            krCurrentSurahIdx = idx;
+            updateKrHeader(idx);
+            updateKrBg(idx);
+          }
+        }
+      });
+    }, { root: krScrollEl, threshold: 0.15, rootMargin: "-100px 0px 0px 0px" });
+    krSurahSections.forEach(function(b) { krObserver.observe(b.el); });
+  }
+
+  function saveKrProgress() {
+    if (!khatm) return;
+    var verses = krScrollEl ? krScrollEl.querySelectorAll(".kr-verse") : [];
+    var scrollTop = (krScrollEl ? krScrollEl.scrollTop : 0) + 130;
+    for (var i = 0; i < verses.length; i++) {
+      if (verses[i].offsetTop <= scrollTop) {
+        khatm.surahIdx = parseInt(verses[i].dataset.si, 10);
+        khatm.ayahIdx = parseInt(verses[i].dataset.ai, 10);
+      } else {
+        break;
+      }
+    }
+    saveKhatm();
+  }
+
+  function closeKhatmReader() {
+    saveKrProgress();
+    finalizeKhatmSession(); // log session end
+    if (krObserver) { krObserver.disconnect(); krObserver = null; }
+    if (krScrollEl) krScrollEl.removeEventListener("scroll", onKrScroll);
+    $("khatm-reader").classList.add("hidden");
+    $("kr-panel").classList.add("hidden");
+    $("kr-lang-picker").classList.add("hidden");
+    $("kr-mode-picker").classList.add("hidden");
+    renderKhatmProgress();
+    updateDashKhatmCard();
+  }
+
+  // ---- KHATM HISTORY ----
+  var _krSessionStart = null; // { surahIdx, ayahIdx, timestamp }
+
+  function startKhatmSession(surahIdx, ayahIdx) {
+    _krSessionStart = { surahIdx: surahIdx, ayahIdx: ayahIdx, timestamp: Date.now() };
+  }
+
+  function finalizeKhatmSession() {
+    if (!_krSessionStart || !khatm) return;
+    // Get current position
+    var endSurahIdx = krCurrentSurahIdx;
+    var endAyahIdx = 0;
+    if (krScrollEl) {
+      var verses = krScrollEl.querySelectorAll(".kr-verse");
+      var st = krScrollEl.scrollTop + 130;
+      for (var i = 0; i < verses.length; i++) {
+        if (verses[i].offsetTop <= st) {
+          endSurahIdx = parseInt(verses[i].dataset.si, 10);
+          endAyahIdx = parseInt(verses[i].dataset.ai, 10);
+        } else break;
+      }
+    }
+    var session = {
+      startSurahIdx: _krSessionStart.surahIdx,
+      startAyahIdx: _krSessionStart.ayahIdx,
+      endSurahIdx: endSurahIdx,
+      endAyahIdx: endAyahIdx,
+      timestamp: _krSessionStart.timestamp
+    };
+    try {
+      var raw = localStorage.getItem(KHATM_HISTORY_KEY);
+      var hist = raw ? JSON.parse(raw) : [];
+      hist.unshift(session); // most recent first
+      if (hist.length > 50) hist = hist.slice(0, 50); // cap
+      localStorage.setItem(KHATM_HISTORY_KEY, JSON.stringify(hist));
+    } catch(e) {}
+    _krSessionStart = null;
+  }
+
+  function openKhatmHistory() {
+    var overlay = $("khatm-history-overlay");
+    if (!overlay) return;
+    overlay.classList.remove("hidden");
+    var list = $("kh-hist-list");
+    if (!list) return;
+    list.innerHTML = "";
+    var hist = [];
+    try {
+      var raw = localStorage.getItem(KHATM_HISTORY_KEY);
+      if (raw) hist = JSON.parse(raw);
+    } catch(e) {}
+    if (!hist.length) {
+      list.innerHTML = '<p style="padding:28px 24px;color:rgba(255,255,255,0.35);font-size:0.85rem;">Aucune session enregistrée.</p>';
+      return;
+    }
+    var MONTHS_FR = ["JAN","FÉV","MAR","AVR","MAI","JUN","JUL","AOÛ","SEP","OCT","NOV","DÉC"];
+    hist.forEach(function(s) {
+      var d = new Date(s.timestamp);
+      var day = d.getDate();
+      var mon = MONTHS_FR[d.getMonth()];
+      var hh = String(d.getHours()).padStart(2, "0");
+      var mm = String(d.getMinutes()).padStart(2, "0");
+      var ampm = d.getHours() >= 12 ? "PM" : "AM";
+      var h12 = d.getHours() % 12 || 12;
+      var fromSurah = surahs[s.startSurahIdx];
+      var toSurah = surahs[s.endSurahIdx];
+      if (!fromSurah || !toSurah) return;
+      var fromName = SURAH_TRANSLIT[fromSurah.surahNumber] || ("Sourate " + fromSurah.surahNumber);
+      var toName = SURAH_TRANSLIT[toSurah.surahNumber] || ("Sourate " + toSurah.surahNumber);
+      var fromAyah = s.startAyahIdx + 1;
+      var toAyah = s.endAyahIdx + 1;
+
+      var item = document.createElement("div");
+      item.className = "kh-hist-item";
+      item.innerHTML =
+        '<div class="kh-hist-date">' + day + " " + mon + "<br>" + String(h12).padStart(2,"0") + ":" + mm + " " + ampm + "</div>" +
+        '<div class="kh-hist-info">' +
+          '<span class="kh-hist-from">' + fromName + " " + fromSurah.surahNumber + ":" + fromAyah + "</span>" +
+          '<span class="kh-hist-to">jusqu\'à ' + toName + " " + toSurah.surahNumber + ":" + toAyah + "</span>" +
+        "</div>" +
+        '<div class="kh-hist-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>';
+      list.appendChild(item);
+    });
+  }
+
+  function openKhatmDeleteSheet(onDeleteCallback) {
+    var sheet = $("khatm-delete-sheet");
+    if (!sheet) return;
+    // Update days in subtitle
+    var daysSpan = $("kds-days");
+    if (daysSpan && khatm && khatm.startDate && khatm.goalDays) {
+      var elapsed = Math.floor((Date.now() - new Date(khatm.startDate).getTime()) / 86400000);
+      var left = Math.max(0, khatm.goalDays - elapsed);
+      daysSpan.textContent = left;
+    }
+    sheet.classList.remove("hidden");
+    // Cancel
+    var cancelBtn = $("kds-cancel");
+    if (cancelBtn) {
+      cancelBtn.onclick = function() { sheet.classList.add("hidden"); };
+    }
+    // Backdrop tap closes
+    var backdrop = $("kds-backdrop");
+    if (backdrop) {
+      backdrop.onclick = function() { sheet.classList.add("hidden"); };
+    }
+    // Confirm delete
+    var confirmBtn = $("kds-confirm");
+    if (confirmBtn) {
+      confirmBtn.onclick = function() {
+        khatm = null;
+        localStorage.removeItem(KHATM_KEY);
+        localStorage.removeItem(KHATM_HISTORY_KEY);
+        sheet.classList.add("hidden");
+        if (onDeleteCallback) onDeleteCallback();
+      };
+    }
+  }
+
+  function rerenderKrReader() {
+    // Save position, re-render with new lang/size (single surah only)
+    var savedSurahIdx = krCurrentSurahIdx;
+    var savedAyahIdx = 0;
+    if (krScrollEl) {
+      var verses = krScrollEl.querySelectorAll(".kr-verse");
+      var st = krScrollEl.scrollTop + 130;
+      for (var i = 0; i < verses.length; i++) {
+        if (verses[i].offsetTop <= st) {
+          savedSurahIdx = parseInt(verses[i].dataset.si, 10);
+          savedAyahIdx = parseInt(verses[i].dataset.ai, 10);
+        } else break;
+      }
+    }
+    if (krObserver) { krObserver.disconnect(); krObserver = null; }
+    krScrollEl.innerHTML = "";
+    krSurahSections = [];
+    krCurrentSurahIdx = savedSurahIdx;
+    krLoadedUpTo = surahs.length - 1; // prevent lazy-loading
+    appendKrSurah(savedSurahIdx, savedAyahIdx);
+    setupKrObserver();
+  }
+
+  function initKhatmReader() {
+    $("kr-back").addEventListener("click", closeKhatmReader);
+    // History overlay back button
+    var histBack = $("kh-hist-back");
+    if (histBack) {
+      histBack.addEventListener("click", function() {
+        var ov = $("khatm-history-overlay");
+        if (ov) ov.classList.add("hidden");
+      });
+    }
+    $("kr-menu-btn").addEventListener("click", function() {
+      $("kr-panel").classList.toggle("hidden");
+      $("kr-lang-picker").classList.add("hidden");
+      $("kr-mode-picker").classList.add("hidden");
+    });
+    // Tap on scroll area closes panel
+    $("kr-scroll").addEventListener("click", function() {
+      if (!$("kr-panel").classList.contains("hidden")) {
+        $("kr-panel").classList.add("hidden");
+        $("kr-lang-picker").classList.add("hidden");
+        $("kr-mode-picker").classList.add("hidden");
+      }
+    });
+    // Language
+    $("kr-lang-row").addEventListener("click", function() {
+      $("kr-lang-picker").classList.toggle("hidden");
+      $("kr-mode-picker").classList.add("hidden");
+    });
+    document.querySelectorAll(".kr-lang-opt").forEach(function(el) {
+      el.addEventListener("click", function() {
+        var lang = el.dataset.lang;
+        if (!khatm) khatm = { lang: lang, textScale: 100, active: false };
+        khatm.lang = lang;
+        saveKhatm();
+        updateKrLangDisplay();
+        $("kr-lang-picker").classList.add("hidden");
+        rerenderKrReader();
+      });
+    });
+    // Mode de lecture
+    $("kr-mode-row").addEventListener("click", function() {
+      $("kr-mode-picker").classList.toggle("hidden");
+      $("kr-lang-picker").classList.add("hidden");
+    });
+    document.querySelectorAll(".kr-mode-opt").forEach(function(el) {
+      el.addEventListener("click", function() {
+        var mode = el.dataset.mode;
+        if (!khatm) khatm = { krMode: mode, textScale: 100, active: false };
+        khatm.krMode = mode;
+        saveKhatm();
+        updateKrModeDisplay();
+        $("kr-mode-picker").classList.add("hidden");
+        // Preload tajwid data if needed
+        if ((mode === "minimal-color" || mode === "tajwid" || mode === "tajwid-color") && !tajwidData && !tajwidLoading) {
+          loadTajwidOverlay();
+        }
+        rerenderKrReader();
+      });
+    });
+    // Text size
+    $("kr-size-minus").addEventListener("click", function() {
+      if (!khatm) return;
+      khatm.textScale = Math.max(60, (khatm.textScale || 100) - 10);
+      saveKhatm();
+      updateKrSizeDisplay();
+      applyKrTextScale();
+    });
+    $("kr-size-plus").addEventListener("click", function() {
+      if (!khatm) return;
+      khatm.textScale = Math.min(180, (khatm.textScale || 100) + 10);
+      saveKhatm();
+      updateKrSizeDisplay();
+      applyKrTextScale();
+    });
+  }
+
+  function updateKrSizeDisplay() {
+    var scale = (khatm && khatm.textScale) || 100;
+    $("kr-size-val").textContent = scale === 100 ? "100% (PAR DÉFAUT)" : scale + "%";
+  }
+
+  function applyKrTextScale() {
+    var scale = (khatm && khatm.textScale) || 100;
+    var sz = (1.5 * scale / 100).toFixed(2) + "rem";
+    document.querySelectorAll(".kr-verse-ar").forEach(function(el) {
+      el.style.fontSize = sz;
+    });
   }
 
   // ---- INIT ----
@@ -5064,22 +6395,20 @@
     var invocBtn = $("dash-invocation-btn");
     if (invocBtn) {
       invocBtn.addEventListener("click", function () {
-        // Switch to invocation tab
-        var tabBar = $("tab-bar");
-        if (tabBar) {
-          tabBar.querySelectorAll(".tab-bar-btn").forEach(function (b) { b.classList.remove("active"); });
-          var invTab = tabBar.querySelector('[data-tab="invocation"]');
-          if (invTab) invTab.classList.add("active");
-        }
-        document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.add("hidden"); });
-        var panel = $("tab-invocation");
-        if (panel) panel.classList.remove("hidden");
+        var id = _isDashMorning() ? "matin" : "soir";
+        var idx = DUA_CATEGORIES.findIndex(function(c) { return c.id === id; });
+        if (idx >= 0) openDuaDetail(idx);
       });
     }
-    // Reading card click — go to Coran tab
+    // Reading card click — go to Coran tab or open khatm reader if active
     var readingCard = $("dash-reading-card");
     if (readingCard) {
       readingCard.addEventListener("click", function () {
+        loadKhatm();
+        if (khatm && khatm.active) {
+          openKhatmReader(khatm.surahIdx, khatm.ayahIdx, khatm.goalDays);
+          return;
+        }
         var tabBar = $("tab-bar");
         if (tabBar) {
           tabBar.querySelectorAll(".tab-bar-btn").forEach(function (b) { b.classList.remove("active"); });
@@ -5641,6 +6970,11 @@
       _closeBack("surah-overlay");
     });
 
+    // ---- KHATM SYSTEM INIT ----
+    initKhatmLanding();
+    initKhatmWizard();
+    initKhatmReader();
+
     // ---- QURAN SEARCH ----
     var searchTimer = null;
     var MAX_RESULTS = 50;
@@ -5763,6 +7097,19 @@
     initEmotionWheel();
     $("dash-emotion-plus").addEventListener("click", openEmotionDetail);
     $("emotion-close").addEventListener("click", closeEmotionDetail);
+
+    // Floating back button — emotion overlay
+    (function() {
+      var fab = $("emotion-float-back");
+      var scroll = document.querySelector("#emotion-overlay .emotion-overlay-scroll");
+      if (fab && scroll) {
+        fab.addEventListener("click", closeEmotionDetail);
+        scroll.addEventListener("scroll", function() {
+          if (scroll.scrollTop > 220) fab.classList.add("visible");
+          else fab.classList.remove("visible");
+        });
+      }
+    })();
     $("emotion-share").addEventListener("click", function() {
       var word = EMOTION_WORDS[emotionIndex];
       var data = EMOTION_DATA[word];
@@ -5778,6 +7125,19 @@
     // ---- DU'A TAB ----
     initDuaGrid();
     $("dua-close").addEventListener("click", closeDuaDetail);
+
+    // Floating back button — dua overlay
+    (function() {
+      var fab = $("dua-float-back");
+      var scroll = document.querySelector("#dua-overlay .dua-overlay-scroll");
+      if (fab && scroll) {
+        fab.addEventListener("click", closeDuaDetail);
+        scroll.addEventListener("scroll", function() {
+          if (scroll.scrollTop > 220) fab.classList.add("visible");
+          else fab.classList.remove("visible");
+        });
+      }
+    })();
     $("dua-share").addEventListener("click", function() {
       var title = $("dua-title").textContent;
       var text = title + "\n\nQurani App";
