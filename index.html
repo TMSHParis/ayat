@@ -30,17 +30,16 @@
 
 <!-- ====== SPLASH SCREEN ====== -->
 <div id="splash" class="splash">
-  <div class="splash-logo">QURANI</div>
-  <div class="splash-content">
-    <div class="splash-verse" id="splash-verse">
-      أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ
-    </div>
-    <div class="splash-translation" id="splash-translation">
-      N'est-ce point par l'évocation d'Allah que se tranquillisent les cœurs ?
-    </div>
-    <div class="splash-ref" id="splash-ref">Ar-Ra'd · 13:28</div>
-    <div class="splash-bar-wrap" id="splash-bar-wrap">
-      <div class="splash-bar" id="splash-bar"></div>
+  <div class="splash-top">
+    <div class="splash-title">QURANI</div>
+    <div class="splash-subtitle">BY ISLAMSOUNNAH</div>
+  </div>
+  <div class="splash-logo-wrap">
+    <!-- Ghost (empty) logo -->
+    <img src="img/logo.png" class="splash-logo-ghost" alt="">
+    <!-- Fill logo (masked, animates bottom→top) -->
+    <div class="splash-logo-fill">
+      <img src="img/logo.png" alt="">
     </div>
   </div>
   <div class="splash-credit">DESIGNED BY TMSH</div>
@@ -64,6 +63,7 @@
             <div class="dash-day-name" id="dash-day-name"></div>
             <div class="dash-prayer-countdown" id="dash-prayer-countdown"></div>
           </div>
+          <div class="dash-prayer-hint" id="dash-prayer-hint">Appuyez sur la fl&egrave;che pour choisir votre ville</div>
           <button class="dash-prayer-expand" id="dash-prayer-expand" aria-label="Horaires">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
@@ -83,14 +83,21 @@
       <!-- Thin separator -->
       <div class="dash-thin-line"></div>
 
-      <!-- Today's Verse -->
+      <!-- Today's Verse / Khatm -->
       <div class="dash-verse-section" id="dash-reading-card">
-        <div class="dash-verse-header">
-          <span class="dash-verse-title">Versets du Jour</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="dash-khatm-label">AUJOURD'HUI</span>
+        <div class="dash-verse-row">
+          <div class="dash-khatm-thumb" id="dash-khatm-thumb"></div>
+          <div class="dash-verse-body">
+            <span class="dash-verse-title">Lecture du Jour</span>
+            <span class="dash-verse-subtitle" id="dash-reading-subtitle"></span>
+          </div>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
-        <div class="dash-verse-subtitle" id="dash-reading-subtitle"></div>
       </div>
+
+      <!-- Thin separator -->
+      <div class="dash-thin-line"></div>
 
       <!-- Emotion Wheel -->
       <div class="dash-emotion" id="dash-emotion">
@@ -117,6 +124,9 @@
         <div id="khatm-hero-bg"></div>
         <div id="khatm-hero-fade"></div>
         <div id="khatm-hero-content">
+          <button id="kh-search-btn" aria-label="Rechercher">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
 
           <!-- Khatm ACTIF : grand titre + ··· inline -->
           <div id="kh-active-header" class="hidden">
@@ -126,7 +136,7 @@
 
           <!-- Khatm INACTIF : titre + sous-titre -->
           <div id="kh-no-khatm">
-            <h1>Commencez votre Khatm</h1>
+            <h1 class="kh-hero-title">Commencez votre Khatm</h1>
             <p>Lisez le Coran du début à la fin, en continu.</p>
           </div>
 
@@ -136,6 +146,7 @@
           </div>
         </div>
       </div>
+      <div id="khatm-hero-line"></div>
 
       <!-- Dropdown style iOS (outside #khatm-hero to avoid overflow:hidden clip) -->
       <div id="khatm-hero-dropdown">
@@ -145,7 +156,7 @@
         </button>
         <div class="kh-menu-sep"></div>
         <button id="khatm-reset-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           <span>Supprimer</span>
         </button>
       </div>
@@ -259,10 +270,127 @@
   <!-- ====== TAB: INVOCATION ====== -->
   <div id="tab-invocation" class="tab-panel hidden">
     <div class="dua-tab-scroll">
-      <h2 class="dua-tab-title">Invocations</h2>
-      <p class="dua-tab-subtitle">Les du&rsquo;as authentiques du Proph&egrave;te &#xFDFA;</p>
+      <!-- Hero header -->
+      <div id="dua-hero">
+        <div id="dua-hero-bg"></div>
+        <div id="dua-hero-fade"></div>
+        <div id="dua-hero-content">
+          <h2 class="dua-tab-title">Invocations</h2>
+          <p class="dua-tab-subtitle">Les du&rsquo;as authentiques du Proph&egrave;te &#xFDFA;</p>
+        </div>
+      </div>
+      <!-- Category list -->
       <div class="dua-grid" id="dua-grid"></div>
     </div>
+  </div>
+
+
+  <!-- ====== TAB: MOI (Profile) ====== -->
+  <div id="tab-ayati" class="tab-panel hidden">
+    <div class="moi-scroll">
+      <div class="moi-header">
+        <div class="moi-header-content">
+          <h1 class="moi-logo">QURANI</h1>
+          <p class="moi-subtitle">BY ISLAMSOUNNAH</p>
+        </div>
+        <button class="moi-settings-btn" id="moi-settings-btn" aria-label="Réglages">
+          <svg width="18" height="4" viewBox="0 0 18 4" fill="currentColor"><circle cx="2" cy="2" r="1.8"/><circle cx="9" cy="2" r="1.8"/><circle cx="16" cy="2" r="1.8"/></svg>
+        </button>
+      </div>
+      <div class="moi-section">
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-favoris">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Favoris</span>
+            <span class="moi-item-count" id="moi-favoris-count">0</span>
+          </div>
+          <div class="moi-item-right">
+            <div class="moi-item-thumb" id="moi-favoris-thumb"></div>
+            <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-notes">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Notes</span>
+            <span class="moi-item-count" id="moi-notes-count">AUCUNE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-khatms">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Khatms</span>
+            <span class="moi-item-count" id="moi-khatms-count">AUCUN</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-videos">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Vidéos</span>
+            <span class="moi-item-count" id="moi-videos-count">VIDÉO DU JOUR</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-podcast">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Podcast</span>
+            <span class="moi-item-count">COLLECTIF D'ÉTUDIANTS DE MÉDINE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-islamsounnah">
+          <div class="moi-item-text">
+            <span class="moi-item-label">IslamSounnah</span>
+            <span class="moi-item-count">TÉLÉCHARGER LE YOUTUBE ISLAMIQUE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-ayati">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Ayati</span>
+            <span class="moi-item-count">IDENTIFIER UN VERSET</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-hifz">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Mémorisation</span>
+            <span class="moi-item-count">HIFZ — APPRENTISSAGE PAR CŒUR</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-contact">
+          <div class="moi-item-text">
+            <span class="moi-item-label">Besoin d&rsquo;une Appli&thinsp;?</span>
+            <span class="moi-item-count">CONTACTEZ-NOUS</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+      </div>
+    </div>
+  </div>
+  <!-- MINI PLAYER -->
+  <div id="sp-mini" class="hidden">
+    <div id="sp-mini-bg"></div>
+    <div id="sp-mini-info">
+      <div id="sp-mini-name"></div>
+      <div id="sp-mini-sub">EN COURS DE LECTURE</div>
+    </div>
+    <button id="sp-mini-pp" aria-label="Lecture/Pause">
+      <svg id="sp-mini-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg id="sp-mini-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    </button>
+    <button id="sp-mini-close-btn" aria-label="Fermer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
 
   <!-- ====== TAB BAR ====== -->
@@ -377,8 +505,7 @@
 <!-- ====== KHATM READER ====== -->
 <div id="khatm-reader" class="overlay hidden">
   <div id="kr-bg"></div>
-  <!-- Barre de progression fine -->
-  <div id="kr-progress-bar-wrap"><div id="kr-progress-bar"></div></div>
+  <div id="kr-bg-overlay"></div>
   <header id="kr-header">
     <button id="kr-back">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -391,6 +518,8 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
     </button>
   </header>
+  <!-- Barre de progression fine, juste sous le header -->
+  <div id="kr-progress-bar-wrap"><div id="kr-progress-bar"></div></div>
 
   <!-- Panel paramètres -->
   <div id="kr-panel" class="hidden">
@@ -497,9 +626,7 @@
       </a>
       <a href="#" class="menu-item" id="menu-shazam">
         <span class="menu-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 00-3 3v4a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><circle cx="12" cy="21" r="2"/><path d="M12 13v6"/>
-          </svg>
+          <svg width="15" height="15" viewBox="0 -960 960 960" fill="currentColor"><path d="M192-680q-15-17-23.5-37t-8.5-43q0-50 35-85t85-35q50 0 85 35t35 85q0 23-8.5 43T368-680H192ZM400-80q-66 0-113-47t-47-113h-40l-40-400h240l-40 400h-40q0 33 23.5 56.5T400-160q33 0 56.5-23.5T480-240v-480q0-66 47-113t113-47q66 0 113 47t47 113v640h-80v-640q0-33-23.5-56.5T640-800q-33 0-56.5 23.5T560-720v480q0 66-47 113T400-80ZM272-320h16l24-240h-64l24 240Zm16-240h-40 64-24Z"/></svg>
         </span>
         <span class="menu-item-label">Ayati</span>
         <svg class="menu-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -554,17 +681,46 @@
   </div>
 </div>
 
-<!-- ====== SETTINGS OVERLAY ====== -->
-<div id="settings-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Réglages</h2>
-    <button class="close-btn" id="settings-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+<!-- ====== MOI SETTINGS — gradient overlay ====== -->
+<div id="moi-settings-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="moi-settings-back" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">R&eacute;glages</h1>
+    <div class="moi-settings-list">
+      <div class="moi-sep"></div>
+      <div class="moi-settings-item" id="moi-set-about">
+        <span class="moi-settings-item-label">&Agrave; propos</span>
+        <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="moi-sep"></div>
+      <div class="moi-settings-item" id="moi-set-help">
+        <span class="moi-settings-item-label">Aide</span>
+        <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="moi-sep"></div>
+      <div class="moi-settings-item" id="moi-set-method">
+        <span class="moi-settings-item-label">M&eacute;thode de Calcul</span>
+        <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="moi-sep"></div>
+    </div>
   </div>
-  <div class="overlay-body">
+</div>
+
+<!-- ====== SETTINGS OVERLAY (Preferences) — gradient ====== -->
+<div id="settings-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="settings-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Pr&eacute;f&eacute;rences</h1>
+    <div class="moi-cat-body">
     <div class="setting-group">
       <div class="setting-label">Lectures complètes</div>
       <div class="setting-value" id="cycle-count">0</div>
@@ -640,123 +796,193 @@
         <span class="reminder-status-dot"></span> Notifications actives
       </div>
     </div>
+    </div>
   </div>
 </div>
 
 <!-- ====== STATS OVERLAY ====== -->
-<div id="stats-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Statistiques</h2>
-    <button class="close-btn" id="stats-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="stat-streak">0</div>
-        <div class="stat-label">Jours consécutifs</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-total-verses">0</div>
-        <div class="stat-label">Versets lus</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-khatmas">0</div>
-        <div class="stat-label">Lectures complètes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-start-date">—</div>
-        <div class="stat-label">Début de la lecture</div>
+<div id="stats-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="stats-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Statistiques</h1>
+    <div class="moi-cat-body">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-streak">0</div>
+          <div class="stat-label">Jours consécutifs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total-verses">0</div>
+          <div class="stat-label">Versets lus</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-khatmas">0</div>
+          <div class="stat-label">Lectures complètes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-start-date">—</div>
+          <div class="stat-label">Début de la lecture</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ====== ABOUT OVERLAY ====== -->
-<div id="about-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>À propos</h2>
-    <button class="close-btn" id="about-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body about-body">
-    <p>Qurani est une application simple et épurée pour lire le Coran en 30 jours, verset par verset, sans distraction.</p>
-    <p>Elle divise les 6236 versets en 30 portions quotidiennes et enregistre votre progression automatiquement. Pas de compte, pas de publicité, pas de réseau social — juste le Coran.</p>
-    <hr class="divider">
-    <p class="sub-label">Source du texte</p>
-    <p>Texte du Coran (écriture Uthmani) provenant du projet <span class="highlight">Tanzil.net</span>.</p>
-    <p>Police utilisée : <span class="highlight">Amiri</span> — police libre (licence OFL).</p>
-    <hr class="divider">
-    <p class="sub-label">Vie privée</p>
-    <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les données sont stockées localement sur votre appareil.</p>
-    <hr class="divider">
-    <p class="sub-label">Horaires de prière</p>
-    <p>Méthode <span class="highlight">IslamSounnah</span> (hors connexion, correction spéciale France) ou <span class="highlight">Mawaqit</span> (mosquée via mawaqit.net).</p>
+<!-- ====== ABOUT OVERLAY — gradient ====== -->
+<div id="about-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="about-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">&Agrave; propos</h1>
+    <div class="moi-cat-body">
+      <p><span class="highlight">Qurani</span> est une application compl&egrave;te pour accompagner le musulman au quotidien. Sans publicit&eacute;, sans compte, sans distraction.</p>
+      <hr class="divider">
+      <p class="sub-label">Lecture du Coran</p>
+      <p>Lisez le Coran verset par verset avec navigation par balayage. Quatre modes de lecture disponibles : <span class="highlight">Tajwid</span>, <span class="highlight">Tajwid &middot; couleurs</span>, <span class="highlight">Minimal</span> et <span class="highlight">Minimal &middot; couleurs</span>. Trois tailles de texte (S, M, L), trois th&egrave;mes (Jour, S&eacute;pia, Nuit) et trois langues (Arabe, Arabe + Fran&ccedil;ais, Fran&ccedil;ais).</p>
+      <hr class="divider">
+      <p class="sub-label">Audio</p>
+      <p>&Eacute;coutez le Coran sourate par sourate avec plusieurs r&eacute;citateurs parmi lesquels <span class="highlight">Mishary Al-Afasy</span>, <span class="highlight">As-Sudais</span>, <span class="highlight">Al-Hudhaifi</span>, <span class="highlight">Saad Al-Ghamidi</span> et d'autres. Barre de progression, avance/retour de 10 secondes, passage &agrave; la sourate suivante.</p>
+      <hr class="divider">
+      <p class="sub-label">Khatm</p>
+      <p>Terminez la lecture compl&egrave;te du Coran en <span class="highlight">30 ou 60 jours</span>. L'application divise les 114 sourates en portions quotidiennes et suit votre progression automatiquement.</p>
+      <hr class="divider">
+      <p class="sub-label">Horaires de pri&egrave;re</p>
+      <p>Deux sources au choix : la m&eacute;thode <span class="highlight">IslamSounnah</span> (hors connexion, calcul astronomique adapt&eacute; &agrave; la France) ou <span class="highlight">Mawaqit</span> (horaires de votre mosqu&eacute;e). Affichage du compte &agrave; rebours, milieu de la nuit et dernier tiers.</p>
+      <hr class="divider">
+      <p class="sub-label">Qibla</p>
+      <p>Boussole en temps r&eacute;el indiquant la direction de la <span class="highlight">Kaaba</span> depuis votre position.</p>
+      <hr class="divider">
+      <p class="sub-label">M&eacute;morisation (Hifz)</p>
+      <p>Mode d'apprentissage verset par verset. Cachez progressivement les mots (0 &agrave; 100&percnt;), touchez pour r&eacute;v&eacute;ler, &eacute;coutez le verset avec le r&eacute;citateur de votre choix. Quatre styles de lecture et police calligraphique <span class="highlight">Scheherazade New</span>.</p>
+      <hr class="divider">
+      <p class="sub-label">Invocations (Du'a)</p>
+      <p>Invocations du matin, du soir, avant de dormir, de protection, en cas de tristesse, pour le voyage, Salat al-Istikhara et les 40 Rabbana. Texte arabe avec tashkeel complet et traduction fran&ccedil;aise.</p>
+      <hr class="divider">
+      <p class="sub-label">Vid&eacute;os</p>
+      <p>Vid&eacute;o du jour s&eacute;lectionn&eacute;e parmi les rappels de la cha&icirc;ne <span class="highlight">IslamSounnah</span> sur YouTube.</p>
+      <hr class="divider">
+      <p class="sub-label">Sources du texte</p>
+      <p>Texte coranique (&eacute;criture Uthmani) : <span class="highlight">Tanzil.net</span>. Traduction fran&ccedil;aise : celle du <span class="highlight">Complexe du Roi Fahd</span>. Donn&eacute;es Tajwid : <span class="highlight">EveryAyah.com</span>. Polices : <span class="highlight">Amiri</span>, <span class="highlight">Amiri Quran</span>, <span class="highlight">Scheherazade New</span> (licences libres OFL/SIL).</p>
+      <hr class="divider">
+      <p class="sub-label">Vie priv&eacute;e</p>
+      <p>Aucun suivi. Aucune analyse. Aucun compte. Toutes les donn&eacute;es (favoris, progression, pr&eacute;f&eacute;rences) sont stock&eacute;es <span class="highlight">uniquement sur votre appareil</span>.</p>
+      <hr class="divider">
+      <p class="sub-label">Conception</p>
+      <p><span class="highlight">QURANI</span> &mdash; par IslamSounnah<br>Designed by <span class="highlight">TMSH Paris</span></p>
+    </div>
   </div>
 </div>
 
-<!-- ====== HELP OVERLAY ====== -->
-<div id="help-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Aide</h2>
-    <button class="close-btn" id="help-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+<!-- ====== HELP OVERLAY — gradient ====== -->
+<div id="help-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="help-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Aide</h1>
+    <div class="moi-cat-body">
+    <div class="help-section">
+      <div class="help-title">Onglet Accueil</div>
+      <div class="help-text">La page d'accueil affiche les horaires de pri&egrave;re en haut (appuyez sur la fl&egrave;che vers le bas pour ouvrir la page compl&egrave;te et choisir votre ville), les invocations du matin ou du soir selon l'heure, votre Khatm en cours, et la roue des &eacute;motions pour trouver un verset adapt&eacute; &agrave; votre &eacute;tat d'esprit.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Onglet Quran</div>
+      <div class="help-text">Parcourez la liste des 114 sourates et appuyez pour ouvrir le lecteur. Deux onglets sont disponibles : <b>Lecteur</b> pour lire verset par verset (balayez &agrave; gauche/droite pour naviguer), et <b>Audio</b> pour &eacute;couter la sourate compl&egrave;te. Appuyez sur les trois points (&middot;&middot;&middot;) pour acc&eacute;der aux r&eacute;glages (mode de lecture, langue, taille, th&egrave;me, r&eacute;citateur).</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Onglet Du'a</div>
+      <div class="help-text">Retrouvez les invocations class&eacute;es par cat&eacute;gorie : matin, soir, avant de dormir, protection, tristesse, voyage, Istikhara et les 40 Rabbana. Chaque invocation est affich&eacute;e en arabe avec tashkeel et sa traduction en fran&ccedil;ais.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Onglet Moi</div>
+      <div class="help-text">Acc&eacute;dez &agrave; toutes vos donn&eacute;es personnelles : favoris, statistiques, notes, rappels, m&eacute;morisation (Hifz), vid&eacute;os du jour, pr&eacute;f&eacute;rences et r&eacute;glages. Les trois points en haut &agrave; droite ouvrent les param&egrave;tres avanc&eacute;s (statistiques, &agrave; propos, aide, m&eacute;thode de calcul).</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Khatm (lecture compl&egrave;te)</div>
+      <div class="help-text">Depuis l'accueil ou l'onglet Quran, commencez un Khatm en 30 ou 60 jours. L'application r&eacute;partit les sourates en portions quotidiennes. Ouvrez une sourate, lisez, puis appuyez sur &laquo; Compl&eacute;ter &raquo; en bas pour valider et passer &agrave; la suite.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">M&eacute;morisation (Hifz)</div>
+      <div class="help-text">Depuis l'onglet Moi, appuyez sur M&eacute;morisation. Choisissez une sourate et un verset. Utilisez le menu (&middot;&middot;&middot;) pour augmenter le pourcentage de mots cach&eacute;s (de 0&percnt; &agrave; 100&percnt;). Touchez un mot flou pour le r&eacute;v&eacute;ler, ou un mot visible pour le cacher. Appuyez sur le bouton lecture pour &eacute;couter le verset.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Horaires de pri&egrave;re</div>
+      <div class="help-text">Appuyez sur la fl&egrave;che vers le bas sur la page d'accueil pour ouvrir les horaires. Deux sources disponibles : <b>IslamSounnah</b> (calcul astronomique hors connexion, adapt&eacute; &agrave; la France) ou <b>Mawaqit</b> (horaires de votre mosqu&eacute;e via internet). Vous pouvez &eacute;galement acc&eacute;der &agrave; la boussole de la Qibla depuis cette page.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Favoris et recherche</div>
+      <div class="help-text">Pendant la lecture, appuyez longuement sur un verset pour le sauvegarder dans vos favoris ou acc&eacute;der au tafsir. Utilisez la recherche (ic&ocirc;ne loupe) pour trouver un verset en arabe ou en fran&ccedil;ais.</div>
+    </div>
+    <div class="help-section">
+      <div class="help-title">Th&egrave;mes et pr&eacute;f&eacute;rences</div>
+      <div class="help-text">Trois th&egrave;mes : Jour (fond clair), S&eacute;pia (fond chaud) et Nuit (fond sombre). Le mode Auto s'adapte aux r&eacute;glages de votre appareil. Personnalisez la taille du texte, la langue et le mode de lecture depuis les pr&eacute;f&eacute;rences ou le menu du lecteur.</div>
+    </div>
+    </div>
   </div>
-  <div class="overlay-body">
-    <div class="help-section">
-      <div class="help-title">Lire le Coran en 30 jours</div>
-      <div class="help-text">L'application divise les 6236 versets en 30 portions quotidiennes. Le compteur en haut vous indique combien de versets il reste à lire aujourd'hui.</div>
+</div>
+
+<!-- ====== MÉTHODE DE CALCUL OVERLAY — gradient ====== -->
+<div id="method-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="method-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
-    <div class="help-section">
-      <div class="help-title">Navigation</div>
-      <div class="help-text">Balayez vers la gauche (ou appuyez à droite) pour passer au verset suivant. Balayez vers la droite (ou appuyez à gauche) pour revenir en arrière.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Lecture libre</div>
-      <div class="help-text">Consultez n'importe quel verset sans modifier votre plan de 30 jours. Votre progression reste exactement là où elle était.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Recherche</div>
-      <div class="help-text">Appuyez sur la loupe en haut à droite pour rechercher un verset (arabe ou français) ou parcourir les sourates.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Favoris</div>
-      <div class="help-text">Appuyez sur le signet pendant la lecture pour sauvegarder un verset. Retrouvez-les via Favoris dans le menu.</div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Horaires de prière</div>
-      <div class="help-text">Accédez aux horaires depuis le menu. Choisissez IslamSounnah (hors connexion) ou Mawaqit (mosquée à proximité).</div>
-    </div>
-    <div class="help-section help-section-highlight">
-      <div class="help-title">Méthode de calcul IslamSounnah</div>
-      <div class="help-text">
-        La méthode <strong>IslamSounnah</strong> est spécialement conçue pour la France et les hautes latitudes. Elle fonctionne <strong>hors connexion</strong> et corrige les problèmes que rencontrent les méthodes classiques en été.
-      </div>
-      <div class="help-text" style="margin-top:8px">
-        <strong>Principe :</strong> En France, les signes astronomiques du Fajr et de l'Isha peuvent disparaître en été (le soleil ne descend pas assez sous l'horizon). IslamSounnah utilise alors une <strong>interpolation</strong> basée sur les derniers jours où le signe est observable, conformément à l'avis de nombreux savants.
-      </div>
-      <div class="help-text" style="margin-top:8px">
-        <strong>Angles utilisés :</strong> Fajr à −18° (aube astronomique), Isha à −17° (crépuscule astronomique). Quand ces angles ne sont plus atteignables, l'interpolation prend le relais pour garantir des horaires cohérents toute l'année.
-      </div>
-      <div class="help-text" style="margin-top:8px">
-        <strong>Asr :</strong> Calcul selon l'école de la majorité (ombre = 1× la taille de l'objet + ombre au zénith).
-      </div>
-      <div class="help-text" style="margin-top:8px">
-        <strong>Informations supplémentaires :</strong> L'application affiche aussi le milieu de la nuit et le dernier tiers de la nuit, deux repères importants pour la prière nocturne (Qiyam al-Layl).
-      </div>
-    </div>
-    <div class="help-section">
-      <div class="help-title">Partage</div>
-      <div class="help-text">Partagez le verset en cours via le bouton partager en bas à gauche de l'écran.</div>
+    <h1 class="moi-cat-title">M&eacute;thode de Calcul</h1>
+    <div class="moi-cat-body">
+      <p class="sub-label">Deux sources disponibles</p>
+      <p>Qurani propose deux modes pour les horaires de pri&egrave;re : <span class="highlight">IslamSounnah</span> (calcul astronomique local, fonctionne hors connexion) et <span class="highlight">Mawaqit</span> (horaires de votre mosqu&eacute;e, n&eacute;cessite une connexion internet). Vous pouvez basculer entre les deux depuis la page des horaires.</p>
+      <hr class="divider">
+
+      <p class="sub-label">IslamSounnah &mdash; Fondements</p>
+      <p>La m&eacute;thode IslamSounnah repose sur le moteur astronomique <span class="highlight">PrayTimes.org</span> (utilis&eacute; par des millions de musulmans dans le monde), calibr&eacute; sur les param&egrave;tres de la <span class="highlight">Ligue Islamique Mondiale</span> (MWL &mdash; رابطة العالم الإسلامي). Ces param&egrave;tres sont le fruit d'un consensus de savants musulmans r&eacute;unis &agrave; La Mecque, qui ont d&eacute;termin&eacute; les angles de d&eacute;pression du soleil correspondant aux signes l&eacute;gaux du Fajr et de l'Isha.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Chaque pri&egrave;re, expliqu&eacute;e</p>
+      <p><span class="highlight">Fajr (الفجر)</span> &mdash; Entr&eacute;e : lorsque la lueur blanche horizontale (الفجر الصادق) appara&icirc;t &agrave; l'horizon est, correspondant au moment o&ugrave; le soleil atteint <span class="highlight">&minus;18&deg;</span> sous l'horizon (aube astronomique). C'est l'angle retenu par la MWL et valid&eacute; par de nombreux savants dont le cheikh Ibn B&acirc;z (رحمه الله) et la Commission Permanente saoudienne.</p>
+      <p><span class="highlight">Shourouq (الشروق)</span> &mdash; Lever du soleil : lorsque le bord sup&eacute;rieur du disque solaire appara&icirc;t &agrave; l'horizon. Calcul&eacute; avec un angle de <span class="highlight">&minus;0,833&deg;</span> qui tient compte de la r&eacute;fraction atmosph&eacute;rique (0,567&deg;) et du diam&egrave;tre apparent du soleil (0,266&deg;), plus une correction selon l'altitude.</p>
+      <p><span class="highlight">Dhuhr (الظهر)</span> &mdash; Le soleil passe au m&eacute;ridien local (point le plus haut). L'heure est calcul&eacute;e via l'&eacute;quation du temps, qui corrige l'&eacute;cart entre le midi solaire vrai et le midi moyen d&ucirc; &agrave; l'orbite elliptique de la Terre et &agrave; l'inclinaison de son axe.</p>
+      <p><span class="highlight">Asr (العصر)</span> &mdash; Calcul selon l'avis de la <span class="highlight">majorit&eacute; des savants</span> (jumh&ucirc;r : m&acirc;likites, ch&acirc;fi&rsquo;ites et hanbalites) : l'Asr entre lorsque l'ombre d'un objet &eacute;gale sa propre taille <span class="highlight">plus</span> la longueur de l'ombre au z&eacute;nith (facteur = 1). L'avis hanafite (facteur = 2) n'est pas utilis&eacute; dans cette m&eacute;thode.</p>
+      <p><span class="highlight">Maghrib (المغرب)</span> &mdash; Coucher du soleil : lorsque le bord sup&eacute;rieur du disque solaire dispara&icirc;t sous l'horizon. M&ecirc;me calcul que le lever, sym&eacute;trique par rapport au midi solaire, avec une correction de <span class="highlight">+3 minutes</span> pour s'assurer que le disque est enti&egrave;rement pass&eacute; sous l'horizon.</p>
+      <p><span class="highlight">Isha (العشاء)</span> &mdash; Entr&eacute;e : lorsque la lueur rougeoyante (الشفق الأحمر) dispara&icirc;t totalement du ciel, correspondant au moment o&ugrave; le soleil atteint <span class="highlight">&minus;17&deg;</span> sous l'horizon (cr&eacute;puscule astronomique). C'est l'angle de la MWL pour l'Isha.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Probl&egrave;me des hautes latitudes</p>
+      <p>La France m&eacute;tropolitaine se situe entre les latitudes <span class="highlight">41&deg;N</span> (Corse) et <span class="highlight">51&deg;N</span> (Dunkerque). &Agrave; ces latitudes &eacute;lev&eacute;es, un ph&eacute;nom&egrave;ne astronomique se produit en &eacute;t&eacute; : le soleil ne descend plus assez bas sous l'horizon pour atteindre &minus;18&deg; (Fajr) ou &minus;17&deg; (Isha). Les signes l&eacute;gaux &mdash; la lueur de l'aube et la disparition du cr&eacute;puscule &mdash; <span class="highlight">ne sont plus observables</span> pendant plusieurs semaines autour du solstice d'&eacute;t&eacute;. Les m&eacute;thodes classiques donnent alors des horaires irr&eacute;alistes ou aucun horaire du tout.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Solution : interpolation par villes de r&eacute;f&eacute;rence</p>
+      <p>Pour r&eacute;soudre ce probl&egrave;me, la m&eacute;thode IslamSounnah suit l'avis de nombreux savants et acad&eacute;mies islamiques qui pr&eacute;conisent l'<span class="highlight">interpolation</span> : on estime l'horaire du Fajr &agrave; partir des derniers jours o&ugrave; le signe &eacute;tait visible, en maintenant une progression coh&eacute;rente.</p>
+      <p>Concr&egrave;tement, l'application utilise une table de <span class="highlight">16 villes de r&eacute;f&eacute;rence</span> r&eacute;parties sur tout le territoire fran&ccedil;ais (Amiens, Besan&ccedil;on, Bordeaux, Clermont-Ferrand, Lille, Lyon, Marseille, Metz, Mulhouse, Orl&eacute;ans, Paris, Perpignan, Rennes, Strasbourg, Toulon, Toulouse). Pour chacune, l'horaire du Fajr a &eacute;t&eacute; <span class="highlight">v&eacute;rifi&eacute; et valid&eacute;</span> jour par jour (365 valeurs par ville) par les imams et associations de r&eacute;f&eacute;rence.</p>
+      <p>Pour calculer votre Fajr, l'application identifie les deux villes de r&eacute;f&eacute;rence les plus proches de votre position, puis effectue une <span class="highlight">double interpolation</span> (en latitude et en longitude) pour obtenir un horaire pr&eacute;cis adapt&eacute; &agrave; votre localisation exacte. Les autres pri&egrave;res (Dhuhr, Asr, Maghrib) sont calcul&eacute;es par astronomie pure, car elles ne posent pas de probl&egrave;me aux hautes latitudes.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Correction de l'Isha en &eacute;t&eacute;</p>
+      <p>Pour l'Isha, lorsque l'angle de &minus;17&deg; n'est plus atteignable, l'application applique la m&eacute;thode <span class="highlight">&laquo; Angle-Based &raquo;</span> (m&eacute;thode de l'angle proportionnel) : l'intervalle entre le coucher du soleil et l'Isha est calcul&eacute; comme une fraction de la nuit, proportionnelle &agrave; l'angle requis. Cette approche, recommand&eacute;e par le Conseil Europ&eacute;en de la Fatwa et des Recherches, &eacute;vite les horaires d'Isha extr&ecirc;mement tardifs tout en respectant le principe astronomique.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Milieu de la nuit et dernier tiers</p>
+      <p>L'application affiche &eacute;galement deux rep&egrave;res importants pour la pri&egrave;re nocturne :</p>
+      <p><span class="highlight">Moiti&eacute; de la nuit</span> &mdash; Le point m&eacute;dian entre le coucher du soleil (Maghrib) et le Fajr du lendemain. C'est la limite apr&egrave;s laquelle il est d&eacute;conseill&eacute; de retarder la pri&egrave;re d'Isha, selon l'avis de nombreux savants fond&eacute; sur le hadith du Proph&egrave;te ﷺ.</p>
+      <p><span class="highlight">Dernier tiers de la nuit</span> &mdash; Le d&eacute;but du dernier tiers de la nuit (entre Maghrib et Fajr), un moment b&eacute;ni pour les invocations et la pri&egrave;re surr&eacute;rogatoire (Qiyam al-Layl / Tahajjud), fond&eacute; sur le hadith o&ugrave; le Proph&egrave;te ﷺ mentionne la descente divine au dernier tiers.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Mawaqit &mdash; Horaires de mosqu&eacute;e</p>
+      <p>Le mode Mawaqit r&eacute;cup&egrave;re les horaires directement depuis le service <span class="highlight">mawaqit.net</span>, qui est utilis&eacute; par des milliers de mosqu&eacute;es en France et en Europe. Ces horaires sont d&eacute;finis par l'imam de chaque mosqu&eacute;e et peuvent inclure des ajustements locaux (retards pour le Jama&rsquo;a, choix d'une m&eacute;thode sp&eacute;cifique, etc.). Ce mode n&eacute;cessite une connexion internet.</p>
+      <hr class="divider">
+
+      <p class="sub-label">Fonctionnement hors connexion</p>
+      <p>Le calcul IslamSounnah est enti&egrave;rement <span class="highlight">local</span> : aucune donn&eacute;e n'est envoy&eacute;e sur internet. Toutes les tables de r&eacute;f&eacute;rence et les algorithmes astronomiques sont int&eacute;gr&eacute;s dans l'application. Il suffit d'avoir activ&eacute; la g&eacute;olocalisation une seule fois pour que les horaires soient calcul&eacute;s m&ecirc;me sans connexion.</p>
     </div>
   </div>
 </div>
@@ -778,17 +1004,17 @@
   <div class="overlay-body" id="surah-list"></div>
 </div>
 
-<!-- ====== BOOKMARKS OVERLAY ====== -->
-<div id="bookmarks-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Favoris</h2>
-    <button class="close-btn" id="bookmarks-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+<!-- ====== BOOKMARKS OVERLAY — gradient ====== -->
+<div id="bookmarks-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="bookmarks-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Favoris</h1>
+    <div class="moi-cat-body" id="bookmarks-list"></div>
   </div>
-  <div class="overlay-body" id="bookmarks-list"></div>
 </div>
 
 <!-- ====== FOLDER PICKER SHEET ====== -->
@@ -813,131 +1039,264 @@
   </div>
 </div>
 
+<!-- ====== NOTES OVERLAY — gradient ====== -->
+<div id="notes-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="notes-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Notes</h1>
+    <div class="moi-cat-body" id="notes-list"></div>
+  </div>
+</div>
+
+<!-- ====== MOI KHATMS OVERLAY — gradient ====== -->
+<div id="moi-khatms-overlay" class="overlay hidden moi-cat-overlay">
+  <div id="moi-khatms-bg" class="moi-khatms-bg"></div>
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="moi-khatms-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Khatms</h1>
+    <div class="moi-cat-body" id="moi-khatms-list"></div>
+  </div>
+</div>
+
+<!-- ====== VIDEOS OVERLAY ====== -->
+<div id="videos-overlay" class="overlay hidden moi-cat-overlay">
+  <!-- Sticky player block — no topbar, player at very top -->
+  <div class="video-sticky-player">
+    <button class="video-top-back" id="video-top-back" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="video-player-wrap" id="video-player-wrap">
+      <div class="video-thumb-state" id="video-thumb-state">
+        <img class="video-thumb-img" id="video-thumb-img" alt="">
+        <button class="video-play-btn" id="video-play-btn" aria-label="Lire">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+            <polygon points="23 17 40 28 23 39" fill="white"/>
+          </svg>
+        </button>
+      </div>
+      <div class="video-iframe-state hidden" id="video-iframe-state"></div>
+    </div>
+  </div>
+  <!-- Scrollable content below player -->
+  <div class="videos-scroll" id="videos-scroll">
+    <div class="video-info">
+      <p class="video-label">VIDÉO DU JOUR</p>
+      <h1 class="video-title" id="video-title"></h1>
+      <p class="video-meta" id="video-meta"></p>
+    </div>
+    <div class="video-upnext-section">
+      <div class="video-upnext-sep"></div>
+      <p class="video-upnext-label">À suivre</p>
+      <div class="video-upnext-list" id="video-upnext-list"></div>
+    </div>
+  </div>
+  <!-- Back button OUTSIDE scroll container for iOS fixed positioning -->
+  <div class="video-back-center" id="video-back-center">
+    <button class="moi-cat-back" id="videos-close" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ====== PODCAST OVERLAY ====== -->
+<div id="podcast-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="video-sticky-player">
+    <button class="video-top-back" id="pod-top-back" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="video-player-wrap" id="pod-player-wrap">
+      <div class="video-thumb-state" id="pod-thumb-state">
+        <img class="video-thumb-img" id="pod-thumb-img" alt="">
+        <button class="video-play-btn" id="pod-play-btn" aria-label="Lire">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+            <polygon points="23 17 40 28 23 39" fill="white"/>
+          </svg>
+        </button>
+      </div>
+      <div class="video-iframe-state hidden" id="pod-iframe-state"></div>
+    </div>
+  </div>
+  <div class="videos-scroll" id="pod-scroll">
+    <div class="video-info">
+      <p class="video-label">PODCAST DU JOUR</p>
+      <h1 class="video-title" id="pod-title"></h1>
+      <p class="video-meta" id="pod-meta"></p>
+    </div>
+    <div class="video-upnext-section">
+      <div class="video-upnext-sep"></div>
+      <p class="video-upnext-label">À suivre</p>
+      <div class="video-upnext-list" id="pod-upnext-list"></div>
+    </div>
+  </div>
+  <div class="video-back-center" id="pod-back-center">
+    <button class="moi-cat-back" id="pod-close" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ====== ISLAMSOUNNAH OVERLAY ====== -->
+<div id="islamsounnah-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="is-bg" id="is-bg"></div>
+  <div class="is-bg-dim"></div>
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="islamsounnah-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">IslamSounnah</h1>
+    <div class="moi-cat-body">
+      <p class="is-subtitle">Télécharger le Youtube Islamique</p>
+      <a href="https://apps.apple.com/fr/app/islamsounnah-vid%C3%A9o/id687454322" class="is-store-row" target="_blank" rel="noopener">
+        <svg class="is-store-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <span class="is-store-label">App Store</span>
+        <svg class="is-store-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+      <div class="moi-sep"></div>
+      <a href="https://play.google.com/store/apps/details?id=com.goodbarber.islamvideo" class="is-store-row" target="_blank" rel="noopener">
+        <svg class="is-store-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.832l2.542 1.473c.564.327.564 1.14 0 1.466l-2.545 1.475-2.533-2.533 2.536-2.534zM5.864 3.458L16.8 9.791l-2.302 2.302-8.634-8.635z"/></svg>
+        <span class="is-store-label">Play Store</span>
+        <svg class="is-store-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ====== NOTE EDITOR SHEET ====== -->
+<div id="note-editor-wrap" class="note-editor-wrap hidden">
+  <div class="note-editor-backdrop" id="note-editor-backdrop"></div>
+  <div class="note-editor-sheet">
+    <div class="note-editor-header">
+      <button class="note-editor-cancel" id="note-editor-cancel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <span class="note-editor-ref" id="note-editor-ref">AL-FATIHA &middot; 1:2</span>
+      <button class="note-editor-save" id="note-editor-save">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </button>
+    </div>
+    <textarea class="note-editor-input" id="note-editor-input" placeholder="Ce verset m&rsquo;apporte de la clart&eacute;..." rows="5" maxlength="1000"></textarea>
+  </div>
+</div>
+
 <!-- ====== SEARCH OVERLAY ====== -->
 <div id="search-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Recherche</h2>
-    <button class="close-btn" id="search-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+  <div class="qs-top">
+    <input type="text" id="search-input" class="qs-input" placeholder="Rechercher" autocomplete="off">
+    <button class="qs-close" id="search-close">FERMER</button>
   </div>
 
-  <!-- Bloc 1 : Recherche dans le Coran -->
-  <div class="search-block">
-    <div class="search-block-label">Rechercher dans le Coran</div>
-    <div class="search-field-wrap">
-      <svg class="search-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" id="search-input" class="search-field-input" placeholder="Mot-clé en arabe ou en français…" autocomplete="off">
+  <div class="qs-filters" id="qs-filters">
+    <button class="qs-pill" data-qs-word="prière">PRIÈRE</button>
+    <button class="qs-pill" data-qs-word="zakat">ZAKAT</button>
+    <button class="qs-pill" data-qs-word="paradis">PARADIS</button>
+    <button class="qs-pill" data-qs-word="patience">PATIENCE</button>
+  </div>
+
+  <div class="qs-body" id="qs-body">
+    <div class="qs-suggest" id="qs-suggest">
+      <h3 class="qs-suggest-title">Suggestions</h3>
+      <div class="qs-suggest-list" id="qs-suggest-list"></div>
     </div>
-    <div class="search-hint" id="search-hint">Tapez au moins 2 caractères pour lancer la recherche.</div>
+    <div class="overlay-body" id="search-results"></div>
   </div>
-
-  <!-- Séparateur "ou" -->
-  <div class="search-or-divider" id="search-or-divider">
-    <span>ou</span>
-  </div>
-
-  <!-- Bloc 2 : Parcourir les sourates -->
-  <div class="search-browse-block" id="search-browse-block">
-    <div class="search-block-label">Parcourir les sourates</div>
-    <button class="search-browse-card" id="search-browse-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-        <circle cx="3" cy="6" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/>
-        <circle cx="3" cy="18" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-      <div class="search-browse-card-text">
-        <span class="search-browse-card-title">114 sourates</span>
-        <span class="search-browse-card-sub">Al-Fatiha → An-Nas</span>
-      </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
-    </button>
-  </div>
-
-  <div class="overlay-body" id="search-results"></div>
 </div>
 
 <!-- ====== QIBLA OVERLAY ====== -->
-<div id="qibla-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Qibla</h2>
-    <button class="close-btn" id="qibla-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
+<div id="qibla-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="qibla-stars"></div>
+  <div class="qibla-topbar">
+    <button class="moi-cat-back" id="qibla-close" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
   </div>
-  <div class="overlay-body qibla-body">
+  <div class="qibla-body">
 
-    <!-- Fond étoilé -->
-    <div class="qibla-stars-bg"></div>
-
-    <!-- Verset Qibla -->
-    <div class="qibla-verse">
-      <p class="qibla-verse-ar">وَمِنْ حَيْثُ خَرَجْتَ فَوَلِّ وَجْهَكَ شَطْرَ الْمَسْجِدِ الْحَرَامِ</p>
-      <p class="qibla-verse-fr">« D'où que tu sortes, tourne ton visage vers la Mosquée sacrée. »</p>
-      <p class="qibla-verse-ref">Al-Baqara 2:149</p>
-    </div>
     <div id="qibla-loading" class="qibla-state">
       <div class="spinner"></div>
       <p class="qibla-state-text">Localisation en cours…</p>
     </div>
 
-    <!-- État : erreur -->
     <div id="qibla-error" class="qibla-state hidden">
       <p class="qibla-state-text" id="qibla-error-msg">Localisation non disponible.</p>
       <button class="qibla-action-btn" id="qibla-retry">Réessayer</button>
     </div>
 
-    <!-- Vue boussole -->
     <div id="qibla-compass-view" class="qibla-compass-view hidden">
-      <div class="qibla-compass-wrap">
-        <div class="qibla-compass" id="qibla-compass">
-          <span class="qibla-cardinal qibla-n">N</span>
-          <span class="qibla-cardinal qibla-e">E</span>
-          <span class="qibla-cardinal qibla-s">S</span>
-          <span class="qibla-cardinal qibla-w">O</span>
-          <!-- Aiguille + Kaaba — tournent ensemble -->
-          <div class="qibla-needle" id="qibla-needle">
-            <span class="qibla-kaaba">🕋</span>
-            <svg class="qibla-needle-svg" viewBox="-6 -48 12 96">
-              <polygon points="0,-46 -4,0 4,0" fill="#f59e0b"/>
-              <polygon points="0,46 -4,0 4,0" fill="currentColor" opacity="0.18"/>
-            </svg>
-          </div>
-          <div class="qibla-center-dot"></div>
-        </div>
+
+      <!-- Direction text -->
+      <div class="qibla-direction" id="qibla-direction">
+        <svg class="qibla-dir-arrow" id="qibla-dir-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+        <span class="qibla-dir-text" id="qibla-dir-text">Tournez à droite</span>
       </div>
 
-      <div class="qibla-aligned-badge" id="qibla-aligned-badge">
-        <span class="qibla-aligned-dot"></span>Aligné avec la Qibla
+      <!-- SVG Arc Compass -->
+      <div class="qibla-arc-wrap">
+        <svg class="qibla-arc-svg" id="qibla-arc-svg" viewBox="0 0 300 220" overflow="visible">
+          <!-- Decorative dashed inner circles -->
+          <circle cx="150" cy="185" r="30" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="3 3"/>
+          <circle cx="150" cy="185" r="50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="3 3"/>
+
+          <!-- Half-circle arc -->
+          <path d="M 10,185 A 140,140 0 0,1 290,185" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+          <!-- Fixed "facing" line: straight up from center -->
+          <line x1="150" y1="185" x2="150" y2="45" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+          <circle cx="150" cy="45" r="4" fill="rgba(255,255,255,0.7)"/>
+
+          <!-- Center hollow dot -->
+          <circle cx="150" cy="185" r="4.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <circle cx="150" cy="185" r="1.5" fill="rgba(255,255,255,0.3)"/>
+
+          <!-- Qibla direction pointer (rotates via JS) -->
+          <g id="qibla-pointer">
+            <line x1="150" y1="185" x2="150" y2="45" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+            <circle cx="150" cy="45" r="5" fill="#fff"/>
+          </g>
+        </svg>
       </div>
 
+      <!-- Info -->
       <div class="qibla-info">
         <div class="qibla-bearing-row">
           <span class="qibla-bearing-val" id="qibla-bearing-val">—</span><span class="qibla-bearing-deg">°</span>
         </div>
         <div class="qibla-info-label">Direction de la Mecque</div>
         <div class="qibla-distance" id="qibla-dist">— km</div>
-        <div class="qibla-location" id="qibla-location"></div>
       </div>
 
+      <!-- Bottom bar -->
+      <div class="qibla-bottom-bar">
+        <button class="qibla-bottom-label" id="qibla-goto-prayers">PRIÈRES</button>
+        <span class="qibla-bottom-location" id="qibla-location">—</span>
+        <button class="qibla-bottom-label" id="qibla-goto-settings">RÉGLAGES</button>
+      </div>
+
+      <!-- iOS orientation prompt -->
       <div id="qibla-orient-prompt" class="qibla-orient-prompt hidden">
-        <button class="qibla-action-btn" id="qibla-orient-btn">Activer la boussole en direct</button>
-        <p class="qibla-orient-note">Autorisez l'accès à l'orientation pour une boussole live</p>
+        <button class="qibla-action-btn" id="qibla-orient-btn">Activer la boussole</button>
+        <p class="qibla-orient-note">Autorisez l'accès à l'orientation</p>
       </div>
-      <div id="qibla-live-status" class="qibla-live-status hidden">
-        <span class="qibla-live-dot"></span>Boussole active
-      </div>
-    </div>
 
+    </div>
   </div>
 </div>
 
@@ -995,14 +1354,8 @@
 <div id="prayer-overlay" class="overlay hidden prayer-overlay-bg">
   <!-- Sun rays / light beam overlay -->
   <div class="prayer-sun-rays" id="prayer-sun-rays"></div>
-  <!-- Close button -->
-  <div class="prayer-top-bar">
-    <button class="close-btn" id="prayer-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
+  <!-- Top spacer (replaces old close button) -->
+  <div class="prayer-top-bar"></div>
 
   <!-- Date navigation -->
   <div class="prayer-date-nav">
@@ -1049,16 +1402,21 @@
   <!-- Bottom action bar -->
   <div class="prayer-bottom-bar">
     <button class="prayer-bottom-btn" id="prayer-qibla-btn">QIBLA</button>
-    <div class="prayer-bottom-location" id="prayer-bottom-location"></div>
+    <button class="prayer-bottom-close" id="prayer-close" aria-label="Fermer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
     <button class="prayer-bottom-btn" id="prayer-settings-btn">RÉGLAGES</button>
   </div>
+  <div class="prayer-bottom-location" id="prayer-bottom-location" style="display:none"></div>
 
   <!-- Settings sub-panel (slides up) -->
   <div id="prayer-settings-panel" class="prayer-settings-panel hidden">
     <div class="prayer-settings-header">
       <span class="prayer-settings-title">Réglages</span>
       <button class="close-btn" id="prayer-settings-close" aria-label="Fermer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
@@ -1088,45 +1446,91 @@
   </div>
 </div>
 
-<!-- ====== HIFZ (MEMORIZATION) OVERLAY ====== -->
+<!-- ====== HIFZ (MEMORIZATION) OVERLAY — Reader-style ====== -->
 <div id="hifz-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Mémorisation</h2>
-    <button class="close-btn" id="hifz-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  <!-- Top bar with surah name centered -->
+  <div id="hifz-topbar">
+    <button id="hifz-close" aria-label="Retour">
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 1 8 9 15 1"/>
+      </svg>
+    </button>
+    <div id="hifz-surah-header">
+      <h1 id="hifz-surah-name">Al-Fatiha</h1>
+      <p id="hifz-surah-meaning">L'OUVERTURE</p>
+    </div>
+    <button id="hifz-menu-btn" aria-label="Options">
+      <svg width="18" height="4" viewBox="0 0 18 4">
+        <circle cx="2" cy="2" r="1.6" fill="currentColor"/>
+        <circle cx="9" cy="2" r="1.6" fill="currentColor"/>
+        <circle cx="16" cy="2" r="1.6" fill="currentColor"/>
       </svg>
     </button>
   </div>
-  <div class="overlay-body hifz-body">
-    <!-- Choix de sourate en haut -->
-    <div class="hifz-top">
-      <select id="hifz-surah-select" class="hifz-surah-select"></select>
-    </div>
 
-    <!-- Verset centré -->
-    <div class="hifz-center">
-      <div class="hifz-words" id="hifz-words" dir="rtl"></div>
-    </div>
+  <!-- Single verse area (centered) -->
+  <div id="hifz-content">
+    <div id="hifz-words" dir="rtl"></div>
+  </div>
 
-    <!-- Contrôles +/- sous le verset -->
-    <div class="hifz-controls">
-      <button class="hifz-ctrl-btn" id="hifz-prev-level">−</button>
-      <div class="hifz-level" id="hifz-level">0 / 4</div>
-      <button class="hifz-ctrl-btn hifz-ctrl-primary" id="hifz-next-level">+</button>
+  <!-- Footer: level + verse nav + play -->
+  <div id="hifz-footer">
+    <div id="hifz-level-display">
+      <span id="hifz-level">0% — 0 mots cachés</span>
     </div>
+    <div id="hifz-verse-nav">
+      <button class="hifz-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span id="hifz-nav-ref">Verset 1</span>
+      <button class="hifz-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <button id="hifz-play-btn" aria-label="Écouter">
+      <svg id="hifz-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg id="hifz-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    </button>
+  </div>
 
-    <!-- Navigation en bas -->
-    <div class="hifz-bottom">
-      <div class="hifz-verse-nav">
-        <button class="recit-nav-btn" id="hifz-prev-verse" aria-label="Verset précédent">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <span class="hifz-ref" id="hifz-ref"></span>
-        <button class="recit-nav-btn" id="hifz-next-verse" aria-label="Verset suivant">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  <!-- ··· Menu dropdown -->
+  <div id="hifz-menu" class="hidden">
+    <div class="hifz-menu-label">STYLE DE LECTURE</div>
+    <button class="hifz-menu-item" data-hifz-mode="tajwid"><span>Tajwid</span><span class="hifz-menu-check" id="hm-check-tajwid"></span></button>
+    <button class="hifz-menu-item" data-hifz-mode="tajwid-color"><span>Tajwid · couleurs</span><span class="hifz-menu-check" id="hm-check-tajwid-color"></span></button>
+    <button class="hifz-menu-item" data-hifz-mode="minimal"><span>Minimal</span><span class="hifz-menu-check" id="hm-check-minimal"></span></button>
+    <button class="hifz-menu-item" data-hifz-mode="minimal-color"><span>Minimal · couleurs</span><span class="hifz-menu-check" id="hm-check-minimal-color"></span></button>
+    <div class="hifz-menu-sep"></div>
+    <button class="hifz-menu-item" id="hifz-menu-reciter"><span>Récitateur</span><span class="hifz-menu-arrow">›</span></button>
+    <div class="hifz-menu-sep"></div>
+    <div class="hifz-menu-label">SOURATE & VERSET</div>
+    <div class="hifz-menu-selects">
+      <select id="hifz-surah-select" class="hifz-select"></select>
+      <select id="hifz-ayah-select" class="hifz-select"></select>
+    </div>
+    <div class="hifz-menu-sep"></div>
+    <div class="hifz-menu-label">MOTS CACHÉS</div>
+    <div class="hifz-menu-stepper">
+      <button class="hifz-stepper-btn" id="hifz-hide-less">−</button>
+      <span id="hifz-hide-count">0</span>
+      <button class="hifz-stepper-btn" id="hifz-hide-more">+</button>
+    </div>
+    <div class="hifz-menu-actions">
+      <button class="hifz-menu-item" id="hifz-show-all"><span>Tout montrer</span></button>
+      <button class="hifz-menu-item" id="hifz-hide-all"><span>Tout cacher</span></button>
+    </div>
+  </div>
+
+  <!-- Reciter sheet -->
+  <div id="hifz-reciter-sheet" class="hidden">
+    <div id="hifz-reciter-panel">
+      <div class="hifz-reciter-header">
+        <h3>Récitateur</h3>
+        <button id="hifz-reciter-close" aria-label="Fermer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
+      <div id="hifz-reciter-list"></div>
     </div>
   </div>
 </div>
@@ -1186,16 +1590,15 @@
 </div>
 
 <!-- ===== SHAZAM OVERLAY ===== -->
-<div id="shazam-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Ayati</h2>
-    <button class="close-btn" id="shazam-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
+<div id="shazam-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="is-bg" id="shazam-bg"></div>
+  <div class="is-bg-dim"></div>
+  <div class="shazam-topbar">
+    <button class="moi-cat-back" id="shazam-close" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
   </div>
-  <div class="overlay-body shazam-body">
+  <div class="shazam-body">
 
     <!-- Scrolling Arabic verses background (during listening/analyzing) -->
     <div class="shazam-scroll-bg hidden" id="shazam-scroll-bg">
@@ -1206,22 +1609,6 @@
       <div class="shazam-scroll-row" style="--dur:26s;--delay:-8s">سُبْحَـٰنَ ٱلَّذِى أَسْرَىٰ بِعَبْدِهِۦ لَيْلًا مِّنَ ٱلْمَسْجِدِ ٱلْحَرَامِ إِلَى ٱلْمَسْجِدِ ٱلْأَقْصَا ٱلَّذِى بَـٰرَكْنَا حَوْلَهُۥ</div>
     </div>
 
-    <!-- Status text -->
-    <p class="shazam-status" id="shazam-status">Récitez un verset ou laissez écouter une récitation pour retrouver la sourate et le verset</p>
-
-    <!-- Sound wave bars (visible during recording) -->
-    <div class="shazam-waves hidden" id="shazam-waves">
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-      <span class="shazam-wave-bar"></span>
-    </div>
-
     <!-- Microphone button -->
     <div class="shazam-btn-wrap" id="shazam-btn-wrap">
       <div class="shazam-rings" id="shazam-rings">
@@ -1229,13 +1616,12 @@
         <span class="shazam-ring"></span>
       </div>
       <button class="shazam-btn" id="shazam-btn" aria-label="Écouter">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
-          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
-        </svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
       </button>
     </div>
+
+    <!-- Status text -->
+    <p class="shazam-status" id="shazam-status">Récitez un verset ou laissez écouter une récitation pour retrouver la sourate et le verset</p>
 
     <!-- Timer -->
     <p class="shazam-timer hidden" id="shazam-timer">15s</p>
@@ -1375,6 +1761,70 @@
   <button class="float-back-fab" id="dua-float-back" aria-label="Retour">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
+  <button class="dua-scroll-hint" id="dua-scroll-hint" aria-label="Faire défiler">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-top:-10px;opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+</div>
+
+<!-- ====== DUA CONTACT OVERLAY ====== -->
+<div id="dua-contact-overlay" class="overlay hidden">
+  <div class="dua-contact-bg" id="dua-contact-bg"></div>
+  <div class="dua-contact-scroll">
+    <div class="dua-contact-hero">
+      <div class="emotion-top-bar">
+        <button class="emotion-back-btn" id="dua-contact-close" aria-label="Retour">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+      </div>
+      <h1 class="dua-contact-title">Besoin d&rsquo;une Appli&thinsp;?</h1>
+      <p class="dua-contact-subtitle">Contactez-nous</p>
+    </div>
+    <div class="dua-contact-form-wrap">
+      <div class="dua-contact-field">
+        <label class="dua-contact-label" for="dc-email">Email</label>
+        <input type="email" id="dc-email" class="dua-contact-input" placeholder="votre@email.com" autocomplete="email">
+      </div>
+      <div class="dua-contact-field">
+        <label class="dua-contact-label" for="dc-besoin">Besoin</label>
+        <div class="dua-contact-select-wrap">
+          <select id="dc-besoin" class="dua-contact-select">
+            <option value="">S&eacute;lectionner&hellip;</option>
+            <option value="Application Mobile (iOS &amp; Android)">Application Mobile (iOS &amp; Android)</option>
+            <option value="Application iOS">Application iOS</option>
+            <option value="Application Android">Application Android</option>
+            <option value="Site internet / Vitrine">Site internet / Vitrine</option>
+            <option value="Site E-commerce">Site E-commerce</option>
+            <option value="Automatisation / Workflow">Automatisation / Workflow</option>
+            <option value="Logiciel sur-mesure">Logiciel sur-mesure</option>
+            <option value="Intelligence Artificielle">Intelligence Artificielle</option>
+            <option value="Autre">Autre</option>
+          </select>
+          <svg class="dua-contact-select-arrow" width="14" height="8" viewBox="0 0 14 8" fill="none"><path d="M1 1l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="dua-contact-field">
+        <label class="dua-contact-label" for="dc-message">Message</label>
+        <div class="dua-contact-chips" id="dc-chips">
+          <button class="dc-chip" type="button" data-text="Je souhaite cr&eacute;er une application mobile pour mon activit&eacute;.">Cr&eacute;er une app</button>
+          <button class="dc-chip" type="button" data-text="J&rsquo;ai besoin d&rsquo;un site internet professionnel avec un design moderne.">Site pro</button>
+          <button class="dc-chip" type="button" data-text="Je cherche &agrave; automatiser des t&acirc;ches r&eacute;p&eacute;titives dans mon entreprise.">Automatiser</button>
+          <button class="dc-chip" type="button" data-text="J&rsquo;aimerais int&eacute;grer de l&rsquo;intelligence artificielle dans mon projet.">IA / ChatBot</button>
+          <button class="dc-chip" type="button" data-text="J&rsquo;ai un budget d&eacute;fini et je voudrais discuter d&rsquo;une solution adapt&eacute;e.">Budget fix&eacute;</button>
+        </div>
+        <textarea id="dc-message" class="dua-contact-textarea" placeholder="D&eacute;crivez votre besoin&hellip;"></textarea>
+      </div>
+      <div id="dua-contact-error" class="dua-contact-error hidden">Veuillez remplir tous les champs.</div>
+      <button id="dua-contact-submit" class="dua-contact-submit">Envoyer</button>
+      <div id="dua-contact-success" class="dua-contact-success hidden">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><path d="M8 12l3 3 5-5" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p class="dua-contact-success-main">Message envoy&eacute;&thinsp;!</p>
+        <p class="dua-contact-success-sub">Nous vous r&eacute;pondrons dans les plus brefs d&eacute;lais.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ====== KHATM DELETE SHEET ====== -->
@@ -1404,6 +1854,140 @@
     <h1>Historique</h1>
   </div>
   <div id="kh-hist-list"></div>
+</div>
+
+<!-- ====== SURAH PLAYER (Lecteur Libre + Audio) ====== -->
+<div id="surah-player" class="hidden">
+  <div id="sp-bg"></div>
+  <div id="sp-bg-overlay"></div>
+
+  <!-- Header -->
+  <div id="sp-header">
+    <button id="sp-close">
+      <!-- Simple clean downward chevron -->
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 1 8 9 15 1"/></svg>
+    </button>
+    <div id="sp-page-dots">
+      <span class="sp-dot sp-dot-active"></span>
+      <span class="sp-dot"></span>
+    </div>
+    <button id="sp-menu-btn">
+      <!-- Three clean dots -->
+      <svg width="18" height="4" viewBox="0 0 18 4" fill="currentColor"><circle cx="2" cy="2" r="1.8"/><circle cx="9" cy="2" r="1.8"/><circle cx="16" cy="2" r="1.8"/></svg>
+    </button>
+  </div>
+
+  <!-- Tab labels -->
+  <div id="sp-tab-labels">
+    <span id="sp-tab-reader" class="sp-tab-active">Lecteur</span>
+    <span id="sp-tab-audio">Audio</span>
+  </div>
+  <div id="sp-tab-sep"></div>
+
+  <!-- READER PAGE -->
+  <div id="sp-reader-page">
+    <div id="sp-reader-intro">
+      <h1 id="sp-reader-name"></h1>
+      <p id="sp-reader-meaning"></p>
+    </div>
+    <div id="sp-reader-scroll">
+      <div id="sp-reader-content"></div>
+    </div>
+  </div>
+
+  <!-- READER ACTION BAR (hidden, shows on long-press) -->
+  <div id="sp-action-bar" class="hidden">
+    <button class="sp-action-btn" id="sp-action-close" aria-label="Fermer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="sp-action-btn" id="sp-action-play" aria-label="Écouter">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <button class="sp-action-btn" id="sp-action-heart" aria-label="Favori">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </button>
+    <button class="sp-action-btn" id="sp-action-note" aria-label="Note">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </button>
+  </div>
+
+  <!-- AUDIO PAGE -->
+  <div id="sp-audio-page" class="hidden">
+    <div id="sp-audio-top"></div>
+    <div id="sp-audio-center">
+      <h1 id="sp-audio-name"></h1>
+      <p id="sp-audio-reciter"></p>
+    </div>
+    <div id="sp-audio-bottom">
+      <div id="sp-seek-wrap">
+        <input type="range" id="sp-seek" min="0" max="1000" value="0" step="1">
+        <div id="sp-times">
+          <span id="sp-time-cur">00:00</span>
+          <span id="sp-time-tot">00:00</span>
+        </div>
+      </div>
+      <div id="sp-btns">
+        <button id="sp-prev-surah" title="Sourate précédente">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="2" height="16" rx="1"/><polygon points="20 4 9 12 20 20"/></svg>
+        </button>
+        <button id="sp-rew" title="-10s">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/><text x="8" y="14.5" font-size="5" fill="currentColor" stroke="none" font-family="sans-serif">10</text></svg>
+        </button>
+        <button id="sp-playpause">
+          <svg id="sp-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg id="sp-pause-icon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <button id="sp-fwd" title="+10s">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-5"/><text x="8" y="14.5" font-size="5" fill="currentColor" stroke="none" font-family="sans-serif">10</text></svg>
+        </button>
+        <button id="sp-next-surah" title="Sourate suivante">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="18" y="4" width="2" height="16" rx="1"/><polygon points="4 4 15 12 4 20"/></svg>
+        </button>
+      </div>
+    </div>
+    <audio id="sp-audio-el" preload="none" x-webkit-airplay="allow"></audio>
+  </div>
+</div>
+
+<!-- SURAH PLAYER MENU (position:fixed, outside overlay) -->
+<div id="surah-player-menu" class="hidden">
+  <div id="spm-lang-row" class="spm-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    <span>Langue</span>
+    <svg id="spm-lang-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+  <div id="spm-lang-opts" class="hidden">
+    <div class="spm-lang-opt" data-lang="ar">Arabe seulement</div>
+    <div class="spm-lang-opt" data-lang="fr">Français seulement</div>
+    <div class="spm-lang-opt" data-lang="ar-fr">Arabe &amp; Français</div>
+  </div>
+  <div class="spm-sep"></div>
+  <button id="spm-reciter" class="spm-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <span>Récitateur</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-left:auto;opacity:0.38"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+  <button id="spm-airplay" class="spm-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><polygon points="12 15 17 21 7 21 12 15"/></svg>
+    AirPlay
+  </button>
+  <div class="spm-sep"></div>
+  <button id="spm-close-player" class="spm-btn spm-close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Fermer le lecteur
+  </button>
+</div>
+
+<!-- RECITER PICKER SHEET -->
+<div id="sp-reciter-sheet" class="hidden">
+  <div id="sp-reciter-backdrop"></div>
+  <div id="sp-reciter-panel">
+    <div id="sp-reciter-header">
+      <h2>Récitateur</h2>
+      <button id="sp-reciter-close">FERMER</button>
+    </div>
+    <div id="sp-reciter-list"></div>
+  </div>
 </div>
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>

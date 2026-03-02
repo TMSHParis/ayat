@@ -54,14 +54,15 @@ struct PrayerTimesWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
+            let gold = Color(red: 1.0, green: 0.90, blue: 0.62)
             HStack {
                 Image(systemName: "moon.stars.fill")
                     .font(.caption2)
-                    .foregroundColor(.orange)
+                    .foregroundColor(gold)
                 Text("Horaires de pri\u{00e8}re")
                     .font(.caption2)
                     .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.5))
                 Spacer()
             }
             .padding(.bottom, 2)
@@ -69,7 +70,7 @@ struct PrayerTimesWidgetView: View {
             if entry.prayers.isEmpty {
                 Text("Ouvrez Qurani pour charger les horaires")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ForEach(Array(entry.prayers.enumerated()), id: \.offset) { index, prayer in
@@ -78,29 +79,26 @@ struct PrayerTimesWidgetView: View {
                         Text(prayer.nameAr)
                             .font(.caption2)
                             .frame(width: 40, alignment: .trailing)
-                            .foregroundColor(isNext ? .orange : .primary)
+                            .foregroundColor(isNext ? gold : .white.opacity(0.7))
                         Text(prayer.name)
                             .font(.caption2)
-                            .foregroundColor(isNext ? .orange : .secondary)
+                            .foregroundColor(isNext ? gold : .white.opacity(0.42))
                             .frame(width: 60, alignment: .leading)
                         Spacer()
                         Text(prayer.time)
                             .font(.caption)
                             .fontWeight(isNext ? .bold : .regular)
-                            .foregroundColor(isNext ? .orange : .primary)
+                            .foregroundColor(isNext ? gold : .white.opacity(0.7))
                     }
                     .padding(.vertical, 1)
-                    if isNext {
-                        Rectangle()
-                            .fill(Color.orange.opacity(0.15))
-                            .frame(height: 0)
-                    }
                 }
             }
         }
         .padding()
         .containerBackground(for: .widget) {
-            Color(.systemBackground)
+            Image("PrayerBg")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
         }
     }
 }

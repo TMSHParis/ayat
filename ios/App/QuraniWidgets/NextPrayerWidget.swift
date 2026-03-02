@@ -42,32 +42,35 @@ struct NextPrayerWidgetView: View {
             HStack {
                 Image(systemName: "moon.stars.fill")
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
                 Text("Qurani")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.5))
             }
             Spacer()
             Text(entry.prayerNameAr)
                 .font(.title2)
                 .fontWeight(.bold)
+                .foregroundColor(.white.opacity(0.92))
                 .minimumScaleFactor(0.7)
             Text(entry.prayerName)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.5))
             HStack {
                 Image(systemName: "clock.fill")
                     .font(.caption2)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
                 Text(entry.prayerTime)
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
             }
         }
         .padding()
         .containerBackground(for: .widget) {
-            Color(.systemBackground)
+            Image("PrayerBg")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
         }
     }
 }

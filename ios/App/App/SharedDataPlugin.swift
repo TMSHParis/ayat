@@ -1,5 +1,6 @@
 import Foundation
 import Capacitor
+import WidgetKit
 
 @objc(SharedDataPlugin)
 public class SharedDataPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -34,6 +35,7 @@ public class SharedDataPlugin: CAPPlugin, CAPBridgedPlugin {
         ]
 
         defaults.set(data, forKey: "prayerTimes")
+        WidgetCenter.shared.reloadAllTimelines()
         call.resolve()
     }
 
@@ -52,6 +54,7 @@ public class SharedDataPlugin: CAPPlugin, CAPBridgedPlugin {
         ]
 
         defaults.set(data, forKey: "currentVerse")
+        WidgetCenter.shared.reloadAllTimelines()
         call.resolve()
     }
 }

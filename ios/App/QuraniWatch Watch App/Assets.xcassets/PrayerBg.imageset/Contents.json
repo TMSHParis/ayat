@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "prayer-bg.jpg",
+      "idiom": "universal",
+      "scale": "2x"
+    }
+  ],
+  "info": {
+    "version": 1,
+    "author": "xcode"
+  }
+}

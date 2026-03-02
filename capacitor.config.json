@@ -2,6 +2,13 @@
   "appId": "com.tmshparis.qurani",
   "appName": "Qurani",
   "webDir": "www",
+  "ios": {
+    "allowsInlineMediaPlayback": true
+  },
+  "server": {
+    "iosScheme": "https",
+    "allowNavigation": ["*.youtube.com", "*.googlevideo.com", "*.github.io"]
+  },
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
