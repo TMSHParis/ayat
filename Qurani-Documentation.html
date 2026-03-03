@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qurani v3.0 - Documentation</title>
+<style>
+  @page { margin: 2cm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    line-height: 1.7;
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+  }
+  .cover {
+    text-align: center;
+    padding: 80px 0 60px;
+    border-bottom: 3px solid #1a1a1a;
+    margin-bottom: 50px;
+    page-break-after: always;
+  }
+  .cover h1 { font-size: 52px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; }
+  .cover .subtitle { font-size: 20px; color: #555; margin-bottom: 30px; }
+  .cover .meta { font-size: 14px; color: #888; margin-top: 40px; }
+  .cover .meta span { display: block; margin: 4px 0; }
+  .cover .badge {
+    display: inline-block; background: #1a1a1a; color: #fff;
+    padding: 8px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; margin-top: 20px;
+  }
+  .toc { page-break-after: always; padding: 20px 0; }
+  .toc h2 { font-size: 28px; margin-bottom: 30px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+  .toc ul { list-style: none; }
+  .toc li { padding: 8px 0; border-bottom: 1px dotted #ddd; font-size: 15px; }
+  .toc .toc-num { display: inline-block; width: 30px; font-weight: 700; color: #888; }
+  h2 { font-size: 26px; font-weight: 700; margin-top: 50px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #1a1a1a; page-break-after: avoid; }
+  h3 { font-size: 18px; font-weight: 700; margin-top: 30px; margin-bottom: 12px; color: #333; page-break-after: avoid; }
+  h4 { font-size: 15px; font-weight: 700; margin-top: 20px; margin-bottom: 8px; color: #555; }
+  p { margin-bottom: 12px; font-size: 14.5px; }
+  ul, ol { margin: 10px 0 16px 24px; font-size: 14.5px; }
+  li { margin-bottom: 6px; }
+  .info-box { background: #f7f7f7; border-left: 4px solid #1a1a1a; padding: 16px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  .info-box strong { display: block; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f5f5f5; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #ddd; }
+  .tag { display: inline-block; background: #eee; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 2px; }
+  .tag-green { background: #d4edda; color: #155724; }
+  .tag-yellow { background: #fff3cd; color: #856404; }
+  .tag-red { background: #f8d7da; color: #721c24; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', Menlo, monospace; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+  .stat-card { background: #f7f7f7; padding: 20px; border-radius: 12px; text-align: center; }
+  .stat-card .num { font-size: 32px; font-weight: 800; color: #1a1a1a; }
+  .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .timeline { margin: 20px 0; }
+  .timeline-item { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eee; }
+  .timeline-date { min-width: 100px; font-size: 13px; font-weight: 600; color: #888; }
+  .timeline-content { font-size: 14px; }
+  .page-break { page-break-before: always; }
+  @media print { body { padding: 0; } .cover { padding: 60px 0 40px; } }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <h1>QURANI</h1>
+  <div class="subtitle">by IslamSounnah / TMSH Paris</div>
+  <div class="badge">Version 3.0 - Mars 2026</div>
+  <div class="meta">
+    <span>Documentation Technique & Fonctionnelle</span>
+    <span>Plateforme : iOS (iPhone, iPad, Apple Watch)</span>
+    <span>Bundle ID : com.tmshparis.qurani</span>
+    <span>Developpeur : Kamel El Boutaibi</span>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Table des matieres</h2>
+  <ul>
+    <li><span class="toc-num">1.</span> Vue d'ensemble</li>
+    <li><span class="toc-num">2.</span> Architecture technique</li>
+    <li><span class="toc-num">3.</span> Toutes les fonctionnalites</li>
+    <li><span class="toc-num">4.</span> Adaptation iPad</li>
+    <li><span class="toc-num">5.</span> Apple Watch & Widgets iOS</li>
+    <li><span class="toc-num">6.</span> Design & Direction artistique</li>
+    <li><span class="toc-num">7.</span> Confidentialite & Donnees</li>
+    <li><span class="toc-num">8.</span> Build & Deploiement</li>
+    <li><span class="toc-num">9.</span> Historique des soumissions Apple</li>
+  </ul>
+</div>
+
+<!-- 1. VUE D'ENSEMBLE -->
+<h2>1. Vue d'ensemble</h2>
+
+<p>Qurani est une application iOS complete pour la lecture, la memorisation et la pratique quotidienne du Coran. Concue avec un design minimaliste et immersif, elle accompagne l'utilisateur dans sa spiritualite au quotidien : lecture du Coran, invocations, horaires de priere, memorisation, et bien plus.</p>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="num">50+</div><div class="label">Fonctionnalites</div></div>
+  <div class="stat-card"><div class="num">22</div><div class="label">Recitateurs</div></div>
+  <div class="stat-card"><div class="num">36+</div><div class="label">Categories Du'a</div></div>
+  <div class="stat-card"><div class="num">114</div><div class="label">Sourates</div></div>
+  <div class="stat-card"><div class="num">26</div><div class="label">Emotions</div></div>
+  <div class="stat-card"><div class="num">100%</div><div class="label">Hors-ligne</div></div>
+</div>
+
+<div class="info-box">
+  <strong>Points forts</strong>
+  Aucun compte requis. Aucune publicite. Aucun tracking. Toutes les donnees sont stockees localement sur l'appareil. L'app fonctionne entierement hors-ligne (sauf Mawaqit pour les horaires de mosquee). Disponible sur iPhone, iPad et Apple Watch.
+</div>
+
+<!-- 2. ARCHITECTURE -->
+<h2>2. Architecture technique</h2>
+
+<h3>Stack technologique</h3>
+<table>
+  <tr><th>Composant</th><th>Technologie</th></tr>
+  <tr><td>Frontend</td><td>HTML5, CSS3, JavaScript (Vanilla)</td></tr>
+  <tr><td>Bridge natif</td><td>Capacitor 8.1.0</td></tr>
+  <tr><td>Plateforme</td><td>iOS (WKWebView)</td></tr>
+  <tr><td>Cache hors-ligne</td><td>Service Worker (v152)</td></tr>
+  <tr><td>Notifications</td><td>OneSignal</td></tr>
+  <tr><td>Formulaire contact</td><td>EmailJS (REST API)</td></tr>
+  <tr><td>Horaires mosquee</td><td>Mawaqit API</td></tr>
+</table>
+
+<h3>Structure de l'app</h3>
+<p>Single Page Application (SPA) avec 3 fichiers principaux :</p>
+<ul>
+  <li><code>index.html</code> — Structure HTML avec tous les overlays et vues</li>
+  <li><code>app.js</code> — Logique applicative (4500+ lignes)</li>
+  <li><code>style.css</code> — Styles et responsive design (2800+ lignes)</li>
+</ul>
+
+<h3>Donnees embarquees</h3>
+<table>
+  <tr><th>Fichier</th><th>Contenu</th></tr>
+  <tr><td><code>quran.json</code></td><td>Texte complet du Coran en arabe (ecriture Uthmani)</td></tr>
+  <tr><td><code>quran-fr.json</code></td><td>Traduction francaise (Complexe du Roi Fahd)</td></tr>
+  <tr><td><code>quran-tajwid.json</code></td><td>Donnees de tajwid pour le marquage colore</td></tr>
+</table>
+
+<h3>Navigation principale (4 onglets)</h3>
+<table>
+  <tr><th>Onglet</th><th>Contenu</th></tr>
+  <tr><td>ACCUEIL</td><td>Dashboard avec priere, invocations, emotion, lecture du jour</td></tr>
+  <tr><td>QURAN</td><td>Lecteur Coran, Khatm, parcourir les sourates</td></tr>
+  <tr><td>DU'A</td><td>Invocations par categorie</td></tr>
+  <tr><td>MOI</td><td>Favoris, notes, khatms, videos, podcast, contact</td></tr>
+</table>
+
+<!-- 3. FONCTIONNALITES -->
+<div class="page-break"></div>
+<h2>3. Toutes les fonctionnalites</h2>
+
+<h3>3.1 — Lecture du Coran</h3>
+<ul>
+  <li>Lecture verset par verset avec navigation par swipe (gauche/droite)</li>
+  <li>114 sourates completes en ecriture Uthmani</li>
+  <li><strong>4 modes de lecture</strong> : Minimal, Minimal couleurs, Tajwid, Tajwid couleurs</li>
+  <li><strong>3 langues</strong> : Arabe, Arabe + Francais, Francais</li>
+  <li><strong>4 themes visuels</strong> : Jour, Sepia, Nuit, Auto (detection systeme)</li>
+  <li><strong>3 tailles de texte</strong> : S, M, L avec boutons +/-</li>
+  <li>Marques de waqf (pause) en mode Tajwid</li>
+  <li>Tafsir (commentaire) par appui long sur chaque verset (1.2s)</li>
+  <li>Lecture libre ou lecture guidee (Khatm)</li>
+</ul>
+
+<h3>3.2 — Khatm (Lecture complete du Coran)</h3>
+<p>Systeme complet pour terminer la lecture du Coran avec 5 rythmes au choix :</p>
+<table>
+  <tr><th>Rythme</th><th>Portion quotidienne</th><th>Duree</th></tr>
+  <tr><td>1 Juz par jour</td><td>20 pages</td><td>30 jours</td></tr>
+  <tr><td>1 Hizb par jour</td><td>10 pages</td><td>60 jours</td></tr>
+  <tr><td>3 Rub par jour</td><td>7,5 pages</td><td>80 jours</td></tr>
+  <tr><td>2 Rub par jour</td><td>5 pages</td><td>120 jours</td></tr>
+  <tr><td>1 Rub par jour</td><td>2,5 pages</td><td>240 jours</td></tr>
+</table>
+<ul>
+  <li>Portions quotidiennes calculees automatiquement</li>
+  <li>Hero card avec compte a rebours "X jours jusqu'au khatm"</li>
+  <li>Liste immersive des sourates avec photos de fond</li>
+  <li>Reader dedie : une sourate a la fois, bouton "Completer" en bas</li>
+  <li>Barre de progression live au scroll (3px, z-index 9999)</li>
+  <li>Historique complet des sessions (heure, sourate, versets debut/fin)</li>
+  <li>Dropdown iOS (position fixed) pour Historique et Suppression</li>
+  <li>Sheet de confirmation pour suppression avec recapitulatif</li>
+</ul>
+
+<h3>3.3 — Audio (22 recitateurs)</h3>
+<h4>19 recitateurs arabes</h4>
+<p>Mishary Al-Afasy, Al-Husary, Abdul Basit, Al-Minshawi, Al-Shuraym, Muhammad Ayyub, Al-Hudhaifi, Hisham Al-Harraz, Al-Oyoun Al-Kouchi, Mokhtar Al-Hajj, Nourein Muhammad, Younes Asoliss, Abdulrahman Al-Sudais, Maher Al-Mueaqly, Nasser Al-Qatami, Ahmad Al-Ajmi, Yasser Al-Dosari, Bandar Baleela, Khalid Al-Jalil</p>
+<h4>2 recitateurs francais</h4>
+<p>Jean-Louis Leclerc, Muhammad Hamidullah</p>
+<h4>Fonctionnalites</h4>
+<ul>
+  <li>Lecture automatique verset par verset</li>
+  <li>Auto-avance vers le verset/sourate suivant</li>
+  <li>Avance et retour rapide de 10 secondes</li>
+  <li>Barre de progression avec seek (glisser pour naviguer)</li>
+  <li>Selection de recitateur avec overlay dedie</li>
+  <li>Recitateur configurable separement pour : lecture, Hifz, ecoute</li>
+</ul>
+
+<h3>3.4 — Hifz (Memorisation)</h3>
+<ul>
+  <li>Memorisation verset par verset, mot par mot</li>
+  <li>Masquage progressif des mots (0% a 100% par paliers de 10%)</li>
+  <li>Toucher pour reveler ou masquer chaque mot individuellement</li>
+  <li>Compteur de mots masques avec pourcentage de completion</li>
+  <li>4 modes de lecture disponibles dans le mode Hifz</li>
+  <li>Recitateur configurable pour la memorisation</li>
+  <li>Option "Continuer" pour reprendre la derniere session</li>
+</ul>
+
+<h3>3.5 — Ayati (Reconnaissance de versets)</h3>
+<ul>
+  <li>Identification de versets coraniques par l'audio</li>
+  <li>Fonctionnement type Shazam adapte au Coran</li>
+  <li>Affichage du verset identifie avec reference (sourate et numero)</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h3>3.6 — Du'a / Invocations (36+ categories)</h3>
+<h4>Invocations temporelles</h4>
+<ul>
+  <li><strong>Matin</strong> : 12+ duas avec tashkeel complet (Ayat al-Kursi, Al-Ikhlas, Al-Falaq, An-Nas + 8 adhkar)</li>
+  <li><strong>Soir</strong> : 12+ duas avec tashkeel complet</li>
+</ul>
+<h4>Invocations situationnelles (28+ categories)</h4>
+<p>Avant de dormir, Protection, Tristesse, Voyage, Istikhara, les 40 Rabbana, Reveil, Repas, Maison, Mosquee, Toilettes, Vetement, Sujud, Prosternations, Tashahud, Colere, Peur, Anxiete, Dette, Maladie, Pluie, Iftar, Mariage, Defunt, Marche, Taajjub, et d'autres</p>
+<h4>Fonctionnalites</h4>
+<ul>
+  <li>Texte arabe avec tashkeel complet (toutes les voyelles)</li>
+  <li>Traduction francaise pour chaque du'a</li>
+  <li>References Hadith et Coran</li>
+  <li>Audio disponible (11 invocations avec fichiers MP3)</li>
+  <li>Detection automatique matin/soir basee sur l'heure du Maghrib</li>
+  <li>Page d'accueil en liste verticale numerotee (police Space Mono)</li>
+</ul>
+
+<h3>3.7 — Roue des Emotions (26 emotions)</h3>
+<p>Gratitude, Tristesse, Colere, Solitude, Doute, Amour, Joie, Repentir, Paresse, Angoisse, Peur, Detresse, Espoir, Regret, Honte, Envie, Haine, Orgueil, Arrogance, Ingratitude, Pauvrete, Richesse, Pudeur, Misericorde, Compassion, Ghayrah</p>
+<ul>
+  <li>Selecteur en roue radiale interactive</li>
+  <li>Navigation par swipe gauche/droite entre les emotions</li>
+  <li>Versets et invocations adaptes a chaque emotion</li>
+  <li>Acces rapide depuis le dashboard (accueil)</li>
+  <li>Overlay detail avec guidance coranique personnalisee</li>
+</ul>
+
+<h3>3.8 — Horaires de priere</h3>
+<ul>
+  <li><strong>2 methodes de calcul</strong> :
+    <ul>
+      <li><strong>IslamSounnah</strong> : calcul astronomique adapte a la France, 100% hors-ligne, double interpolation pour le Fajr aux hautes latitudes</li>
+      <li><strong>Mawaqit</strong> : horaires reels des mosquees via mawaqit.net (necessite internet)</li>
+    </ul>
+  </li>
+  <li>5 prieres affichees : Fajr, Dhuhr, Asr, Maghrib, Isha</li>
+  <li>Shourouq (lever du soleil)</li>
+  <li>Milieu de la nuit et Dernier tiers de la nuit</li>
+  <li>Compte a rebours en temps reel jusqu'a la prochaine priere</li>
+  <li>Detection automatique de la ville par geolocalisation</li>
+  <li>Overlay priere immersif style Behold (117 photos de fond)</li>
+  <li>Footer avec QIBLA, bouton fermeture (X), REGLAGES</li>
+</ul>
+
+<h3>3.9 — Boussole Qibla</h3>
+<ul>
+  <li>Direction de la Kaaba en temps reel</li>
+  <li>Calcul du bearing depuis la position GPS</li>
+  <li>Capteurs d'orientation de l'appareil</li>
+  <li>Detection d'alignement</li>
+  <li>Overlay dedie avec interface immersive</li>
+</ul>
+
+<h3>3.10 — Statistiques & Suivi</h3>
+<ul>
+  <li>Nombre total de versets lus</li>
+  <li>Streak de jours consecutifs de lecture</li>
+  <li>Nombre de khatms termines</li>
+  <li>Indicateurs visuels de progression</li>
+  <li>Enregistrement automatique de chaque session de lecture</li>
+</ul>
+
+<h3>3.11 — Signets & Notes</h3>
+<ul>
+  <li>Sauvegarde de versets favoris via appui long</li>
+  <li>Organisation en dossiers personnalises</li>
+  <li>Creation de dossiers custom</li>
+  <li>Notes personnelles attachees a chaque verset</li>
+</ul>
+
+<h3>3.12 — Recherche</h3>
+<ul>
+  <li>Recherche plein texte en arabe et en francais</li>
+  <li>Recherche de sourate avec overlay dedie</li>
+  <li>Navigation directe vers les resultats</li>
+</ul>
+
+<h3>3.13 — Videos & Podcast</h3>
+<ul>
+  <li>Video quotidienne selectionnee (chaine IslamSounnah sur YouTube)</li>
+  <li>Lecteur video sticky</li>
+  <li>Collection de podcasts du Collectif des Etudiants de Medine</li>
+</ul>
+
+<h3>3.14 — Dashboard (Accueil)</h3>
+<ul>
+  <li>Barre de priere avec compte a rebours et localisation</li>
+  <li>Carte invocations matin/soir (detection automatique via Maghrib)</li>
+  <li>Lecture du jour (portion Khatm en cours)</li>
+  <li>Roue des emotions en acces rapide</li>
+  <li>Animation ambient glow (soleil le matin, lune le soir)</li>
+</ul>
+
+<h3>3.15 — Formulaire de contact</h3>
+<ul>
+  <li>Champs : email, besoin (type de demande), message</li>
+  <li>Envoi via EmailJS REST API (aucun SDK requis)</li>
+  <li>Contact pour assistance ou demande de services TMSH</li>
+</ul>
+
+<h3>3.16 — Notifications</h3>
+<ul>
+  <li>Rappel quotidien de lecture via OneSignal</li>
+  <li>Personnalisation de l'heure du rappel</li>
+</ul>
+
+<h3>3.17 — Splash Screen</h3>
+<ul>
+  <li>Verset Ar-Ra'd 13:28 en arabe</li>
+  <li>Logo QURANI</li>
+  <li>Mention "DESIGNED BY TMSH"</li>
+  <li>Detection instantanee du theme (pas de flash blanc/noir)</li>
+  <li>Duree minimum de 3 secondes</li>
+</ul>
+
+<!-- 4. ADAPTATION iPAD -->
+<div class="page-break"></div>
+<h2>4. Adaptation iPad</h2>
+
+<p>L'interface est entierement responsive pour iPad avec 2 breakpoints CSS :</p>
+
+<table>
+  <tr><th>Breakpoint</th><th>Appareil</th><th>Adaptations</th></tr>
+  <tr><td><code>768px</code></td><td>iPad (portrait)</td><td>Padding 10%, max-width 640px, fonts agrandies</td></tr>
+  <tr><td><code>1024px</code></td><td>iPad Pro (paysage)</td><td>Padding 12%, layouts centres, marges elargies</td></tr>
+</table>
+
+<h3>Elements adaptes</h3>
+<ul>
+  <li><strong>Dashboard</strong> : fond plein ecran avec padding proportionnel</li>
+  <li><strong>Du'a liste</strong> : grille centree avec max-width 640px</li>
+  <li><strong>Du'a detail</strong> : padding 10%, fonts agrandies</li>
+  <li><strong>Khatm</strong> : layout responsive avec hero et liste immersive</li>
+  <li><strong>Tous les overlays</strong> : centres avec marges adaptees</li>
+  <li><strong>Tab bar</strong> : largeur et espacement ajustes</li>
+  <li><strong>Orientation</strong> : toutes orientations supportees (portrait + paysage)</li>
+</ul>
+
+<div class="info-box">
+  <strong>iPhone vs iPad</strong>
+  iPhone : portrait uniquement. iPad : toutes orientations avec adaptation CSS dynamique.
+</div>
+
+<!-- 5. APPLE WATCH & WIDGETS -->
+<h2>5. Apple Watch & Widgets iOS</h2>
+
+<h3>QuraniWatch (Apple Watch)</h3>
+<ul>
+  <li>Affichage des 5 horaires de priere au poignet</li>
+  <li>Interface PrayerTimesView avec design soigne</li>
+  <li>Image de fond immersive</li>
+  <li>Donnees partagees entre l'iPhone et la Watch via SharedDataPlugin</li>
+</ul>
+
+<h3>QuraniWidgets (ecran d'accueil iOS)</h3>
+<ul>
+  <li><strong>NextPrayerWidget</strong> : affiche la prochaine priere avec compte a rebours</li>
+  <li><strong>PrayerTimesWidget</strong> : affiche toutes les prieres du jour</li>
+  <li>Icones adaptatives : Light, Dark, Tinted</li>
+  <li>Image de fond immersive</li>
+</ul>
+
+<!-- 6. DESIGN -->
+<h2>6. Design & Direction artistique</h2>
+
+<h3>Philosophie</h3>
+<p>Design minimaliste et immersif inspire par les apps modernes (Behold, Apple Weather). Experience de lecture pure et sans distraction, avec une esthetique soignee qui respecte le contenu sacre.</p>
+
+<h3>Overlay priere (style Behold)</h3>
+<ul>
+  <li>117 photos de fond immersives haute qualite</li>
+  <li>Footer avec QIBLA, bouton X (fermeture), REGLAGES</li>
+  <li>Bouton X : fond semi-transparent rond, trait epais (2.5px), blanc lumineux</li>
+  <li>Horaires en police Space Mono</li>
+  <li>Transitions fluides entre les vues</li>
+</ul>
+
+<h3>Themes visuels</h3>
+<table>
+  <tr><th>Theme</th><th>Description</th></tr>
+  <tr><td>Jour</td><td>Fond clair, texte sombre</td></tr>
+  <tr><td>Sepia</td><td>Fond beige chaud, confort de lecture prolongee</td></tr>
+  <tr><td>Nuit</td><td>Fond sombre, texte clair, reduit la fatigue oculaire</td></tr>
+  <tr><td>Auto</td><td>Detection automatique du mode sombre/clair du systeme iOS</td></tr>
+</table>
+
+<h3>Polices</h3>
+<ul>
+  <li><strong>Space Mono</strong> (Regular + Bold) : overlay priere, numeros</li>
+  <li><strong>NotoNaskhArabic</strong> : texte arabe principal</li>
+  <li><strong>ScheherazadeNew</strong> : texte arabe alternatif</li>
+  <li><strong>-apple-system</strong> : interface generale</li>
+</ul>
+
+<h3>Details UX</h3>
+<ul>
+  <li>Scrollbars masquees sur toute l'app (scroll fluide, barre invisible)</li>
+  <li>Navigation par swipe naturel</li>
+  <li>Splash screen avec detection instantanee du theme (zero flash)</li>
+</ul>
+
+<!-- 7. CONFIDENTIALITE -->
+<div class="page-break"></div>
+<h2>7. Confidentialite & Donnees</h2>
+
+<h3>Politique de confidentialite</h3>
+<p>URL : <code>https://tmshparis.github.io/ayat/privacy.html</code></p>
+
+<h3>Donnees collectees</h3>
+<table>
+  <tr><th>Donnee</th><th>Usage</th><th>Liee a l'identite</th><th>Suivi</th></tr>
+  <tr><td>Adresse e-mail</td><td>Formulaire de contact (fonctionnalite de l'app)</td><td>Oui</td><td>Non</td></tr>
+  <tr><td>Message d'assistance</td><td>Formulaire de contact (fonctionnalite de l'app)</td><td>Oui</td><td>Non</td></tr>
+</table>
+
+<h3>Ce que l'app ne fait PAS</h3>
+<ul>
+  <li>Aucun tracking publicitaire</li>
+  <li>Aucune analyse comportementale</li>
+  <li>Aucun identifiant d'appareil (IDFA)</li>
+  <li>La geolocalisation (Qibla, priere) reste sur l'appareil, jamais envoyee</li>
+  <li>Signets, notes, statistiques : stockes 100% en local</li>
+  <li>Aucun compte utilisateur requis</li>
+  <li>Aucune publicite</li>
+</ul>
+
+<!-- 8. BUILD -->
+<h2>8. Build & Deploiement</h2>
+
+<h3>Workflow</h3>
+<ol>
+  <li>Modifier <code>app.js</code>, <code>style.css</code>, <code>index.html</code></li>
+  <li>Incrementer la version du Service Worker dans <code>sw.js</code></li>
+  <li>Executer <code>npm run cap:sync</code></li>
+  <li>Xcode : scheme "App" > destination "Any iOS Device (arm64)"</li>
+  <li>Product > Archive</li>
+  <li>Distribute App > App Store Connect</li>
+  <li>Sur App Store Connect : associer le build et soumettre</li>
+</ol>
+
+<h3>Configuration</h3>
+<table>
+  <tr><th>Parametre</th><th>Valeur</th></tr>
+  <tr><td>Capacitor</td><td>8.1.0</td></tr>
+  <tr><td>Bundle ID</td><td>com.tmshparis.qurani</td></tr>
+  <tr><td>Version</td><td>3.0 (build 3)</td></tr>
+  <tr><td>Swift tools</td><td>6.0</td></tr>
+  <tr><td>Service Worker</td><td>v152</td></tr>
+  <tr><td>Depot Git</td><td>github.com/TMSHParis/ayat</td></tr>
+</table>
+
+<!-- 9. HISTORIQUE SOUMISSIONS -->
+<h2>9. Historique des soumissions Apple</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="timeline-date">23 Fev 2026</div>
+    <div class="timeline-content">
+      <strong>v1.0 soumise</strong> — Premiere soumission sur l'App Store
+    </div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-date">23 Fev 2026</div>
+    <div class="timeline-content">
+      <strong>v1.0 rejetee</strong> <span class="tag tag-red">Guideline 4.2</span> — Apple estime que l'app n'offre pas assez de fonctionnalites differenciantes par rapport aux apps Coran existantes (Minimum Functionality).
+    </div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-date">25 Fev 2026</div>
+    <div class="timeline-content">
+      <strong>v2.0 soumise</strong> — Build 2.0 avec reponse detaillee a Apple. Nombreuses fonctionnalites ajoutees.
+    </div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-date">Fev 2026</div>
+    <div class="timeline-content">
+      <strong>v2.0 approuvee</strong> <span class="tag tag-green">APPROUVEE</span> — Prete pour la distribution sur l'App Store.
+    </div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-date">3 Mar 2026</div>
+    <div class="timeline-content">
+      <strong>v3.0 soumise</strong> <span class="tag tag-yellow">EN ATTENTE</span> — Mise a jour majeure avec Emotions, Khatm (5 rythmes), Du'a (36+ categories), iPad responsive, Apple Watch, Widgets iOS, 117 images immersives, audio du'a.
+    </div>
+  </div>
+</div>
+
+<br><br>
+<div style="text-align: center; padding: 40px 0; border-top: 2px solid #eee; color: #888; font-size: 13px;">
+  <p><strong>Qurani — by IslamSounnah / TMSH Paris</strong></p>
+  <p>Document genere le 3 mars 2026</p>
+  <p>Developpe par Kamel El Boutaibi</p>
+</div>
+
+</body>
+</html>
