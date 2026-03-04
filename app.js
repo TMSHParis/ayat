@@ -10633,6 +10633,34 @@
     });
 
     // Note button
+    // Play from selected verse button
+    var playFromBtn = $("sp-action-play");
+    if (playFromBtn) playFromBtn.addEventListener("click", function() {
+      if (spCurrentSurahIdx < 0 || !spAudioEl) return;
+      var verseI = spSelectedVerseI >= 0 ? spSelectedVerseI : 0;
+      var bar = $("sp-action-bar");
+      if (bar) bar.classList.add("hidden");
+      spSelectedVerseI = -1;
+      if (spPlaylist.length > 0) {
+        var plIdx = spPlaylistVerseIndices.indexOf(verseI);
+        if (plIdx < 0) plIdx = 0;
+        spPlaylistIdx = plIdx;
+        spAudioEl.src = spPlaylist[plIdx];
+        spCurrentVerseI = verseI;
+      }
+      spAudioEl.play().then(function() {
+        spIsPlaying = true;
+        spUpdatePlayBtn();
+        if (spPlaylist.length > 0 && spPlaylistVerseIndices[spPlaylistIdx] !== undefined) {
+          spSetActiveVerse(spPlaylistVerseIndices[spPlaylistIdx]);
+        }
+      }).catch(function() {
+        spIsPlaying = false;
+        spUpdatePlayBtn();
+        showToast("Audio non disponible");
+      });
+    });
+
     var noteBtn = $("sp-action-note");
     if (noteBtn) noteBtn.addEventListener("click", function() {
       if (spCurrentSurahIdx < 0) return;
