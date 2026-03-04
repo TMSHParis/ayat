@@ -154,23 +154,53 @@
 
   // ---- STATS ----
   var STATS_KEY = "qurani-stats";
+
+  // Count Arabic letters only (exclude tashkeel/diacritics, spaces, non-Arabic)
+  // Based on hadith: each letter = 10 hassanates
+  function countArabicLetters(text) {
+    if (!text) return 0;
+    var count = 0;
+    for (var i = 0; i < text.length; i++) {
+      var c = text.charCodeAt(i);
+      if (c < 0x0620 || c > 0x06FF) continue; // non-Arabic
+      if (c >= 0x064B && c <= 0x065F) continue; // harakat (fatha, kasra, damma, sukun, shadda…)
+      if (c >= 0x0610 && c <= 0x061A) continue; // Quranic signs
+      if (c >= 0x06D6 && c <= 0x06ED) continue; // Quranic ornamental marks
+      if (c >= 0x0660 && c <= 0x0669) continue; // Arabic-Indic digits
+      count++;
+    }
+    return count;
+  }
+
+  // Get letter count for a specific verse
+  function getVerseLetters(surahIdx, ayahIdx) {
+    if (surahs[surahIdx] && surahs[surahIdx].ayahs[ayahIdx]) {
+      return countArabicLetters(surahs[surahIdx].ayahs[ayahIdx]);
+    }
+    return 0;
+  }
+
   function loadStats() {
     try {
       var raw = localStorage.getItem(STATS_KEY);
-      if (!raw) return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0 };
+      if (!raw) return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0, totalHassanates: 0 };
       var s = JSON.parse(raw);
       if (!s.totalReadingSeconds) s.totalReadingSeconds = 0;
+      if (!s.totalHassanates) s.totalHassanates = 0;
       return s;
-    } catch (e) { return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0 }; }
+    } catch (e) { return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0, totalHassanates: 0 }; }
   }
   function saveStats(stats) {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
     if (typeof debouncedSync === "function") debouncedSync();
   }
-  function recordReading(count) {
+  function recordReading(count, letters) {
     var n = count || 1;
     var stats = loadStats();
     stats.totalVersesRead += n;
+    if (letters && letters > 0) {
+      stats.totalHassanates += letters * 10;
+    }
     var today = getLocalDateStr();
     if (stats.readDates.indexOf(today) === -1) {
       stats.readDates.push(today);
@@ -1150,7 +1180,8 @@
     state.todayReadCount++;
     state.lastReadDate = getLocalDateStr();
     saveState();
-    recordReading();
+    var ayah = getAyahByGlobalIndex(newIndex);
+    recordReading(1, ayah ? countArabicLetters(ayah.text) : 0);
     updateBookmarkBtn();
     fadeAndRender();
     showDock();
@@ -1427,6 +1458,12 @@
         }
         khatmsEl.textContent = completed;
       } catch (e) { khatmsEl.textContent = "0"; }
+    }
+    // Hassanates
+    var hassEl = $("stat-hassanates");
+    if (hassEl) {
+      var h = stats.totalHassanates || 0;
+      hassEl.textContent = h.toLocaleString("fr-FR");
     }
   }
 
@@ -6985,6 +7022,7 @@
   var _krHighWaterMark = 0; // highest verse count scrolled past
   var _krLastFlushed = 0; // last flushed count to stats
   var _krStatsTimer = null;
+  var _krPortionLetters = []; // pre-computed letter counts per verse in order
 
   function _krTrackVersesRead(scrolledCount) {
     if (scrolledCount > _krHighWaterMark) {
@@ -6996,7 +7034,12 @@
   function _krFlushVersesRead() {
     var diff = _krHighWaterMark - _krLastFlushed;
     if (diff > 0) {
-      recordReading(diff);
+      // Sum letters for flushed verse range
+      var letters = 0;
+      for (var i = _krLastFlushed; i < _krHighWaterMark && i < _krPortionLetters.length; i++) {
+        letters += _krPortionLetters[i];
+      }
+      recordReading(diff, letters);
       _krLastFlushed = _krHighWaterMark;
     }
   }
@@ -7285,6 +7328,20 @@
     var endSi = portion.endPos.surahIdx;
     var endAi = portion.endPos.ayahIdx;
 
+    // Pre-compute letter counts for each verse in order (for hassanates)
+    _krPortionLetters = [];
+    for (var pi = startSi; pi <= endSi && pi < surahs.length; pi++) {
+      var ps = surahs[pi];
+      if (!ps) continue;
+      var pFrom = (pi === startSi) ? startAi : 0;
+      var pTo = (pi === endSi) ? endAi : ps.ayahs.length;
+      if (endAi === 0 && pi === endSi && pi !== startSi) break;
+      if (endAi === 0 && pi === endSi && pi === startSi) break;
+      for (var pa = pFrom; pa < pTo; pa++) {
+        _krPortionLetters.push(countArabicLetters(ps.ayahs[pa] || ""));
+      }
+    }
+
     // Handle case where portion spans from startSi to endSi
     for (var si = startSi; si <= endSi && si < surahs.length; si++) {
       var s = surahs[si];
@@ -7333,7 +7390,14 @@
     clearTimeout(_krStatsTimer);
     var totalForDay = portion.versesForToday || 0;
     var remaining = totalForDay - _krHighWaterMark;
-    if (remaining > 0) recordReading(remaining);
+    if (remaining > 0) {
+      // Sum letters for remaining verses
+      var remLetters = 0;
+      for (var ri = _krHighWaterMark; ri < totalForDay && ri < _krPortionLetters.length; ri++) {
+        remLetters += _krPortionLetters[ri];
+      }
+      recordReading(remaining, remLetters);
+    }
 
     // ✅ Save state IMMEDIATELY — advance to end of daily portion
     if (portion.finished) {
@@ -8325,7 +8389,8 @@
     // Count verse as read when highlighted by audio (dedup by verse index)
     if (verseI >= 0 && verseI !== _spLastCountedVerse) {
       _spLastCountedVerse = verseI;
-      recordReading();
+      var letters = getVerseLetters(spCurrentSurahIdx, verseI);
+      recordReading(1, letters);
     }
     var verses = document.querySelectorAll("#sp-reader-content .sp-verse");
     verses.forEach(function(el) {
@@ -8522,8 +8587,14 @@
     _spScrollCountTimer = setTimeout(function() {
       var visI = spGetVisibleVerse();
       if (visI >= 0 && visI > _spHighWaterVerse) {
-        var diff = _spHighWaterVerse < 0 ? 1 : (visI - _spHighWaterVerse);
-        recordReading(diff);
+        var fromI = _spHighWaterVerse < 0 ? visI : (_spHighWaterVerse + 1);
+        var diff = visI - (_spHighWaterVerse < 0 ? visI - 1 : _spHighWaterVerse);
+        // Sum letters for all verses in range
+        var totalLetters = 0;
+        for (var vi = fromI; vi <= visI; vi++) {
+          totalLetters += getVerseLetters(spCurrentSurahIdx, vi);
+        }
+        recordReading(diff, totalLetters);
         _spHighWaterVerse = visI;
       }
     }, 800); // debounce 800ms — count when user pauses scrolling
