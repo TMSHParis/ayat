@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v275";
+const CACHE_NAME = "qurani-v279";
 
 const PRECACHE = [
   "./",
@@ -53,6 +53,15 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Firebase & Google auth: always network, never cache
+  const url = new URL(e.request.url);
+  if (url.hostname.includes("firebase") ||
+      url.hostname.includes("googleapis") ||
+      url.hostname.includes("gstatic") ||
+      url.hostname.includes("firestore")) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
