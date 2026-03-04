@@ -6609,9 +6609,29 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 #shazam-overlay .shazam-topbar { position: absolute; z-index: 3; }
 #shazam-overlay .shazam-body { position: relative; z-index: 2; }
 #stats-overlay.moi-cat-overlay {
-  background: linear-gradient(165deg, #1a2030 0%, #161c28 30%, #101620 60%, #0c1018 100%) !important;
+  background-color: #1a1a1a !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
   z-index: 310;
 }
+#stats-overlay.moi-cat-overlay::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: rgba(0,0,0,0.55);
+}
+#stats-overlay.moi-cat-overlay::after {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(
+    105deg, transparent 0%, transparent 35%,
+    rgba(255,230,160,0.15) 42%, rgba(255,230,160,0.22) 50%,
+    rgba(255,230,160,0.1) 58%, transparent 65%, transparent 100%
+  );
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  animation: prayer-sun-sweep 7s ease-in-out 0.3s infinite;
+}
+#stats-overlay .moi-cat-scroll { position: relative; z-index: 1; }
+#stats-overlay .moi-cat-title { text-shadow: 0 1px 8px rgba(0,0,0,0.4); }
 
 /* Content typography within gradient overlays */
 .moi-cat-body p {
@@ -6777,16 +6797,17 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 
 /* Stat cards within gradient overlay */
 .moi-cat-body .stat-card {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-color: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.12);
 }
 .moi-cat-body .stat-value {
-  color: rgba(255,255,255,0.85);
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.3);
 }
 .moi-cat-body .stat-label {
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.55);
 }
 
 /* Reciter select within gradient overlay */

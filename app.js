@@ -10580,10 +10580,22 @@
   // ================================================================
   //  STATS OVERLAY
   // ================================================================
+  var _lastStatsBg = -1;
   function openStatsOverlay() {
     renderStats();
     var ov = $("stats-overlay");
-    if (ov) ov.classList.remove("hidden");
+    if (ov) {
+      // Random background image (same pool as prayer)
+      var imgs = PRAYER_BG_IMAGES;
+      var idx;
+      do { idx = Math.floor(Math.random() * imgs.length); }
+      while (idx === _lastStatsBg && imgs.length > 1);
+      _lastStatsBg = idx;
+      var num = imgs[idx];
+      var ext = [20, 36, 40, 64].indexOf(num) >= 0 ? "png" : "jpg";
+      ov.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
+      ov.classList.remove("hidden");
+    }
   }
 
   // ================================================================
@@ -10852,7 +10864,7 @@
     try {
       firebase.initializeApp({
         apiKey: "AIzaSyDk8bHjmkjqhOUf0SvHl_jRq5sDlb3OMpw",
-        authDomain: "qurani-28307.firebaseapp.com",
+        authDomain: "ayat-theta.vercel.app",
         projectId: "qurani-28307",
         storageBucket: "qurani-28307.firebasestorage.app",
         messagingSenderId: "76374898417",
@@ -10933,12 +10945,7 @@
   function signInWithGoogle() {
     if (!auth) return;
     var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(function(result) {
-      closeAuthOverlay();
-    }).catch(function(err) {
-      console.error("Google sign-in error:", err);
-      showToast("Erreur : " + err.message);
-    });
+    auth.signInWithRedirect(provider);
   }
 
   function signInWithApple() {
@@ -10946,12 +10953,7 @@
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    auth.signInWithPopup(provider).then(function(result) {
-      closeAuthOverlay();
-    }).catch(function(err) {
-      console.error("Apple sign-in error:", err);
-      showToast("Erreur : " + err.message);
-    });
+    auth.signInWithRedirect(provider);
   }
 
   function signOutUser() {

@@ -16,6 +16,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/__/auth/:path*", "destination": "https://qurani-28307.firebaseapp.com/__/auth/:path*" },
     { "source": "/api/geocode/:path*", "destination": "/api/geocode" },
     { "source": "/api/mawaqit/:path*", "destination": "/api/mawaqit" },
     { "source": "/api/aladhan/:path*", "destination": "/api/aladhan" }
