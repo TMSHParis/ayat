@@ -3304,6 +3304,24 @@ body[data-theme="sepia"] .audio-glow {
   background: rgba(255,255,255,0.1);
   margin: 40px 0;
 }
+.dash-khatm-progress-line {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 40px 0;
+  position: relative;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.dash-khatm-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #c9a84c, #e8c96a);
+  border-radius: 1px;
+  width: 0%;
+  transition: width 1.2s ease;
+}
 
 /* ---- Reading / Khatm card ---- */
 .dash-verse-section {

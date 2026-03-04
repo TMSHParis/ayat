@@ -3072,11 +3072,15 @@
     var thumbEl = $("dash-khatm-thumb");
     if (!subEl) return;
     var p = getKhatmProgress();
+    var progressFill = $("dash-khatm-progress-fill");
     if (p) {
       if (labelEl) labelEl.textContent = "KHATM EN COURS";
       if (titleEl) titleEl.textContent = p.translit + " · " + p.ayahNum;
       if (thumbEl) thumbEl.style.backgroundImage = "url(" + getSurahImg(p.surahNum) + ")";
       subEl.textContent = p.pct + "% · " + p.remaining + " JOUR" + (p.remaining !== 1 ? "S" : "") + " REST.";
+      if (progressFill) {
+        setTimeout(function() { progressFill.style.width = Math.max(p.pct, 0.5) + "%"; }, 100);
+      }
     } else {
       if (labelEl) labelEl.textContent = "MON KHATM";
       if (titleEl) titleEl.textContent = "Commencer mon Khatm";
@@ -3086,6 +3090,7 @@
         thumbEl.style.backgroundImage = "url(img/prayer/" + rIdx + "." + rExt + ")";
       }
       subEl.textContent = "Lire le Coran en 30 ou 60 jours";
+      if (progressFill) progressFill.style.width = "0%";
     }
   }
 
