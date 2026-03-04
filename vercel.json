@@ -6,5 +6,18 @@
     "api/*.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(index.html|app.js|style.css|sw.js)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/geocode/:path*", "destination": "/api/geocode" },
+    { "source": "/api/mawaqit/:path*", "destination": "/api/mawaqit" },
+    { "source": "/api/aladhan/:path*", "destination": "/api/aladhan" }
+  ]
 }
