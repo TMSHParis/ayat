@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v279";
+const CACHE_NAME = "qurani-v280";
 
 const PRECACHE = [
   "./",
@@ -53,8 +53,9 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  // Firebase & Google auth: always network, never cache
   const url = new URL(e.request.url);
+
+  // Firebase & Google auth: always network, never cache
   if (url.hostname.includes("firebase") ||
       url.hostname.includes("googleapis") ||
       url.hostname.includes("gstatic") ||
@@ -62,6 +63,29 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(fetch(e.request));
     return;
   }
+
+  // Network-first pour les fichiers critiques (index.html, app.js, style.css, sw.js)
+  // → l'app iOS reçoit toujours la dernière version dès que le réseau est disponible
+  const isCritical = url.pathname === "/" ||
+    url.pathname.endsWith("index.html") ||
+    url.pathname.endsWith("app.js") ||
+    url.pathname.endsWith("style.css");
+  if (isCritical) {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        if (res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then((cached) => {
+        return cached || caches.match("./index.html");
+      }))
+    );
+    return;
+  }
+
+  // Cache-first pour les assets lourds (fonts, images, JSON)
   e.respondWith(
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
@@ -73,10 +97,7 @@ self.addEventListener("fetch", (e) => {
           }
           return res;
         })
-        .catch(() => {
-          if (e.request.mode === "navigate") return caches.match("./index.html");
-          return new Response("Offline", { status: 503 });
-        });
+        .catch(() => new Response("Offline", { status: 503 }));
     })
   );
 });
