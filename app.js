@@ -157,9 +157,11 @@
   function loadStats() {
     try {
       var raw = localStorage.getItem(STATS_KEY);
-      if (!raw) return { totalVersesRead: 0, readDates: [], streak: 0 };
-      return JSON.parse(raw);
-    } catch (e) { return { totalVersesRead: 0, readDates: [], streak: 0 }; }
+      if (!raw) return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0 };
+      var s = JSON.parse(raw);
+      if (!s.totalReadingSeconds) s.totalReadingSeconds = 0;
+      return s;
+    } catch (e) { return { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0 }; }
   }
   function saveStats(stats) {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
@@ -203,6 +205,23 @@
       }
     }
     return streak;
+  }
+
+  // ---- READING TIME TRACKER ----
+  var _readingStartTs = 0;
+  function startReadingTimer() {
+    if (!_readingStartTs) _readingStartTs = Date.now();
+  }
+  function stopReadingTimer() {
+    if (_readingStartTs) {
+      var elapsed = Math.round((Date.now() - _readingStartTs) / 1000);
+      _readingStartTs = 0;
+      if (elapsed > 2 && elapsed < 7200) {
+        var stats = loadStats();
+        stats.totalReadingSeconds += elapsed;
+        saveStats(stats);
+      }
+    }
   }
 
   // ---- NOTES ----
@@ -1379,14 +1398,34 @@
 
   function renderStats() {
     var stats = loadStats();
-    $("stat-streak").textContent = stats.streak || 0;
-    $("stat-total-verses").textContent = stats.totalVersesRead || 0;
-    $("stat-khatmas").textContent = state ? state.cycleCount : 0;
-    if (state && state.startDate) {
-      var parts = state.startDate.split("-");
-      $("stat-start-date").textContent = parts[2] + "/" + parts[1] + "/" + parts[0];
-    } else {
-      $("stat-start-date").textContent = "—";
+    var streakEl = $("stat-streak");
+    if (streakEl) streakEl.textContent = stats.streak || 0;
+    var versesEl = $("stat-total-verses");
+    if (versesEl) versesEl.textContent = (stats.totalVersesRead || 0).toLocaleString("fr-FR");
+    // Reading time
+    var timeEl = $("stat-reading-time");
+    if (timeEl) {
+      var totalSec = stats.totalReadingSeconds || 0;
+      if (totalSec < 60) timeEl.textContent = "< 1 min";
+      else if (totalSec < 3600) timeEl.textContent = Math.floor(totalSec / 60) + " min";
+      else {
+        var h = Math.floor(totalSec / 3600);
+        var m = Math.floor((totalSec % 3600) / 60);
+        timeEl.textContent = h + "h " + (m > 0 ? m + "m" : "");
+      }
+    }
+    // Khatms completed
+    var khatmsEl = $("stat-khatmas");
+    if (khatmsEl) {
+      try {
+        var raw = localStorage.getItem(KHATM_HISTORY_KEY);
+        var hist = raw ? JSON.parse(raw) : [];
+        var completed = 0;
+        for (var i = 0; i < hist.length; i++) {
+          if (hist[i].type === "complete") completed++;
+        }
+        khatmsEl.textContent = completed;
+      } catch (e) { khatmsEl.textContent = "0"; }
     }
   }
 
@@ -6947,6 +6986,7 @@
     loadKhatm(); // refresh from storage
     var overlay = $("khatm-reader");
     overlay.classList.remove("hidden");
+    startReadingTimer();
     krScrollEl = $("kr-scroll");
     krScrollEl.innerHTML = "";
     krScrollEl.scrollTop = 0; // Reset scroll position from previous session
@@ -7412,6 +7452,7 @@
   }
 
   function closeKhatmReader() {
+    stopReadingTimer();
     stopKrAudio();
     clearTimeout(krScrollTimer); // Cancel any pending debounced save
     if (!krCompleting) saveKrProgress(); // Don't overwrite state if COMPLÉTER is in progress
@@ -8333,14 +8374,15 @@
       spIsPlaying = false;
       spUpdatePlayBtn();
     } else {
-      // If verse-by-verse and haven't started yet, jump to visible verse
-      if (spPlaylist.length > 0 && spCurrentVerseI < 0) {
+      // Always detect visible verse and jump to it (like Khatm)
+      if (spPlaylist.length > 0) {
         var visI = spGetVisibleVerse();
-        if (visI >= 0) {
+        if (visI >= 0 && visI !== spCurrentVerseI) {
           var plIdx = spPlaylistVerseIndices.indexOf(visI);
           if (plIdx >= 0) {
             spPlaylistIdx = plIdx;
             spAudioEl.src = spPlaylist[plIdx];
+            spCurrentVerseI = visI;
           }
         }
       }
@@ -8427,6 +8469,7 @@
     spLoadSurah(surahIdx);
     spSwitchPage(0);
     overlay.classList.remove("hidden");
+    startReadingTimer();
     // Update lang opts display
     spRefreshLangOpts();
     updateSpmModeDisplay();
@@ -8440,6 +8483,7 @@
     var menu = $("surah-player-menu");
     if (menu) menu.classList.add("hidden");
     overlay.classList.add("hidden");
+    stopReadingTimer();
     // Show mini player if audio is playing
     if (spIsPlaying) spShowMiniPlayer();
   }
@@ -10228,6 +10272,14 @@
       openMoiKhatmsOverlay();
     });
 
+    // Statistiques
+    var moiStats = $("moi-stats");
+    if (moiStats) moiStats.addEventListener("click", openStatsOverlay);
+    var statsClose = $("stats-close");
+    if (statsClose) statsClose.addEventListener("click", function() {
+      $("stats-overlay").classList.add("hidden");
+    });
+
     // Vidéos → open videos overlay
     var moiVideos = $("moi-videos");
     if (moiVideos) moiVideos.addEventListener("click", function() {
@@ -10523,6 +10575,15 @@
 
       list.appendChild(item);
     });
+  }
+
+  // ================================================================
+  //  STATS OVERLAY
+  // ================================================================
+  function openStatsOverlay() {
+    renderStats();
+    var ov = $("stats-overlay");
+    if (ov) ov.classList.remove("hidden");
   }
 
   // ================================================================
@@ -10872,15 +10933,12 @@
   function signInWithGoogle() {
     if (!auth) return;
     var provider = new firebase.auth.GoogleAuthProvider();
-    if (_isNativeApp()) {
-      auth.signInWithRedirect(provider).catch(function(err) {
-        showToast("Erreur : " + err.message);
-      });
-    } else {
-      auth.signInWithPopup(provider).catch(function(err) {
-        showToast("Erreur : " + err.message);
-      });
-    }
+    auth.signInWithPopup(provider).then(function(result) {
+      closeAuthOverlay();
+    }).catch(function(err) {
+      console.error("Google sign-in error:", err);
+      showToast("Erreur : " + err.message);
+    });
   }
 
   function signInWithApple() {
@@ -10888,15 +10946,12 @@
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    if (_isNativeApp()) {
-      auth.signInWithRedirect(provider).catch(function(err) {
-        showToast("Erreur : " + err.message);
-      });
-    } else {
-      auth.signInWithPopup(provider).catch(function(err) {
-        showToast("Erreur : " + err.message);
-      });
-    }
+    auth.signInWithPopup(provider).then(function(result) {
+      closeAuthOverlay();
+    }).catch(function(err) {
+      console.error("Apple sign-in error:", err);
+      showToast("Erreur : " + err.message);
+    });
   }
 
   function signOutUser() {
