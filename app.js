@@ -167,9 +167,10 @@
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
     if (typeof debouncedSync === "function") debouncedSync();
   }
-  function recordReading() {
+  function recordReading(count) {
+    var n = count || 1;
     var stats = loadStats();
-    stats.totalVersesRead++;
+    stats.totalVersesRead += n;
     var today = getLocalDateStr();
     if (stats.readDates.indexOf(today) === -1) {
       stats.readDates.push(today);
@@ -7294,6 +7295,10 @@
     clearTimeout(krScrollTimer);
     krCompleting = true; // Block saveKrProgress from overwriting state
 
+    // Record all verses in this daily portion as read
+    var versesToCount = portion.versesForToday || 0;
+    if (versesToCount > 0) recordReading(versesToCount);
+
     // ✅ Save state IMMEDIATELY — advance to end of daily portion
     if (portion.finished) {
       khatm.surahIdx = 0;
@@ -8274,8 +8279,14 @@
     if (hdrBtn) hdrBtn.classList.toggle("sp-playing", spIsPlaying);
   }
 
+  var _spLastCountedVerse = -1;
   function spSetActiveVerse(verseI) {
     spCurrentVerseI = verseI;
+    // Count verse as read when it becomes active during playback (avoid duplicates)
+    if (spIsPlaying && verseI >= 0 && verseI !== _spLastCountedVerse) {
+      _spLastCountedVerse = verseI;
+      recordReading();
+    }
     var verses = document.querySelectorAll("#sp-reader-content .sp-verse");
     verses.forEach(function(el) {
       el.classList.remove("sp-verse-active");
@@ -8466,6 +8477,7 @@
     var overlay = $("surah-player");
     if (!overlay) return;
     spCurrentSurahIdx = surahIdx;
+    _spLastCountedVerse = -1; // Reset verse counter for new surah
     spLoadSurah(surahIdx);
     spSwitchPage(0);
     overlay.classList.remove("hidden");
