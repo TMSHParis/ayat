@@ -7046,6 +7046,17 @@
           if (target) {
             krScrollEl.scrollTop = Math.max(0, target.offsetTop - 10);
           }
+          // Set high water mark to already-read verses so they aren't re-counted
+          var verses = krScrollEl.querySelectorAll(".kr-verse");
+          var containerRect = krScrollEl.getBoundingClientRect();
+          var visibleTop = containerRect.top + 20;
+          var alreadyRead = 0;
+          for (var vi = 0; vi < verses.length; vi++) {
+            if (verses[vi].getBoundingClientRect().bottom < visibleTop) alreadyRead++;
+            else break;
+          }
+          _krHighWaterMark = alreadyRead;
+          _krLastFlushed = alreadyRead;
         }
         krScrollEl.addEventListener("scroll", onKrScroll);
         setupKrObserver();
