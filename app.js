@@ -210,6 +210,10 @@
     // Calculate streak
     stats.streak = computeStreak(stats.readDates);
     saveStats(stats);
+    // Refresh dashboard stats if visible
+    if (typeof updateDashStats === "function") {
+      try { updateDashStats(); } catch(e) {}
+    }
   }
   function computeStreak(dates) {
     if (!dates || dates.length === 0) return 0;
@@ -1170,6 +1174,7 @@
 
   // ---- NAVIGATION ----
   function goNext() {
+    startReadingTimer(); // Track reading time for swipe reader
     if (isAudioPlaying && !audioAutoNext) stopAudio();
     if (freeReadMode) { goNextFreeRead(); showDock(); return; }
     var newIndex = state.globalIndex + 1;
@@ -1188,6 +1193,7 @@
   }
 
   function goPrev() {
+    startReadingTimer(); // Track reading time for swipe reader
     stopAudio();
     if (freeReadMode) { goPrevFreeRead(); showDock(); return; }
     if (state.globalIndex <= 0) return;
@@ -2875,6 +2881,7 @@
         };
         renderDashPrayer();
         startDashPrayerCountdown();
+        savePrayerTimesToBridge(); // sync Watch + widgets dès le démarrage
       } catch (e) { /* silent */ }
       return;
     }
@@ -2893,6 +2900,7 @@
           };
           renderDashPrayer();
           startDashPrayerCountdown();
+          savePrayerTimesToBridge(); // sync Watch + widgets dès le démarrage
         }).catch(function() {});
       }
       return;
@@ -2905,6 +2913,7 @@
       prayerTimesCache = data.data.timings;
       renderDashPrayer();
       startDashPrayerCountdown();
+      savePrayerTimesToBridge(); // sync Watch + widgets dès le démarrage
     }).catch(function() {});
   }
 
@@ -3094,12 +3103,46 @@
     }
   }
 
+  function updateDashStats() {
+    var stats = loadStats();
+    var versesEl = $("dash-stat-verses");
+    var hassEl = $("dash-stat-hassanates");
+    if (versesEl) versesEl.textContent = (stats.totalVersesRead || 0).toLocaleString("fr-FR");
+    if (hassEl) hassEl.textContent = (stats.totalHassanates || 0).toLocaleString("fr-FR");
+    // Stats progress bar — shows total Quran letters read as percentage (total Quran ≈ 330,733 letters → 3,307,330 hassanates)
+    var progressEl = $("dash-stats-progress-fill");
+    if (progressEl) {
+      var totalQuranLetters = 330733;
+      var lettersRead = Math.floor((stats.totalHassanates || 0) / 10);
+      var pct = Math.min((lettersRead / totalQuranLetters) * 100, 100);
+      setTimeout(function() { progressEl.style.width = Math.max(pct, 0) + "%"; }, 200);
+    }
+    // Click to open full stats overlay
+    var section = $("dash-stats-section");
+    if (section && !section._dashStatsBound) {
+      section._dashStatsBound = true;
+      section.addEventListener("click", function() {
+        openStatsOverlay();
+      });
+    }
+  }
+
+  function setDashBg() {
+    var dashBg = document.getElementById("dash-bg");
+    if (!dashBg || !PRAYER_BG_IMAGES || !PRAYER_BG_IMAGES.length) return;
+    var num = PRAYER_BG_IMAGES[Math.floor(Math.random() * PRAYER_BG_IMAGES.length)];
+    var ext = [20, 36, 40, 64].indexOf(num) >= 0 ? "png" : "jpg";
+    dashBg.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
+  }
+
   function initDashboardCards() {
     var labelEl = $("dash-card-label");
     if (labelEl) {
       labelEl.textContent = _isDashMorning() ? "INVOCATIONS DU MATIN" : "INVOCATIONS DU SOIR";
     }
+    setDashBg();
     updateDashKhatmCard();
+    updateDashStats();
   }
 
   // ---- TAB BAR SWITCHING ----
@@ -3116,6 +3159,8 @@
           $("video-iframe-state").innerHTML = "";
           vidOverlay.classList.add("hidden");
         }
+        // Stop reading timer when leaving any reading context
+        stopReadingTimer();
         btns.forEach(function (b) { b.classList.remove("active"); });
         btn.classList.add("active");
         document.querySelectorAll(".tab-panel").forEach(function (p) {
@@ -3123,6 +3168,10 @@
         });
         var panel = $("tab-" + tab);
         if (panel) panel.classList.remove("hidden");
+        // Rafraîchir le fond flouté de l'accueil à chaque visite
+        if (tab === "accueil") {
+          setDashBg();
+        }
         // Rafraîchir l'image du hero Invocations à chaque visite
         if (tab === "invocation") {
           var heroBg = document.getElementById("dua-hero-bg");
@@ -6750,7 +6799,7 @@
         if (daysEl && khatm.goalDays) {
           var p2 = getKhatmProgress();
           var left = p2 ? Math.max(0, Math.round(khatm.goalDays * (1 - p2.pct / 100))) : khatm.goalDays;
-          daysEl.textContent = left + " jour" + (left !== 1 ? "s" : "") + " jusqu'au khatm";
+          daysEl.innerHTML = '<span class="kh-days-num">' + left + '</span><span class="kh-days-label">JOUR' + (left !== 1 ? 'S' : '') + ' JUSQU\u2019AU KHATM</span>';
         }
         if (activeHeader) activeHeader.classList.remove("hidden");
         if (noKhatm) noKhatm.classList.add("hidden");
@@ -7025,6 +7074,7 @@
   var krObserver = null;
   var krCompleting = false; // Guard flag: prevents saveKrProgress from overwriting state during COMPLÉTER
   var _krHighWaterMark = 0; // highest verse count scrolled past
+  var _krResumeTarget = null; // {si, ai} — resume scroll target for rerenderKrReader race condition
   var _krLastFlushed = 0; // last flushed count to stats
   var _krStatsTimer = null;
   var _krPortionLetters = []; // pre-computed letter counts per verse in order
@@ -7057,6 +7107,7 @@
     // Reset verse counting for this session
     _krHighWaterMark = 0;
     _krLastFlushed = 0;
+    _krResumeTarget = null;
     clearTimeout(_krStatsTimer);
     krScrollEl = $("kr-scroll");
     krScrollEl.innerHTML = "";
@@ -7069,6 +7120,12 @@
     if (krDailyPortion) {
       var startPos = krDailyPortion.startPos;
       krCurrentSurahIdx = startPos.surahIdx;
+
+      // Pre-set resume target for rerenderKrReader race condition
+      // (tajwid fetch may complete before the 80ms scroll timeout)
+      if (khatm.surahIdx !== startPos.surahIdx || khatm.ayahIdx !== startPos.ayahIdx) {
+        _krResumeTarget = { si: khatm.surahIdx, ai: khatm.ayahIdx, off: khatm.scrollOffset || 0 };
+      }
 
       updateKrHeader(startPos.surahIdx);
       updateKrBg(startPos.surahIdx);
@@ -7092,7 +7149,9 @@
             "[data-si=\"" + curSi + "\"][data-ai=\"" + curAi + "\"]"
           );
           if (target) {
-            krScrollEl.scrollTop = Math.max(0, target.offsetTop - 10);
+            // Use saved pixel offset for precise restore (falls back to 0 = verse at top)
+            var savedOff = typeof khatm.scrollOffset === "number" ? khatm.scrollOffset : 0;
+            krScrollEl.scrollTop = Math.max(0, target.offsetTop - savedOff);
           }
           // Set high water mark to already-read verses so they aren't re-counted
           var verses = krScrollEl.querySelectorAll(".kr-verse");
@@ -7455,6 +7514,8 @@
   }
 
   function onKrScroll() {
+    // Clear resume target once user has started scrolling (initial scroll done)
+    _krResumeTarget = null;
     // Update header + background based on topmost visible section
     updateKrCurrentSection();
     // Update progress bar live while scrolling
@@ -7529,37 +7590,41 @@
 
   function saveKrProgress() {
     if (krCompleting) return; // Don't overwrite state during COMPLÉTER flow
+    if (_krResumeTarget) return; // Don't save during initial scroll restore (race condition guard)
     if (!khatm || !khatm.active) return;
     var overlay = $("khatm-reader");
     if (!overlay || overlay.classList.contains("hidden")) return; // Don't save if reader closed
     var verses = krScrollEl ? krScrollEl.querySelectorAll(".kr-verse") : [];
     if (!verses.length) return;
-    // Use getBoundingClientRect for accurate verse detection
-    // Find the first verse that is visible in the viewport (top edge above container midpoint)
+    // Use getBoundingClientRect for robust verse detection across all font sizes & languages.
+    // Find the first verse whose TOP edge is within 20px above the container's top edge.
     var containerRect = krScrollEl.getBoundingClientRect();
-    var visibleTop = containerRect.top + 20; // small 20px margin inside scroll area
+    var threshold = containerRect.top - 20;
     var foundSi = khatm.surahIdx;
     var foundAi = khatm.ayahIdx;
+    var foundOffset = 0;
     var found = false;
     for (var i = 0; i < verses.length; i++) {
       var rect = verses[i].getBoundingClientRect();
-      // First verse whose bottom is below the visible top = first visible verse
-      if (rect.bottom > visibleTop) {
+      if (rect.top >= threshold) {
         foundSi = parseInt(verses[i].dataset.si, 10);
         foundAi = parseInt(verses[i].dataset.ai, 10);
+        // Save precise pixel offset: how far the verse top is from the scroll viewport top
+        // Positive = verse top below viewport top, negative = verse top above (partially scrolled off)
+        foundOffset = verses[i].offsetTop - krScrollEl.scrollTop;
         found = true;
         break;
       }
     }
     if (!found) {
-      // Fallback: last verse if all are above viewport (scrolled to bottom)
       var last = verses[verses.length - 1];
       foundSi = parseInt(last.dataset.si, 10);
       foundAi = parseInt(last.dataset.ai, 10);
+      foundOffset = 0;
     }
-    // Save actual reading position (no forward-only ratchet — prevents verse skip from scroll momentum)
     khatm.surahIdx = foundSi;
     khatm.ayahIdx = foundAi;
+    khatm.scrollOffset = foundOffset; // precise pixel offset for exact restore
     saveKhatm();
   }
 
@@ -7707,13 +7772,23 @@
     // Save current scroll position to restore after re-render
     var savedSurahIdx = krCurrentSurahIdx;
     var savedAyahIdx = 0;
-    if (krScrollEl) {
+    var savedOffset = 0;
+
+    // If we have a resume target (set by openKhatmReader), use it instead of
+    // scanning the DOM — fixes race condition where rerenderKrReader fires
+    // before the initial scroll timeout and saves scrollTop=0 as the position.
+    if (_krResumeTarget) {
+      savedSurahIdx = _krResumeTarget.si;
+      savedAyahIdx = _krResumeTarget.ai;
+      savedOffset = _krResumeTarget.off || 0;
+    } else if (krScrollEl) {
       var verses = krScrollEl.querySelectorAll(".kr-verse");
       var st = krScrollEl.scrollTop + 130;
       for (var i = 0; i < verses.length; i++) {
         if (verses[i].offsetTop <= st) {
           savedSurahIdx = parseInt(verses[i].dataset.si, 10);
           savedAyahIdx = parseInt(verses[i].dataset.ai, 10);
+          savedOffset = verses[i].offsetTop - krScrollEl.scrollTop;
         } else break;
       }
     }
@@ -7732,13 +7807,13 @@
     }
     setupKrObserver();
 
-    // Restore scroll to saved verse
+    // Restore scroll to saved verse with precise pixel offset
     setTimeout(function() {
       var target = krScrollEl.querySelector(
         "[data-si=\"" + savedSurahIdx + "\"][data-ai=\"" + savedAyahIdx + "\"]"
       );
       if (target) {
-        krScrollEl.scrollTop = Math.max(0, target.offsetTop - 10);
+        krScrollEl.scrollTop = Math.max(0, target.offsetTop - savedOffset);
       }
     }, 50);
   }
@@ -7852,7 +7927,7 @@
         saveBookmarks(bms);
         showToast("Favori retiré");
       } else {
-        bms.push({ key: key, surah: num, ayah: ayahNum, ts: Date.now() });
+        bms.push({ key: key, surahNumber: num, ayahNumber: ayahNum, surahNameFr: s.surahNameFr || "", text: "", date: getLocalDateStr() });
         saveBookmarks(bms);
         showToast("Ajouté aux favoris");
       }
@@ -7884,7 +7959,7 @@
         for (var j = 0; j < notes.length; j++) {
           if (notes[j].key === key) { notes[j].text = input; notes[j].ts = Date.now(); found = true; break; }
         }
-        if (!found) notes.push({ key: key, surah: num, ayah: ayahNum, text: input, ts: Date.now() });
+        if (!found) notes.push({ key: key, surahNumber: num, surahNameFr: s.surahNameFr || "", ayahNumber: ayahNum, text: input, date: getLocalDateStr(), ts: Date.now() });
         saveNotes(notes);
         showToast("Note enregistrée");
       }
@@ -9663,7 +9738,10 @@
     initOneSignal();
 
     document.addEventListener("visibilitychange", function () {
-      if (!document.hidden) {
+      if (document.hidden) {
+        // Stop reading timer when app goes to background
+        stopReadingTimer();
+      } else {
         var today = getLocalDateStr();
         if (state.lastReadDate !== today) {
           state.todayReadCount = 0;
@@ -11095,16 +11173,47 @@
 
   function signInWithGoogle() {
     if (!auth) return;
+    var btn = $("auth-google-btn");
+    var originalHTML = btn ? btn.innerHTML : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Connexion..."; }
     var provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider);
+    // Use signInWithPopup with same-origin authDomain (ayat-theta.vercel.app)
+    // This avoids WKWebView storage partitioning issues in Capacitor
+    auth.signInWithPopup(provider).then(function(result) {
+      currentUser = result.user;
+      closeAuthOverlay();
+      updateAuthUI();
+      syncFromCloud();
+    }).catch(function(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+      if (err.code === "auth/popup-closed-by-user") return;
+      if (err.code === "auth/cancelled-popup-request") return;
+      console.error("Google sign-in error:", err.code, err.message);
+      showToast("Erreur : " + (err.message || err.code));
+    });
   }
 
   function signInWithApple() {
     if (!auth) return;
+    var btn = $("auth-apple-btn");
+    var originalHTML = btn ? btn.innerHTML : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Connexion..."; }
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    auth.signInWithRedirect(provider);
+    // Use signInWithPopup with same-origin authDomain (ayat-theta.vercel.app)
+    auth.signInWithPopup(provider).then(function(result) {
+      currentUser = result.user;
+      closeAuthOverlay();
+      updateAuthUI();
+      syncFromCloud();
+    }).catch(function(err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+      if (err.code === "auth/popup-closed-by-user") return;
+      if (err.code === "auth/cancelled-popup-request") return;
+      console.error("Apple sign-in error:", err.code, err.message);
+      showToast("Erreur : " + (err.message || err.code));
+    });
   }
 
   function signOutUser() {
@@ -11222,10 +11331,11 @@
       }
     }
 
-    // bookmarks: merge by key
+    // bookmarks: merge by key (normalize property names from old format)
     if (cloud.bookmarks) {
       var localBms = loadBookmarks();
-      var merged = mergeArraysByKey(localBms, cloud.bookmarks, "key");
+      cloud.bookmarks = cloud.bookmarks.map(normalizeBookmarkOrNote);
+      var merged = mergeArraysByKey(localBms.map(normalizeBookmarkOrNote), cloud.bookmarks, "key");
       saveBookmarks(merged);
     }
 
@@ -11236,21 +11346,25 @@
       saveFolders(mergedFolders);
     }
 
-    // stats: merge taking max values and union of dates
+    // stats: merge taking max values, union of dates, recalculate streak
     if (cloud.stats) {
       var localStats = loadStats();
+      var mergedDates = mergeReadDates(localStats.readDates || [], cloud.stats.readDates || []);
       var mergedStats = {
         totalVersesRead: Math.max(localStats.totalVersesRead || 0, cloud.stats.totalVersesRead || 0),
-        streak: Math.max(localStats.streak || 0, cloud.stats.streak || 0),
-        readDates: mergeReadDates(localStats.readDates || [], cloud.stats.readDates || [])
+        totalHassanates: Math.max(localStats.totalHassanates || 0, cloud.stats.totalHassanates || 0),
+        totalReadingSeconds: Math.max(localStats.totalReadingSeconds || 0, cloud.stats.totalReadingSeconds || 0),
+        readDates: mergedDates,
+        streak: computeStreak(mergedDates)
       };
       saveStats(mergedStats);
     }
 
-    // notes: merge by key
+    // notes: merge by key (normalize property names from old format)
     if (cloud.notes) {
       var localNotes = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
-      var mergedNotes = mergeArraysByKey(localNotes, cloud.notes, "key");
+      cloud.notes = cloud.notes.map(normalizeBookmarkOrNote);
+      var mergedNotes = mergeArraysByKey(localNotes.map(normalizeBookmarkOrNote), cloud.notes, "key");
       saveNotes(mergedNotes);
     }
 
@@ -11281,8 +11395,49 @@
       if (cloud.preferences.hifzReciter) localStorage.setItem(HIFZ_RECITER_KEY, cloud.preferences.hifzReciter);
     }
 
+    // Refresh all UI components with merged data
+    refreshAllAfterSync();
+
     // Push merged data back
     syncToCloud();
+  }
+
+  // Normalize bookmark/note objects: ensure surahNumber & ayahNumber exist
+  // Fixes data saved with old property names (surah/ayah instead of surahNumber/ayahNumber)
+  function normalizeBookmarkOrNote(item) {
+    if (!item) return item;
+    // If surahNumber is missing, try to extract from key ("2:255") or from old "surah" field
+    if (item.surahNumber === undefined || item.surahNumber === null) {
+      if (item.surah !== undefined) {
+        item.surahNumber = item.surah;
+      } else if (item.key) {
+        var parts = item.key.split(":");
+        item.surahNumber = parseInt(parts[0], 10) || 0;
+      }
+    }
+    if (item.ayahNumber === undefined || item.ayahNumber === null) {
+      if (item.ayah !== undefined) {
+        item.ayahNumber = item.ayah;
+      } else if (item.key) {
+        var parts = item.key.split(":");
+        item.ayahNumber = parseInt(parts[1], 10) || 0;
+      }
+    }
+    // Fill surahNameFr if missing
+    if (!item.surahNameFr && item.surahNumber && typeof SURAH_NAMES_FR !== "undefined") {
+      item.surahNameFr = SURAH_NAMES_FR[item.surahNumber] || "";
+    }
+    return item;
+  }
+
+  function refreshAllAfterSync() {
+    try { state = loadState(); applyMode(); render(); } catch(e) {}
+    try { updateDashStats(); } catch(e) {}
+    try { updateDashKhatmCard(); } catch(e) {}
+    try { refreshMoiCounts(); } catch(e) {}
+    try { renderBookmarksList(); } catch(e) {}
+    try { renderStats(); } catch(e) {}
+    try { loadKhatm(); } catch(e) {}
   }
 
   function mergeArraysByKey(local, cloud, keyField) {

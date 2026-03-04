@@ -52,6 +52,9 @@
   <div id="tab-accueil" class="tab-panel">
     <div class="dashboard">
 
+      <!-- Blurred background image -->
+      <div id="dash-bg"></div>
+
       <!-- Ambient sun/moon glow overlay -->
       <div class="dash-ambient-glow" id="dash-ambient-glow"></div>
 
@@ -99,6 +102,30 @@
       <!-- Khatm progress bar separator -->
       <div class="dash-khatm-progress-line">
         <div class="dash-khatm-progress-fill" id="dash-khatm-progress-fill"></div>
+      </div>
+
+      <!-- Dashboard Stats -->
+      <div class="dash-stats-section" id="dash-stats-section">
+        <div class="dash-stats-header">
+          <span class="dash-stats-title">MES STATISTIQUES</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="dash-stats-row">
+          <div class="dash-stat-block">
+            <span class="dash-stat-value" id="dash-stat-verses">0</span>
+            <span class="dash-stat-label">Versets lus</span>
+          </div>
+          <div class="dash-stat-divider"></div>
+          <div class="dash-stat-block">
+            <span class="dash-stat-value dash-stat-value--gold" id="dash-stat-hassanates">0</span>
+            <span class="dash-stat-label">Hassanates</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats progress bar separator -->
+      <div class="dash-khatm-progress-line">
+        <div class="dash-stats-progress-fill" id="dash-stats-progress-fill"></div>
       </div>
 
       <!-- Emotion Wheel -->
@@ -178,6 +205,15 @@
             <span id="kp-days-lbl">JOURS REST.</span>
           </div>
           <svg class="kp-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <!-- Séparateur + titre Lecture libre -->
+      <div class="khatm-section-divider">
+        <div class="khatm-section-line"></div>
+        <div class="khatm-section-header">
+          <span class="khatm-section-title">LECTURE LIBRE</span>
+          <p class="khatm-section-desc">Parcourez le Coran sourate par sourate, indépendamment de votre Khatm.</p>
         </div>
       </div>
 
@@ -300,7 +336,7 @@
         </button>
       </div>
       <!-- Compte / Sync -->
-      <div class="moi-section" id="auth-section">
+      <div class="moi-section hidden" id="auth-section">
         <!-- État déconnecté -->
         <div id="auth-logged-out">
           <div class="moi-sep"></div>

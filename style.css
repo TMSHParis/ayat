@@ -3116,7 +3116,7 @@ body[data-theme="sepia"] .audio-glow {
 /* Dashboard — Behold gradient (slate blue-grey top → black bottom) */
 .dashboard {
   flex: 1;
-  background: linear-gradient(180deg, #2c2622 0%, #1a1613 20%, #0c0a08 50%, #020202 100%);
+  background: transparent;
   color: #fff;
   padding: 0 28px;
   padding-top: env(safe-area-inset-top, 20px);
@@ -3128,6 +3128,20 @@ body[data-theme="sepia"] .audio-glow {
   inset: 0;
   padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px) + 20px);
   touch-action: pan-y;
+}
+
+/* ---- Blurred background image ---- */
+#dash-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(30px) brightness(0.4);
+  transform: scale(1.1);
+  pointer-events: none;
+  transition: background-image 0.6s ease;
 }
 
 /* ---- Dynamic Ambient Glow (sun/moon) ---- */
@@ -3203,13 +3217,13 @@ body[data-theme="sepia"] .audio-glow {
   letter-spacing: 1px;
   margin-bottom: 5px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.65);
 }
 
 .dash-prayer-countdown {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255,255,255,0.9);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -3263,7 +3277,7 @@ body[data-theme="sepia"] .audio-glow {
 
 .dash-card-prompt {
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -1px;
@@ -3323,6 +3337,77 @@ body[data-theme="sepia"] .audio-glow {
   transition: width 1.2s ease;
 }
 
+/* ---- Dashboard Stats Section ---- */
+.dash-stats-section {
+  cursor: pointer;
+}
+.dash-stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.dash-stats-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+.dash-stats-header > svg {
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.dash-stats-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+.dash-stat-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.dash-stat-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 32px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: -1px;
+}
+.dash-stat-value--gold {
+  background: linear-gradient(180deg, #e8c96a 0%, #c9a84c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dash-stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+.dash-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  margin: 4px 20px 0;
+}
+.dash-stats-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #c9a84c, #e8c96a);
+  border-radius: 1px;
+  width: 0%;
+  transition: width 1.2s ease;
+}
+
 /* ---- Reading / Khatm card ---- */
 .dash-verse-section {
   cursor: pointer;
@@ -3330,10 +3415,10 @@ body[data-theme="sepia"] .audio-glow {
 .dash-khatm-label {
   display: block;
   font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 2px;
+  font-size: 11px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.4);
   margin-bottom: 10px;
 }
 .dash-verse-row {
@@ -3389,7 +3474,7 @@ body[data-theme="sepia"] .audio-glow {
 .dash-emotion {
   margin-top: 10px;
   text-align: center;
-  padding-bottom: 20px;
+  padding-bottom: 0;
 }
 .dash-emotion-question {
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -3403,7 +3488,7 @@ body[data-theme="sepia"] .audio-glow {
   font-size: 42px;
   font-weight: 700;
   color: #fff;
-  margin-bottom: -20px;
+  margin-bottom: -40px;
 }
 /* Radial container — full viewport width, hub at 280px from top */
 .dash-emotion-radial {
@@ -3844,13 +3929,16 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   .dash-prayer-countdown { font-size: 14px; letter-spacing: 1.2px; }
   .dash-card { margin-top: 48px; }
   .dash-card-label { font-size: 12px; letter-spacing: 3px; }
-  .dash-card-prompt { font-size: 40px; margin-bottom: 32px; }
+  .dash-card-prompt { font-size: 34px; margin-bottom: 32px; }
   .dash-card-btn { font-size: 12px; padding: 16px 36px; letter-spacing: 2px; }
   .dash-thin-line { margin: 48px 0; }
-  .dash-khatm-label { font-size: 10px; letter-spacing: 2.5px; }
+  .dash-khatm-label { font-size: 12px; letter-spacing: 2.5px; }
   .dash-khatm-thumb { width: 64px; height: 64px; border-radius: 10px; }
   .dash-verse-title { font-size: 24px; }
   .dash-verse-subtitle { font-size: 11px; letter-spacing: 2px; }
+  .dash-stat-value { font-size: 40px; }
+  .dash-stat-label { font-size: 10px; letter-spacing: 2.5px; }
+  .dash-stats-title { font-size: 12px; letter-spacing: 2.5px; }
   .dash-verse-row { gap: 18px; }
   .dash-emotion-question { font-size: 20px; }
   .dash-emotion-selected { font-size: 52px; }
@@ -4636,6 +4724,47 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   background: rgba(255,255,255,0.1);
   margin: 0;
 }
+/* ---- Séparateur Lecture libre ---- */
+.khatm-section-divider {
+  position: relative;
+  padding: 20px 24px 16px;
+  background: linear-gradient(180deg, #0f0d08 0%, #0a0a0a 100%);
+  flex-shrink: 0;
+}
+.khatm-section-divider::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: -20px;
+  transform: translateX(-50%);
+  width: 280px; height: 100px;
+  background: radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.khatm-section-line {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, #e8c96a, #c9a84c, transparent);
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+.khatm-section-header {
+  padding-bottom: 4px;
+}
+.khatm-section-title {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 8px;
+}
+.khatm-section-desc {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
 #khatm-hero-content {
   position: relative;
   z-index: 2;
@@ -4718,15 +4847,26 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   margin-bottom: 16px;
 }
 #kh-active-header #kh-days-title {
-  font-size: 24px;
-  font-weight: 700;
   font-family: system-ui, -apple-system, sans-serif;
   color: rgba(255,255,255,0.95);
-  line-height: 1.2;
   margin: 0;
   flex: 1;
-  letter-spacing: normal;
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#kh-active-header #kh-days-title .kh-days-num {
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+#kh-active-header #kh-days-title .kh-days-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.55);
+  font-family: 'Space Mono', monospace;
 }
 #khatm-hero-menu {
   display: none;
@@ -4951,7 +5091,7 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 /* ---- KHATM PROGRESS CARD ---- */
 #khatm-progress-card {
   background: rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -7205,7 +7345,7 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
     padding-left: 12%;
     padding-right: 12%;
   }
-  .dash-card-prompt { font-size: 44px; }
+  .dash-card-prompt { font-size: 38px; }
   .dash-verse-title { font-size: 28px; }
   .dash-emotion-selected { font-size: 58px; }
   .dash-emotion-question { font-size: 22px; }
