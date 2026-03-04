@@ -6982,12 +6982,34 @@
   var krSurahSections = [];
   var krObserver = null;
   var krCompleting = false; // Guard flag: prevents saveKrProgress from overwriting state during COMPLÉTER
+  var _krHighWaterMark = 0; // highest verse count scrolled past
+  var _krLastFlushed = 0; // last flushed count to stats
+  var _krStatsTimer = null;
+
+  function _krTrackVersesRead(scrolledCount) {
+    if (scrolledCount > _krHighWaterMark) {
+      _krHighWaterMark = scrolledCount;
+      clearTimeout(_krStatsTimer);
+      _krStatsTimer = setTimeout(_krFlushVersesRead, 2000);
+    }
+  }
+  function _krFlushVersesRead() {
+    var diff = _krHighWaterMark - _krLastFlushed;
+    if (diff > 0) {
+      recordReading(diff);
+      _krLastFlushed = _krHighWaterMark;
+    }
+  }
 
   function openKhatmReader(surahIdx, ayahIdx, goalDays) {
     loadKhatm(); // refresh from storage
     var overlay = $("khatm-reader");
     overlay.classList.remove("hidden");
     startReadingTimer();
+    // Reset verse counting for this session
+    _krHighWaterMark = 0;
+    _krLastFlushed = 0;
+    clearTimeout(_krStatsTimer);
     krScrollEl = $("kr-scroll");
     krScrollEl.innerHTML = "";
     krScrollEl.scrollTop = 0; // Reset scroll position from previous session
@@ -7295,9 +7317,12 @@
     clearTimeout(krScrollTimer);
     krCompleting = true; // Block saveKrProgress from overwriting state
 
-    // Record all verses in this daily portion as read
-    var versesToCount = portion.versesForToday || 0;
-    if (versesToCount > 0) recordReading(versesToCount);
+    // Flush already-tracked verses + count remaining unscrolled verses
+    _krFlushVersesRead();
+    clearTimeout(_krStatsTimer);
+    var totalForDay = portion.versesForToday || 0;
+    var remaining = totalForDay - _krHighWaterMark;
+    if (remaining > 0) recordReading(remaining);
 
     // ✅ Save state IMMEDIATELY — advance to end of daily portion
     if (portion.finished) {
@@ -7392,6 +7417,8 @@
           else break;
         }
       }
+      // Track verses read in real-time (high water mark)
+      _krTrackVersesRead(scrolledCount);
       var total = krDailyPortion.versesForToday;
       var pct = total > 0 ? Math.min(100, Math.round((scrolledCount / total) * 100)) : 0;
       bar.style.width = Math.max(pct, 0.5) + "%";
@@ -7459,6 +7486,8 @@
   function closeKhatmReader() {
     stopReadingTimer();
     stopKrAudio();
+    _krFlushVersesRead(); // Flush any pending verse count to stats
+    clearTimeout(_krStatsTimer);
     clearTimeout(krScrollTimer); // Cancel any pending debounced save
     if (!krCompleting) saveKrProgress(); // Don't overwrite state if COMPLÉTER is in progress
     finalizeKhatmSession(); // log session end
@@ -8282,8 +8311,8 @@
   var _spLastCountedVerse = -1;
   function spSetActiveVerse(verseI) {
     spCurrentVerseI = verseI;
-    // Count verse as read when it becomes active during playback (avoid duplicates)
-    if (spIsPlaying && verseI >= 0 && verseI !== _spLastCountedVerse) {
+    // Count verse as read when highlighted by audio (dedup by verse index)
+    if (verseI >= 0 && verseI !== _spLastCountedVerse) {
       _spLastCountedVerse = verseI;
       recordReading();
     }
@@ -8473,15 +8502,38 @@
     });
   }
 
+  // SP scroll-based verse counting (for manual reading without audio)
+  var _spScrollCountTimer = null;
+  var _spHighWaterVerse = -1;
+  function _spOnReaderScroll() {
+    if (spIsPlaying) return; // Audio mode already counts via spSetActiveVerse
+    clearTimeout(_spScrollCountTimer);
+    _spScrollCountTimer = setTimeout(function() {
+      var visI = spGetVisibleVerse();
+      if (visI >= 0 && visI > _spHighWaterVerse) {
+        var diff = _spHighWaterVerse < 0 ? 1 : (visI - _spHighWaterVerse);
+        recordReading(diff);
+        _spHighWaterVerse = visI;
+      }
+    }, 800); // debounce 800ms — count when user pauses scrolling
+  }
+
   function openSurahPlayer(surahIdx) {
     var overlay = $("surah-player");
     if (!overlay) return;
     spCurrentSurahIdx = surahIdx;
     _spLastCountedVerse = -1; // Reset verse counter for new surah
+    _spHighWaterVerse = -1; // Reset scroll counter
     spLoadSurah(surahIdx);
     spSwitchPage(0);
     overlay.classList.remove("hidden");
     startReadingTimer();
+    // Attach scroll listener for verse counting
+    var scrollEl = $("sp-reader-scroll");
+    if (scrollEl) {
+      scrollEl.removeEventListener("scroll", _spOnReaderScroll);
+      scrollEl.addEventListener("scroll", _spOnReaderScroll, { passive: true });
+    }
     // Update lang opts display
     spRefreshLangOpts();
     updateSpmModeDisplay();
