@@ -1505,6 +1505,15 @@ body.tajwid-no-colors [class^="tajwid-"] { color: inherit; }
 #khatm-reader .tajwid-iqlab    { color: #80CBC4 !important; }
 #khatm-reader .tajwid-izhar    { color: #B0BEC5 !important; }
 
+/* Surah player (Lecteur Libre): always dark bg → same overrides */
+#surah-player .tajwid-ghunnah  { color: #EF9A9A !important; }
+#surah-player .tajwid-idgham   { color: #A5D6A7 !important; }
+#surah-player .tajwid-ikhfaa   { color: #FFCC80 !important; }
+#surah-player .tajwid-qalqalah { color: #CE93D8 !important; }
+#surah-player .tajwid-madd     { color: #90CAF9 !important; }
+#surah-player .tajwid-iqlab    { color: #80CBC4 !important; }
+#surah-player .tajwid-izhar    { color: #B0BEC5 !important; }
+
 /* ---- TAJWID COLOR SUB-GROUP (shown only when tajwid mode is active) ---- */
 .setting-sub-group {
   margin-top: 10px;
@@ -1851,6 +1860,53 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 /* ---- AUDIO PLAYER ---- */
 .nav-btn.audio-playing { color: #f59e0b; }
 .nav-btn.audio-playing svg { fill: #f59e0b; stroke: none; }
+
+/* ---- AUDIO GLOW EFFECT ---- */
+.audio-glow {
+  text-shadow: 0 0 8px rgba(245,158,11,0.5), 0 0 20px rgba(245,158,11,0.25);
+  transition: text-shadow 0.4s ease;
+}
+.dark .audio-glow,
+body[data-theme="nuit"] .audio-glow {
+  text-shadow: 0 0 10px rgba(245,158,11,0.65), 0 0 28px rgba(245,158,11,0.35);
+}
+body[data-theme="sepia"] .audio-glow {
+  text-shadow: 0 0 8px rgba(180,120,50,0.5), 0 0 20px rgba(180,120,50,0.25);
+}
+/* Surah player glow (dark bg) */
+.sp-verse-ar.audio-glow {
+  text-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 25px rgba(255,255,255,0.3);
+}
+
+/* ---- KHATM AUDIO BUTTONS ---- */
+#kr-audio-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  padding: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#kr-audio-btn.kr-playing { color: #f59e0b; }
+#kr-audio-btn.kr-playing svg { fill: #f59e0b; stroke: none; }
+#kr-audio-auto-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: rgba(255,255,255,0.45);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#kr-audio-auto-btn.kr-auto-active {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
 .reciter-list { display: flex; flex-direction: column; gap: 2px; }
 .reciter-item {
   display: flex; align-items: center; justify-content: space-between;
@@ -2234,21 +2290,23 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
 
 /* ---- MAWAQIT MOSQUE SELECTOR ---- */
 .mosque-selector {
-  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  background: rgba(20,20,20,0.85); backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px; padding: 16px; margin-bottom: 16px;
 }
 .mosque-selector-title {
-  font-size: 12px; color: var(--text-faint); text-transform: uppercase;
+  font-size: 12px; color: rgba(255,255,255,0.7); text-transform: uppercase;
   letter-spacing: 0.5px; margin-bottom: 12px;
 }
 .mosque-selector-item {
   display: block; width: 100%; text-align: left;
-  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
-  font-size: 14px; color: var(--text); cursor: pointer;
+  font-size: 14px; color: #fff; cursor: pointer;
 }
 .mosque-selector-item:last-child { margin-bottom: 0; }
-.mosque-selector-item:hover { background: rgba(255,255,255,0.1); }
+.mosque-selector-item:hover { background: rgba(255,255,255,0.12); }
 
 /* ---- MAWAQIT MOSQUE NAME ROW ---- */
 .prayer-mosque-row {
@@ -2256,14 +2314,14 @@ p.tafsir-note:last-child { margin-bottom: 0 !important; }
   padding: 10px 14px; background: rgba(255,255,255,0.04);
   border-radius: 10px; border: 1px solid var(--glass-border);
 }
-.prayer-mosque-label { font-size: 12px; color: var(--text-faint); flex-shrink: 0; }
-.prayer-mosque-name { font-size: 13px; color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prayer-mosque-label { font-size: 12px; color: rgba(255,255,255,0.6); flex-shrink: 0; }
+.prayer-mosque-name { font-size: 13px; color: #fff; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prayer-mosque-change {
-  background: transparent; border: 1px solid var(--glass-border);
-  color: var(--text-faint); border-radius: 8px; padding: 4px 10px;
+  background: transparent; border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; border-radius: 8px; padding: 4px 10px;
   font-size: 12px; cursor: pointer; flex-shrink: 0;
 }
-.prayer-mosque-change:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.prayer-mosque-change:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
 /* ---- HIFZ (MEMORIZATION) — Reader-style ---- */
 #hifz-overlay {
@@ -5376,6 +5434,9 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 }
 .kr-verse {
   padding: 36px 28px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 .kr-verse-ref {
   text-align: center;
@@ -5526,6 +5587,34 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 #sp-menu-btn {
   font-size: 1rem;
   padding: 0;
+}
+#sp-play-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  padding: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#sp-play-btn.sp-playing { color: #f59e0b; }
+#sp-play-btn.sp-playing svg { fill: #f59e0b; stroke: none; }
+#sp-auto-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: rgba(255,255,255,0.45);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#sp-auto-btn.sp-auto-active {
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 #sp-page-dots {
   display: flex;
@@ -5794,6 +5883,58 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .spm-sep { height: 1px; background: rgba(255,255,255,0.08); }
 .spm-close { color: rgba(255,255,255,0.48); }
 
+/* SP Mode picker */
+#spm-mode-opts { background: rgba(0,0,0,0.18); }
+#spm-mode-opts.hidden { display: none !important; }
+#spm-mode-chev { margin-left: 4px; opacity: 0.45; transition: transform 0.2s; }
+.spm-mode-opt {
+  padding: 11px 18px 11px 50px;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.88rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.spm-mode-opt:active { background: rgba(255,255,255,0.06); }
+.spm-mode-opt.spm-mode-active { color: #fff; }
+.spm-mode-opt.spm-mode-active::before {
+  content: '\2713';
+  position: absolute;
+  left: 22px;
+  color: #fff;
+}
+
+/* SP Text size */
+.spm-size-row { cursor: default; }
+.spm-size-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.spm-size-btns button {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.spm-size-btns button:active { background: rgba(255,255,255,0.25); }
+#spm-size-val {
+  font-family: "Space Mono", monospace;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.6);
+  min-width: 40px;
+  text-align: center;
+}
+
 /* === SP RECITER SHEET === */
 #sp-reciter-sheet {
   position: fixed;
@@ -5943,6 +6084,180 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   margin-top: 4px;
 }
 .moi-section { padding: 0 24px; }
+
+/* ---- AUTH / COMPTE ---- */
+
+/* Auth Overlay */
+.auth-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.auth-overlay.hidden {
+  display: none;
+}
+.auth-overlay.fade-out {
+  opacity: 0;
+}
+.auth-overlay-backdrop {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+}
+.auth-overlay-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 32px 28px calc(env(safe-area-inset-bottom, 24px) + 44px);
+  background: rgba(18, 18, 18, 0.92);
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset;
+  text-align: center;
+  animation: authSheetUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes authSheetUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.auth-overlay-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s;
+}
+.auth-overlay-close:active { background: rgba(255, 255, 255, 0.15); }
+.auth-overlay-icon {
+  margin: 0 auto 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.05));
+  border: 1px solid rgba(251,191,36,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+.auth-overlay-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+.auth-overlay-desc {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 auto 24px;
+  max-width: 300px;
+}
+.auth-overlay-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.auth-overlay-footer {
+  font-family: "Space Mono", monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+.auth-buttons {
+  padding: 4px 0 12px;
+}
+.auth-buttons.hidden { display: none; }
+.auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.92);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-btn:active { opacity: 0.7; }
+.auth-google { background: transparent; color: rgba(255,255,255,0.92); border-color: rgba(255,255,255,0.15); }
+.auth-apple { background: transparent; color: rgba(255,255,255,0.92); border-color: rgba(255,255,255,0.15); }
+.auth-sync { background: var(--accent); color: #fff; border-color: var(--accent); }
+.auth-danger { color: #ef4444; background: transparent; border-color: rgba(239,68,68,0.25); }
+.auth-danger:active { background: rgba(239,68,68,0.08); }
+.auth-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.auth-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.auth-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.auth-email {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+.auth-sync-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  border-top: 1px solid var(--glass-border);
+  margin-bottom: 12px;
+}
+.auth-sync-status {
+  font-family: "Space Mono", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .moi-item {
   display: flex;
   align-items: center;
@@ -6547,6 +6862,52 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .sp-action-btn:active {
   transform: scale(0.9);
   background: rgba(255,255,255,0.16);
+}
+/* ---- KHATM ACTION BAR ---- */
+#kr-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px calc(18px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+#kr-action-bar.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px) scale(0.95);
+}
+.kr-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.kr-action-btn:active {
+  transform: scale(0.9);
+  background: rgba(255,255,255,0.16);
+}
+#kr-action-heart.kr-heart-active svg {
+  fill: #ef4444;
+  stroke: #ef4444;
 }
 #sp-action-heart.sp-heart-active svg {
   fill: #ef4444;
