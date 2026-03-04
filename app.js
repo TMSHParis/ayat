@@ -7144,18 +7144,21 @@
       (function(verseEl, si, ai) {
         var lpTimer = null;
         var lpFired = false;
+        function krShowActionBar() {
+          window.getSelection().removeAllRanges();
+          krSelectedSurahIdx = si;
+          krSelectedAyahIdx = ai;
+          if (navigator.vibrate) navigator.vibrate(15);
+          var bar = $("kr-action-bar");
+          if (bar) bar.classList.remove("hidden");
+          updateKrActionHeartState();
+        }
         verseEl.addEventListener("touchstart", function() {
           lpFired = false;
           lpTimer = setTimeout(function() {
             lpTimer = null;
             lpFired = true;
-            window.getSelection().removeAllRanges();
-            krSelectedSurahIdx = si;
-            krSelectedAyahIdx = ai;
-            if (navigator.vibrate) navigator.vibrate(15);
-            var bar = $("kr-action-bar");
-            if (bar) bar.classList.remove("hidden");
-            updateKrActionHeartState();
+            krShowActionBar();
           }, 400);
         }, { passive: true });
         verseEl.addEventListener("touchend", function(e) {
@@ -7163,6 +7166,21 @@
           if (lpFired) { e.preventDefault(); window.getSelection().removeAllRanges(); lpFired = false; }
         });
         verseEl.addEventListener("touchmove", function() {
+          if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+        });
+        verseEl.addEventListener("mousedown", function(e) {
+          if (e.button !== 0) return;
+          lpFired = false;
+          lpTimer = setTimeout(function() {
+            lpTimer = null;
+            lpFired = true;
+            krShowActionBar();
+          }, 500);
+        });
+        verseEl.addEventListener("mouseup", function() {
+          if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+        });
+        verseEl.addEventListener("mouseleave", function() {
           if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
         });
         verseEl.addEventListener("contextmenu", function(e) { e.preventDefault(); });
@@ -7711,6 +7729,36 @@
       }
       $("kr-action-bar").classList.add("hidden");
     });
+
+    var krActPlay = $("kr-action-play");
+    if (krActPlay) krActPlay.addEventListener("click", function() {
+      if (krSelectedSurahIdx < 0 || krSelectedAyahIdx < 0) return;
+      var targetSurahIdx = krSelectedSurahIdx;
+      var targetVerseI = krSelectedAyahIdx;
+      $("kr-action-bar").classList.add("hidden");
+      // Open Surah Player and auto-play from this verse
+      spSelectedVerseI = targetVerseI;
+      openSurahPlayer(targetSurahIdx);
+      setTimeout(function() {
+        if (spPlaylist.length > 0) {
+          var plIdx = spPlaylistVerseIndices.indexOf(targetVerseI);
+          if (plIdx < 0) plIdx = 0;
+          spPlaylistIdx = plIdx;
+          spAudioEl.src = spPlaylist[plIdx];
+          spCurrentVerseI = targetVerseI;
+        }
+        spSetActiveVerse(targetVerseI);
+        if (spAudioEl) {
+          spAudioEl.play().then(function() {
+            spIsPlaying = true;
+            spUpdatePlayBtn();
+          }).catch(function() {
+            spIsPlaying = false;
+            spUpdatePlayBtn();
+          });
+        }
+      }, 600);
+    });
   }
 
   function updateKrActionHeartState() {
@@ -8100,21 +8148,20 @@
       (function(verseBlock, verseI) {
         var lpTimer = null;
         var lpFired = false;
+        function spShowActionBar() {
+          window.getSelection().removeAllRanges();
+          spSelectedVerseI = verseI;
+          if (navigator.vibrate) navigator.vibrate(15);
+          var bar = $("sp-action-bar");
+          if (bar) bar.classList.remove("hidden");
+          updateSpActionHeartState();
+        }
         verseBlock.addEventListener("touchstart", function() {
           lpFired = false;
           lpTimer = setTimeout(function() {
             lpTimer = null;
             lpFired = true;
-            // Clear any text selection immediately
-            window.getSelection().removeAllRanges();
-            // Set selected verse
-            spSelectedVerseI = verseI;
-            // Haptic feedback
-            if (navigator.vibrate) navigator.vibrate(15);
-            // Show action bar with animation
-            var bar = $("sp-action-bar");
-            if (bar) bar.classList.remove("hidden");
-            updateSpActionHeartState();
+            spShowActionBar();
           }, 400);
         }, { passive: true });
         verseBlock.addEventListener("touchend", function(e) {
@@ -8126,6 +8173,21 @@
           }
         });
         verseBlock.addEventListener("touchmove", function() {
+          if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+        });
+        verseBlock.addEventListener("mousedown", function(e) {
+          if (e.button !== 0) return;
+          lpFired = false;
+          lpTimer = setTimeout(function() {
+            lpTimer = null;
+            lpFired = true;
+            spShowActionBar();
+          }, 500);
+        });
+        verseBlock.addEventListener("mouseup", function() {
+          if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+        });
+        verseBlock.addEventListener("mouseleave", function() {
           if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
         });
         // Block native context menu on verses
