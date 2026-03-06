@@ -1246,15 +1246,11 @@
 
 <!-- ====== VIDEOS OVERLAY ====== -->
 <div id="videos-overlay" class="overlay hidden moi-cat-overlay">
-  <!-- Header bar — always visible, ABOVE the player -->
-  <div class="vid-top-bar">
-    <button class="vid-top-bar-back" id="video-top-back" aria-label="Retour">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <span class="vid-top-bar-label">VIDÉO DU JOUR</span>
-  </div>
-  <!-- Player below header -->
+  <!-- Player with back button overlay -->
   <div class="video-player-wrap" id="video-player-wrap">
+    <button class="video-top-back" id="video-top-back" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <div class="video-thumb-state" id="video-thumb-state">
       <img class="video-thumb-img" id="video-thumb-img" alt="">
       <button class="video-play-btn" id="video-play-btn" aria-label="Lire">
@@ -1289,13 +1285,10 @@
 
 <!-- ====== PODCAST OVERLAY ====== -->
 <div id="podcast-overlay" class="overlay hidden moi-cat-overlay">
-  <div class="vid-top-bar">
-    <button class="vid-top-bar-back" id="pod-top-back" aria-label="Retour">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <span class="vid-top-bar-label">PODCAST DU JOUR</span>
-  </div>
   <div class="video-player-wrap" id="pod-player-wrap">
+    <button class="video-top-back" id="pod-top-back" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
     <div class="video-thumb-state" id="pod-thumb-state">
       <img class="video-thumb-img" id="pod-thumb-img" alt="">
       <button class="video-play-btn" id="pod-play-btn" aria-label="Lire">
