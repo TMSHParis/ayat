@@ -96,6 +96,7 @@
   // ---- DATA ----
   var surahs = [];
   var surahsFr = []; // French translation (parallel structure)
+  var surahsEn = []; // English translation (Sahih International)
   var totalAyat = 0;
   var BASMALA = ""; // extracted from surah 1, verse 1
   var BASMALA_FR = "Au nom d'Allah, le Tout Mis\u00e9ricordieux, le Tr\u00e8s Mis\u00e9ricordieux.";
@@ -467,6 +468,42 @@
         tajwidLoading = false;
         // Overlay unavailable — tajwid mode shows plain text without colors
       });
+  }
+
+  // ---- Phonétique — données locales (quran-phonetic.json) ----
+  var phoneticData = null;    // { "1": [...], "2": [...], ... } chargé une seule fois
+  var _phoneticDataLoading = false;
+  var _phoneticCallbacks = []; // callbacks en attente du chargement
+
+  function loadPhoneticData(callback) {
+    if (phoneticData) { callback(phoneticData); return; }
+    _phoneticCallbacks.push(callback);
+    if (_phoneticDataLoading) return; // déjà en cours
+    _phoneticDataLoading = true;
+    fetch("quran-phonetic.json")
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        phoneticData = data;
+        _phoneticDataLoading = false;
+        var cbs = _phoneticCallbacks.splice(0);
+        cbs.forEach(function(cb) { cb(phoneticData); });
+      })
+      .catch(function() {
+        _phoneticDataLoading = false;
+        var cbs = _phoneticCallbacks.splice(0);
+        cbs.forEach(function(cb) { cb(null); });
+      });
+  }
+
+  // Alias pour la compatibilité avec les appels existants (surahNum ignoré, tout est local)
+  function loadPhoneticForSurah(surahNum, callback) {
+    loadPhoneticData(function(data) {
+      callback(data ? (data[surahNum] || null) : null);
+    });
+  }
+
+  function preloadPhoneticForSurahs(surahNums, callback) {
+    loadPhoneticData(function() { callback(); });
   }
 
   function applyMode() {
@@ -2690,10 +2727,12 @@
   function savePrayerTimesToBridge() {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedData && prayerTimesCache) {
       var t = prayerTimesCache;
+      // Strip timezone suffix (ex: "05:35 (EET)" → "05:35") pour compatibilité Watch/widgets
+      function ct(v) { return (v || "").substring(0, 5); }
       window.Capacitor.Plugins.SharedData.savePrayerTimes({
-        fajr: t.Fajr || "", sunrise: t.Sunrise || "", dhuhr: t.Dhuhr || "",
-        asr: t.Asr || "", maghrib: t.Maghrib || "", isha: t.Isha || "",
-        midnight: t.Midnight || "", lastThird: t.LastThird || "",
+        fajr: ct(t.Fajr), sunrise: ct(t.Sunrise), dhuhr: ct(t.Dhuhr),
+        asr: ct(t.Asr), maghrib: ct(t.Maghrib), isha: ct(t.Isha),
+        midnight: ct(t.Midnight), lastThird: ct(t.LastThird),
         date: "", nextPrayer: "", nextTime: "",
         method: getPrayerMethod(), city: ""
       });
@@ -3135,6 +3174,30 @@
     dashBg.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
   }
 
+  function getDailySurahIdx() {
+    var now = new Date();
+    var day = now.getDay(); // 0=Sun … 5=Fri … 6=Sat
+    if (day === 5) return 17; // Vendredi → Al-Kahf (surah 18, index 17)
+    // Aléatoire déterministe basé sur la date (change chaque jour)
+    var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    var idx = seed % 114;
+    if (idx === 17) idx = 16; // éviter Al-Kahf les autres jours
+    return idx;
+  }
+
+  function updateDashSuratCard() {
+    var nameEl = $("dash-surat-name");
+    if (!nameEl || !surahs || !surahs.length) return;
+    var idx = getDailySurahIdx();
+    var surah = surahs[idx];
+    if (!surah) return;
+    var nameFr = SURAH_NAMES_FR[surah.surahNumber] || ("Sourate " + surah.surahNumber);
+    nameEl.textContent = surah.surahNameAr + " \u2014 " + nameFr;
+  }
+
+  // Choix fixé une fois au démarrage, stable toute la session
+  var _dashShowInvoc = (Math.random() < 0.5);
+
   function initDashboardCards() {
     var labelEl = $("dash-card-label");
     if (labelEl) {
@@ -3143,6 +3206,19 @@
     setDashBg();
     updateDashKhatmCard();
     updateDashStats();
+    updateDashSuratCard();
+    // Appliquer le choix de session (ne change plus jusqu'à fermeture de l'app)
+    var invocCard = document.querySelector(".dash-invocation-card");
+    var suratCard = $("dash-surat-card");
+    if (invocCard && suratCard) {
+      if (_dashShowInvoc) {
+        invocCard.classList.remove("hidden");
+        suratCard.classList.add("hidden");
+      } else {
+        invocCard.classList.add("hidden");
+        suratCard.classList.remove("hidden");
+      }
+    }
   }
 
   // ---- TAB BAR SWITCHING ----
@@ -5902,7 +5978,17 @@
     "soir:10":"http://www.hisnmuslim.com/audio/ar/91.mp3",
     "soir:11":"https://archive.org/download/azkar-al-masa-1425/9-azkar-al-masa-1425-7.mp3",
     "taajjub:0":"http://www.hisnmuslim.com/audio/ar/240.mp3",
-    "taajjub:1":"http://www.hisnmuslim.com/audio/ar/241.mp3"
+    "taajjub:1":"http://www.hisnmuslim.com/audio/ar/241.mp3",
+    // SALAWAT — static.lifewithallah.com (184–192)
+    "salawat:0":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/184.mp3",
+    "salawat:1":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/185.mp3",
+    "salawat:2":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/186.mp3",
+    "salawat:3":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/187.mp3",
+    "salawat:4":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/188.mp3",
+    "salawat:5":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/189.mp3",
+    "salawat:6":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/190.mp3",
+    "salawat:7":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/191.mp3",
+    "salawat:8":"https://static.lifewithallah.com/file/LifeWithAllah/main/4-Salawat/192.mp3"
   };
 
   function _everyAyahUrl(surah, verse) {
@@ -6502,6 +6588,26 @@
         {type:"dua",ref:"Hisn al-Muslim n\u00b0 240",ar:"\u0633\u064F\u0628\u0652\u062D\u064E\u0627\u0646\u064E \u0627\u0644\u0644\u0651\u064E\u0647\u0650",ph:"SubhanAllah !",fr:"Gloire \u00e0 Allah ! (Se dit lorsque l\u2019on est \u00e9merveill\u00e9 ou \u00e9tonn\u00e9 par quelque chose.)"},
         {type:"dua",ref:"Hisn al-Muslim n\u00b0 241",ar:"\u0627\u0644\u0644\u0651\u064E\u0647\u064F \u0623\u064E\u0643\u0652\u0628\u064E\u0631\u064F",ph:"Allahu Akbar !",fr:"Allah est le Plus Grand ! (Se dit lorsque l\u2019on re\u00e7oit une bonne nouvelle.)"}
       ]
+    },
+    {
+      id: "salawat",
+      name: "Salawat sur le Prophète ﷺ",
+      icon: "🌿",
+      gradient: "linear-gradient(165deg, #0d2218 0%, #0a1c14 30%, #071610 60%, #041008 100%)",
+      articleBg: "rgba(4,10,8,0.95)",
+      quote: "Celui qui invoque la bénédiction sur moi une fois, Allah lui en accordera dix. (Muslim 408)",
+      articleTitle: "As-Salawat 'ala an-Nabi ﷺ",
+      entries: [
+        {type:"dua",ref:"Boukhârî 3370",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا صَلَّيْتَ عَلَىٰ إِبْرَاهِيْمَ وَعَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ ، اَللّٰهُمَّ بَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا بَارَكْتَ عَلَىٰ إِبْرَاهِيْمَ وَعَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā ṣallayta ʿalā Ibrāhīma wa ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd, Allāhumma bārik ʿalā Muḥammad, wa ʿalā āli Muḥammad, kamā bārakta ʿalā Ibrāhīma wa ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur la famille de Mouḥammad ﷺ, comme Tu as envoyé les salutations sur Ibrāhīm ﷺ et sur la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux. Ô Allah, bénis Mouḥammad ﷺ et la famille de Mouḥammad ﷺ, comme Tu as béni Ibrāhīm ﷺ et la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Dâraqoutnî 1338",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ بَيْتِهِ ، كَمَا صَلَّيْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ ، اَللّٰهُمَّ صَلِّ عَلَيْنَا مَعَهُمْ ، اَللّٰهُمَّ بَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ بَيْتِهِ ، كَمَا بَارَكْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ ، اَللّٰهُمَّ بَارِكْ عَلَيْنَا مَعَهُمْ ، صَلَوَاتُ اللّٰهِ وَصَلَاةُ الْمُؤْمِنِيْنَ عَلَىٰ مُحَمَّدٍ النَّبيِّ الْأُمِّيِّ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli baytih, kamā ṣallayta ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd, Allāhumma ṣalli ʿalayna maʿahum, Allāhumma bārik ʿalā Muḥammad wa ʿalā āli baytih, kamā bārakta ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd, Allāhumma bārik ʿalaynā maʿahum, ṣalawātu-llāhi wa ṣalātul-mu'minīna ʿalā Muḥammadi-nin-Nabiyyil-ummiyy.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur Sa famille, comme Tu as envoyé les salutations sur la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux. Ô Allah, accorde-nous cette miséricorde avec eux. Ô Allah, bénis Mouḥammad ﷺ et Sa famille, comme Tu as béni la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux. Ô Allah, bénis-nous avec eux. Que les bénédictions d'Allah et les salutations des croyants soient sur Mouḥammad ﷺ, le Prophète."},
+        {type:"dua",ref:"Boukhârî 3369",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّأَزْوَاجِهِ وَذُرِّيَّتِهِ ، كَمَا صَلَّيْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، وَبَارِكْ عَلَىٰ مُحَمَّدٍ وَّأَزْوَاجِهِ وَذُرِّيَّتِهِ ، كَمَا بَارَكْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammadiw-wa azwājihī wa dhurriy-yatih, kamā ṣallayta ʿalā āli Ibrāhīm, wa bārik ʿalā Muḥammadi-w-wa azwājihī wa dhurriyyatih, kamā bārakta ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ, sur Ses épouses et sur Sa descendance, comme Tu as envoyé les salutations sur la famille d'Ibrāhīm ﷺ ; et bénis Mouḥammad ﷺ, Ses épouses et Sa descendance, comme Tu as béni la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Muslim 405",ar:"اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا صَلَّيْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، وَبَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا بَارَكْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ فِي الْعَالَمِيْنَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā ṣallayta ʿalā āli Ibrāhīm, wa bārik ʿalā Muḥammad, wa ʿalā āli Muḥammad, kamā bārakta ʿalā āli Ibrāhīma fi-l-ʿālamīn, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur la famille de Mouḥammad ﷺ, comme Tu as envoyé les salutations sur la famille d'Ibrāhīm ﷺ ; et bénis Mouḥammad ﷺ et la famille de Mouḥammad ﷺ, comme Tu as béni la famille d'Ibrāhīm ﷺ dans les mondes ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Ahmad 17067",ar:"اَللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، وَبَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا بَارَكْتَ عَلَىٰ إبْرَاهِيْمَ فِي الْعَالَمِيْنَ ، إِنَّكَ حَمِيْدٌ مَجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli Muḥammad, wa bārik ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā bārakta ʿalā Ibrāhīma fi-l-ʿālamīn, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur la famille de Mouḥammad ﷺ ; et bénis Mouḥammad ﷺ et la famille de Mouḥammad ﷺ, comme Tu as béni Ibrāhīm ﷺ dans les mondes ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Boukhârî 4798",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ عَبْدِكَ وَرَسُوْلِكَ ، كَمَا صَلَّيْتَ عَلَىٰ اٰلِ إبْراهِيْمَ ، وَبَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا بَارَكْتَ عَلَىٰ إبْرَاهِيْمَ.",ph:"Allāhumma ṣalli ʿalā Muḥammad ʿabdika wa rasulik, kamā ṣallayta ʿalā āli Ibrāhīm, wa bārik ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā bārakta ʿalā Ibrāhīm.",fr:"Ô Allah, envoie les salutations sur Ton Serviteur et Messager Mouḥammad ﷺ, comme Tu as envoyé les salutations sur la famille d'Ibrāhīm ﷺ ; et bénis Mouḥammad ﷺ et la famille de Mouḥammad ﷺ, comme Tu as béni Ibrāhīm ﷺ."},
+        {type:"dua",ref:"Boukhârî 4797",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَما صَلَّيْتَ عَلَىٰ اٰلِ إبْراهِيْمَ إنَّكَ حَمِيْدٌ مَّجِيْدٌ ، اَللّٰهُمَّ بَارِكْ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا بارَكْتَ عَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā ṣallayta ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd, Allāhumma bārik ʿalā Muḥammad wa ʿalā āli Muḥammad, kamā bārakta ʿalā āli Ibrāhīm, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur la famille de Mouḥammad ﷺ, comme Tu as envoyé les salutations sur la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux. Ô Allah, bénis Mouḥammad ﷺ et la famille de Mouḥammad ﷺ, comme Tu as béni la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Ahmad 17072",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ النَّبِيِّ الأُمِّيِّ وَعَلَىٰ اٰلِ مُحَمَّدٍ ، كَمَا صَلَّيْتَ عَلَىٰ إبْرَاهِيْمَ وَاٰلِ إبْرَاهِيْمَ ، وَبَارِكْ عَلَىٰ مُحَمَّدٍ النَّبِيِّ الأُمِّيِّ ، كَمَا بارَكْتَ عَلَىٰ إبْرَاهِيْمَ وَعَلَىٰ اٰلِ إِبْرَاهِيْمَ ، إِنَّكَ حَمِيْدٌ مَّجِيْدٌ.",ph:"Allāhumma ṣalli ʿalā Muḥammadi-nin-Nabiyyil-ummiyy wa ʿalā āli Muḥammad, kamā ṣallayta ʿalā Ibrāhīm, wa āli Ibrāhīma, wa bārik ʿalā Muḥammadi-nin-Nabiyyil-ummiyy, kamā bārakta ʿalā Ibrāhīma wa ʿalā āli Ibrāhīma, innaka Ḥamīdu-m-Majīd.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ, le Prophète et sur la famille de Mouḥammad ﷺ, comme Tu as envoyé les salutations sur Ibrāhīm ﷺ et la famille d'Ibrāhīm ﷺ ; et bénis Mouḥammad ﷺ, le Prophète, comme Tu as béni Ibrāhīm ﷺ et la famille d'Ibrāhīm ﷺ ; certes, Tu es Digne de louanges, Le Très Glorieux."},
+        {type:"dua",ref:"Nasâ'î 1292",ar:"اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَّعَلَىٰ اٰلِ مُحَمَّدٍ.",ph:"Allāhumma ṣalli ʿalā Muḥammad wa ʿalā āli Muḥammad.",fr:"Ô Allah, envoie les salutations sur Mouḥammad ﷺ et sur la famille de Mouḥammad ﷺ."}
+      ]
     }
   ];
 
@@ -6669,8 +6775,10 @@
     var sub = $("dua-contact-submit");
     if (sub) { sub.disabled = true; sub.textContent = "Envoi\u2026"; }
 
-    // Envoi via EmailJS REST API (aucun SDK requis)
-    fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    // Utilise le fetch original (pas le patch CapacitorHttp) pour que
+    // EmailJS reconnaisse un vrai navigateur et accepte la requête.
+    var _fetch = window.CapacitorWebFetch || window.fetch;
+    _fetch.call(window, "https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -6923,6 +7031,34 @@
       });
       wrap.appendChild(item);
     });
+
+    // Chevron "Lecture libre" → smooth scroll to first surah
+    var sectionChevron = document.querySelector(".khatm-section-chevron");
+    if (sectionChevron && !sectionChevron._scrollSet) {
+      sectionChevron._scrollSet = true;
+      sectionChevron.parentElement.style.cursor = "pointer";
+      sectionChevron.parentElement.addEventListener("click", function() {
+        var target = $("khatm-surah-wrap");
+        var container = $("khatm-landing");
+        if (!target || !container) return;
+        // Safe-area offset (~50px for iPhone notch/dynamic island)
+        var safeTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sat") || "0") || 50;
+        var destY = Math.max(0, target.offsetTop - safeTop);
+        // Custom slow scroll (~1.4s, ease-in-out)
+        var startY = container.scrollTop;
+        var dist = destY - startY;
+        var duration = 1400;
+        var startTime = null;
+        function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var p = Math.min((ts - startTime) / duration, 1);
+          container.scrollTop = startY + dist * ease(p);
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      });
+    }
   }
 
   // ---- WIZARD ----
@@ -7211,7 +7347,7 @@
 
   function updateKrLangDisplay() {
     var lang = (khatm && khatm.lang) || "ar+fr";
-    var labels = { "ar": "ARABE", "fr": "FRANÇAIS", "ar+fr": "ARABE & FRANÇAIS" };
+    var labels = { "ar": "ARABE", "fr": "FRANÇAIS", "ar+fr": "ARABE & FRANÇAIS", "ph": "PHONÉTIQUE", "ar+ph": "ARABE & PHONÉTIQUE", "fr+ph": "FRANÇAIS & PHONÉTIQUE", "en": "ANGLAIS", "ar+en": "ARABE & ANGLAIS", "en+ph": "ANGLAIS & PHONÉTIQUE" };
     $("kr-lang-val").textContent = labels[lang] || lang;
     document.querySelectorAll(".kr-lang-opt").forEach(function(o) {
       o.classList.toggle("active", o.dataset.lang === lang);
@@ -7238,6 +7374,7 @@
   function appendKrSurahSection(surahIdx, fromAyahIdx, toAyahIdx) {
     var s = surahs[surahIdx];
     var sFr = surahsFr[surahIdx];
+    var sEn = surahsEn[surahIdx];
     if (!s) return;
     var lang = (khatm && khatm.lang) || "ar+fr";
     var scale = (khatm && khatm.textScale) || 100;
@@ -7276,6 +7413,7 @@
     // Verses
     var ayahs = s.ayahs;
     var ayahsFr = sFr ? sFr.ayahs : null;
+    var ayahsEn = sEn ? sEn.ayahs : null;
     for (var i = fromAyahIdx; i < endIdx; i++) {
       var verse = document.createElement("div");
       verse.className = "kr-verse";
@@ -7292,7 +7430,7 @@
       }
       verse.appendChild(ref);
 
-      if (lang === "ar" || lang === "ar+fr") {
+      if (lang === "ar" || lang === "ar+fr" || lang === "ar+ph" || lang === "ar+en") {
         var ar = document.createElement("div");
         ar.className = "kr-verse-ar";
         ar.style.fontSize = arFontSize;
@@ -7315,11 +7453,32 @@
         }
         verse.appendChild(ar);
       }
-      if ((lang === "fr" || lang === "ar+fr") && ayahsFr && ayahsFr[i]) {
+      if ((lang === "fr" || lang === "ar+fr" || lang === "fr+ph") && ayahsFr && ayahsFr[i]) {
         var fr = document.createElement("div");
-        fr.className = "kr-verse-fr";
+        fr.className = "kr-verse-fr" + (lang === "fr+ph" ? " kr-verse-bright" : "");
         fr.textContent = ayahsFr[i];
         verse.appendChild(fr);
+      }
+      if (lang === "ph" || lang === "ar+ph" || lang === "fr+ph") {
+        var ph = document.createElement("div");
+        ph.className = "kr-verse-ph";
+        var phData = phoneticData ? phoneticData[s.surahNumber] : null;
+        if (phData) {
+          ph.textContent = phData[i] || "";
+        } else {
+          ph.textContent = "\u2026";
+          loadPhoneticForSurah(s.surahNumber, function() {
+            var l = khatm && khatm.lang;
+            if (l === "ph" || l === "ar+ph" || l === "fr+ph" || l === "en+ph") rerenderKrReader();
+          });
+        }
+        verse.appendChild(ph);
+      }
+      if ((lang === "en" || lang === "ar+en" || lang === "en+ph") && ayahsEn && ayahsEn[i]) {
+        var en = document.createElement("div");
+        en.className = "kr-verse-en" + (lang === "en+ph" ? " kr-verse-bright" : "");
+        en.textContent = ayahsEn[i];
+        verse.appendChild(en);
       }
       // Long-press to show action bar
       (function(verseEl, si, ai) {
@@ -7860,7 +8019,13 @@
         saveKhatm();
         updateKrLangDisplay();
         $("kr-lang-picker").classList.add("hidden");
-        rerenderKrReader();
+        if (lang === "ph" || lang === "ar+ph" || lang === "fr+ph" || lang === "en+ph") {
+          var nums = krSurahSections.map(function(sec) { return surahs[sec.surahIdx].surahNumber; });
+          if (!nums.length && surahs[krCurrentSurahIdx]) nums = [surahs[krCurrentSurahIdx].surahNumber];
+          preloadPhoneticForSurahs(nums, function() { rerenderKrReader(); });
+        } else {
+          rerenderKrReader();
+        }
       });
     });
     // Mode de lecture
@@ -8309,6 +8474,8 @@
     var lang = getSpLang();
     var sFr = surahsFr[surahIdx];
     var ayahsFr = sFr ? sFr.ayahs : null;
+    var sEn = surahsEn[surahIdx];
+    var ayahsEn = sEn ? sEn.ayahs : null;
     var num = s.surahNumber;
     var isBasmalaFirst = (num !== 1 && num !== 9);
     var spMode = getSpMode();
@@ -8344,7 +8511,7 @@
       block.appendChild(ref);
 
       // Arabic
-      if (lang === "ar" || lang === "ar-fr") {
+      if (lang === "ar" || lang === "ar-fr" || lang === "ar-ph" || lang === "ar-en") {
         var ar = document.createElement("p");
         ar.className = "sp-verse-ar";
         ar.dir = "rtl";
@@ -8369,14 +8536,42 @@
       }
 
       // French
-      if ((lang === "fr" || lang === "ar-fr") && !isBasmala && ayahsFr) {
+      if ((lang === "fr" || lang === "ar-fr" || lang === "fr-ph") && !isBasmala && ayahsFr) {
         // For non-basmala surahs, ayahsFr[0] is basmala (French placeholder), ayahsFr[i] aligns
         var frText = ayahsFr[i] || "";
         if (frText) {
           var fr = document.createElement("p");
-          fr.className = "sp-verse-fr";
+          fr.className = "sp-verse-fr" + (lang === "fr-ph" ? " sp-verse-bright" : "");
           fr.textContent = frText;
           block.appendChild(fr);
+        }
+      }
+
+      // Phonetic
+      if ((lang === "ph" || lang === "ar-ph" || lang === "fr-ph" || lang === "en-ph") && !isBasmala) {
+        var ph = document.createElement("p");
+        ph.className = "sp-verse-ph";
+        var phData = phoneticData ? phoneticData[num] : null;
+        if (phData) {
+          ph.textContent = phData[i] || "";
+        } else {
+          ph.textContent = "\u2026";
+          loadPhoneticForSurah(num, function() {
+            var l = getSpLang();
+            if (l === "ph" || l === "ar-ph" || l === "fr-ph" || l === "en-ph") spRenderReader(spCurrentSurahIdx);
+          });
+        }
+        block.appendChild(ph);
+      }
+
+      // English
+      if ((lang === "en" || lang === "ar-en" || lang === "en-ph") && !isBasmala && ayahsEn) {
+        var enText = ayahsEn[i] || "";
+        if (enText) {
+          var en = document.createElement("p");
+          en.className = "sp-verse-en" + (lang === "en-ph" ? " sp-verse-bright" : "");
+          en.textContent = enText;
+          block.appendChild(en);
         }
       }
 
@@ -8844,6 +9039,14 @@
         spRefreshLangOpts();
         spCloseSpmMenu();
         // Re-render reader with new lang
+        var needsPh = (el.dataset.lang === "ph" || el.dataset.lang === "ar-ph" || el.dataset.lang === "fr-ph" || el.dataset.lang === "en-ph");
+        if (needsPh) {
+          var num = surahs[spCurrentSurahIdx] ? surahs[spCurrentSurahIdx].surahNumber : null;
+          if (num) {
+            loadPhoneticForSurah(num, function() { spRenderReader(spCurrentSurahIdx); });
+            return;
+          }
+        }
         spRenderReader(spCurrentSurahIdx);
       });
     });
@@ -9170,13 +9373,15 @@
     try {
       var results = await Promise.all([
         fetch("quran.json").then(function (r) { return r.json(); }),
-        fetch("quran-fr.json").then(function (r) { return r.json(); })
+        fetch("quran-fr.json").then(function (r) { return r.json(); }),
+        fetch("quran-en.json").then(function (r) { return r.json(); })
       ]);
 
       if (splashBar) splashBar.style.width = "70%";
 
       var rawSurahs = results[0];
       var rawSurahsFr = results[1];
+      var rawSurahsEn = results[2];
 
       // Extract the Basmala from surah 1 verse 1 (remove BOM if present)
       BASMALA = rawSurahs[0].ayahs[0].replace(/^\uFEFF/, "");
@@ -9206,6 +9411,9 @@
           ayahs: [BASMALA_FR].concat(s.ayahs),
         };
       });
+
+      // quran-en.json already has bismillah as ayahs[0] — use as-is
+      surahsEn = rawSurahsEn;
 
       totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
     } catch (err) {
@@ -9252,6 +9460,13 @@
         var id = _isDashMorning() ? "matin" : "soir";
         var idx = DUA_CATEGORIES.findIndex(function(c) { return c.id === id; });
         if (idx >= 0) openDuaDetail(idx);
+      });
+    }
+    // Surat du jour click — lecture libre
+    var suratBtn = $("dash-surat-btn");
+    if (suratBtn) {
+      suratBtn.addEventListener("click", function () {
+        openSurahPlayer(getDailySurahIdx());
       });
     }
     // Reading card click — go to Coran tab or open khatm reader if active
@@ -10201,6 +10416,9 @@
     initMoiTab();
     initNoteEditor();
     initSpActionBar();
+
+    // ---- SHOOTING STARS (dashboard) ----
+    initShootingStars();
   }
 
   // ================================================================
@@ -10602,6 +10820,13 @@
     });
 
     // Contact → open contact form overlay
+    var moiHeritage = $("moi-heritage");
+    if (moiHeritage) moiHeritage.addEventListener("click", openHeritageOverlay);
+    var moiTestament = $("moi-testament");
+    if (moiTestament) moiTestament.addEventListener("click", openTestamentOverlay);
+    var moiZakat = $("moi-zakat");
+    if (moiZakat) moiZakat.addEventListener("click", openZakatOverlay);
+
     var moiContact = $("moi-contact");
     if (moiContact) moiContact.addEventListener("click", openDuaContact);
 
@@ -10609,6 +10834,11 @@
     var settingsBtn = $("moi-settings-btn");
     if (settingsBtn) settingsBtn.addEventListener("click", function() {
       $("moi-settings-overlay").classList.remove("hidden");
+      var bg = $("moi-settings-hero-bg");
+      if (bg && PRAYER_IMGS && PRAYER_IMGS.length) {
+        var idx = Math.floor(Math.random() * PRAYER_IMGS.length);
+        bg.style.backgroundImage = "url('img/prayer/" + PRAYER_IMGS[idx] + "')";
+      }
     });
 
     // Moi settings items
@@ -10646,8 +10876,792 @@
       $("notes-overlay").classList.add("hidden");
     });
 
+    // Heritage close
+    var heritageClose = $("heritage-close");
+    if (heritageClose) heritageClose.addEventListener("click", function() {
+      $("heritage-overlay").classList.add("hidden");
+    });
+
+    // Testament close
+    var testamentClose = $("testament-close");
+    if (testamentClose) testamentClose.addEventListener("click", function() {
+      $("testament-overlay").classList.add("hidden");
+    });
+
+    // Zakat close
+    var zakatClose = $("zakat-close");
+    if (zakatClose) zakatClose.addEventListener("click", function() {
+      $("zakat-overlay").classList.add("hidden");
+    });
+
+    // Testament document viewer — close + print
+    var tdvClose = $("tdv-close-btn");
+    if (tdvClose) tdvClose.addEventListener("click", function() {
+      $("testament-doc-viewer").classList.add("hidden");
+    });
+    var tdvPrint = $("tdv-print-btn");
+    if (tdvPrint) tdvPrint.addEventListener("click", function() { window.print(); });
+
     // Initial count refresh
     refreshMoiCounts();
+  }
+
+  // ============================================================
+  // HERITAGE — Calculateur Faraidh
+  // ============================================================
+
+  var _heritageGender = "m"; // m = homme, f = femme
+
+  var HERITAGE_HEIRS = [
+    { id: "epoux",    label: "Époux",                  onlyFor: "f" },
+    { id: "epouse",   label: "Épouse(s)",               onlyFor: "m", maxCount: 4 },
+    { id: "fils",     label: "Fils",                    onlyFor: null },
+    { id: "filles",   label: "Filles",                  onlyFor: null },
+    { id: "fils_fils",  label: "Fils du fils (petit-fils)", onlyFor: null },
+    { id: "filles_fils", label: "Fille du fils (petite-fille)", onlyFor: null },
+    { id: "pere",     label: "Père",                    onlyFor: null, maxCount: 1 },
+    { id: "mere",     label: "Mère",                    onlyFor: null, maxCount: 1 },
+    { id: "gd_pere",  label: "Grand-père paternel",     onlyFor: null, maxCount: 1 },
+    { id: "gd_mere_p", label: "Grand-mère paternelle",  onlyFor: null, maxCount: 1 },
+    { id: "gd_mere_m", label: "Grand-mère maternelle",  onlyFor: null, maxCount: 1 },
+    { id: "fr_germain", label: "Frère germain",         onlyFor: null },
+    { id: "sr_germaine", label: "Sœur germaine",        onlyFor: null },
+    { id: "fr_consanguin", label: "Frère consanguin",   onlyFor: null },
+    { id: "sr_consanguine", label: "Sœur consanguine",  onlyFor: null },
+    { id: "fr_uterin", label: "Frère utérin",           onlyFor: null },
+    { id: "sr_uterine", label: "Sœur utérine",          onlyFor: null }
+  ];
+
+  var _heirCounts = {};
+
+  function openHeritageOverlay() {
+    _heritageGender = "m";
+    _heirCounts = {};
+    $("heritage-overlay").classList.remove("hidden");
+    renderHeritageHeirsGrid();
+    updateHeritageGenderUI();
+    calcAndRenderHeritage();
+
+    var btnM = $("heritage-gender-m");
+    var btnF = $("heritage-gender-f");
+    if (btnM) btnM.onclick = function() {
+      _heritageGender = "m";
+      updateHeritageGenderUI();
+      renderHeritageHeirsGrid();
+      calcAndRenderHeritage();
+    };
+    if (btnF) btnF.onclick = function() {
+      _heritageGender = "f";
+      updateHeritageGenderUI();
+      renderHeritageHeirsGrid();
+      calcAndRenderHeritage();
+    };
+    var amountInput = $("heritage-amount");
+    if (amountInput) amountInput.oninput = calcAndRenderHeritage;
+  }
+
+  function updateHeritageGenderUI() {
+    var btnM = $("heritage-gender-m"), btnF = $("heritage-gender-f");
+    if (!btnM || !btnF) return;
+    if (_heritageGender === "m") {
+      btnM.classList.add("active"); btnF.classList.remove("active");
+    } else {
+      btnF.classList.add("active"); btnM.classList.remove("active");
+    }
+  }
+
+  function renderHeritageHeirsGrid() {
+    var grid = $("heritage-heirs-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    HERITAGE_HEIRS.forEach(function(heir) {
+      if (heir.onlyFor && heir.onlyFor !== _heritageGender) return;
+      // epoux uniquement si défunt est femme, epouse si homme
+      var count = _heirCounts[heir.id] || 0;
+      var row = document.createElement("div");
+      row.className = "heritage-heir-row";
+      row.dataset.heirid = heir.id;
+      row.innerHTML =
+        '<span class="heritage-heir-label">' + heir.label + '</span>' +
+        '<div class="heritage-heir-counter">' +
+        '<button class="heritage-counter-btn" data-action="minus" data-heirid="' + heir.id + '">−</button>' +
+        '<span class="heritage-counter-val" id="hc-' + heir.id + '">' + count + '</span>' +
+        '<button class="heritage-counter-btn" data-action="plus" data-heirid="' + heir.id + '">+</button>' +
+        '</div>';
+      grid.appendChild(row);
+    });
+    grid.onclick = function(e) {
+      var btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      var id = btn.dataset.heirid;
+      var heir = HERITAGE_HEIRS.filter(function(h) { return h.id === id; })[0];
+      var max = (heir && heir.maxCount) ? heir.maxCount : 20;
+      if (btn.dataset.action === "plus") {
+        _heirCounts[id] = Math.min((_heirCounts[id] || 0) + 1, max);
+      } else {
+        _heirCounts[id] = Math.max((_heirCounts[id] || 0) - 1, 0);
+      }
+      var val = document.getElementById("hc-" + id);
+      if (val) val.textContent = _heirCounts[id] || 0;
+      calcAndRenderHeritage();
+    };
+  }
+
+  // ---- Faraidh engine (fractions exactes) ----
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  function frac(n, d) { if (d === 0) return { n: 0, d: 1 }; var g = gcd(Math.abs(n), Math.abs(d)); return { n: n / g, d: d / g }; }
+  function addF(a, b) { return frac(a.n * b.d + b.n * a.d, a.d * b.d); }
+  function subF(a, b) { return frac(a.n * b.d - b.n * a.d, a.d * b.d); }
+  function mulF(a, b) { return frac(a.n * b.n, a.d * b.d); }
+  function cmpF(a, b) { return a.n * b.d - b.n * a.d; } // >0 a>b
+  function fracStr(f) { if (f.d === 1) return "" + f.n; return f.n + "/" + f.d; }
+  function pctStr(f) { return (f.n / f.d * 100).toFixed(1) + "%"; }
+
+  function calcHeritageShares(h, gender) {
+    // h = object with counts per heir id
+    // Returns array of { label, frac, blocked, blockReason }
+    var c = function(id) { return (h[id] || 0); };
+
+    var hasFils    = c("fils") > 0;
+    var hasFilles  = c("filles") > 0;
+    var hasFilsFils  = c("fils_fils") > 0;
+    var hasFillesFils = c("filles_fils") > 0;
+    var hasPere    = c("pere") > 0;
+    var hasMere    = c("mere") > 0;
+    var hasGdPere  = c("gd_pere") > 0;
+    var hasGdMereP = c("gd_mere_p") > 0;
+    var hasGdMereM = c("gd_mere_m") > 0;
+    var hasFrG     = c("fr_germain") > 0;
+    var hasSrG     = c("sr_germaine") > 0;
+    var hasFrC     = c("fr_consanguin") > 0;
+    var hasSrC     = c("sr_consanguine") > 0;
+    var hasFrU     = c("fr_uterin") > 0;
+    var hasSrU     = c("sr_uterine") > 0;
+
+    var hasEnfants = hasFils || hasFilles;
+    var hasDescendants = hasEnfants || hasFilsFils || hasFillesFils;
+    var hasFrGouC  = hasFrG || hasSrG || hasFrC || hasSrC;
+    var nbFrGouC   = c("fr_germain") + c("sr_germaine") + c("fr_consanguin") + c("sr_consanguine");
+    var nbFrU      = c("fr_uterin") + c("sr_uterine");
+    var nb2FreresSoeurs = (c("fr_germain") + c("sr_germaine") + c("fr_consanguin") + c("sr_consanguine") + c("fr_uterin") + c("sr_uterine")) >= 2;
+
+    var results = [];
+    var totalFard = { n: 0, d: 1 };
+    var asabaPool = []; // héritiers asaba
+
+    function addResult(label, count, share, blocked, reason, expl) {
+      results.push({ label: label, count: count, share: blocked ? { n: 0, d: 1 } : share, blocked: !!blocked, reason: reason || "", explanation: expl || "" });
+      if (!blocked && share) totalFard = addF(totalFard, mulF(share, frac(1, 1)));
+    }
+
+    // ---- ÉPOUX / ÉPOUSE ----
+    if (gender === "f" && c("epoux") > 0) {
+      var shareEpoux = hasDescendants ? frac(1, 4) : frac(1, 2);
+      addResult("Époux", 1, shareEpoux, false, "", hasDescendants ? "reçoit 1/4 en présence de descendants" : "reçoit 1/2 en l'absence de descendants");
+    }
+    if (gender === "m" && c("epouse") > 0) {
+      var nbEpouses = c("epouse");
+      var shareEpousesTot = hasDescendants ? frac(1, 8) : frac(1, 4);
+      addResult("Épouse" + (nbEpouses > 1 ? "s ×" + nbEpouses : ""), nbEpouses, shareEpousesTot, false, "", hasDescendants ? "reçoivent 1/8 en présence de descendants" : "reçoivent 1/4 en l'absence de descendants");
+    }
+
+    // ---- MÈRE ----
+    if (hasMere) {
+      var shareMere;
+      if (hasDescendants || nb2FreresSoeurs) {
+        shareMere = frac(1, 6);
+      } else {
+        shareMere = frac(1, 3);
+      }
+      addResult("Mère", 1, shareMere, false, "", (hasDescendants || nb2FreresSoeurs) ? "reçoit 1/6 — présence de descendants ou 2+ frères/sœurs" : "reçoit 1/3 — part fixe en l'absence de descendants");
+    }
+
+    // ---- GRAND-MÈRE PATERNELLE ----
+    if (hasGdMereP) {
+      var blocGdMereP = hasMere || hasPere;
+      addResult("Grand-mère paternelle", 1, frac(1, 6), blocGdMereP, blocGdMereP ? (hasMere ? "bloquée par la mère" : "bloquée par le père") : "", blocGdMereP ? "" : "reçoit 1/6 en l'absence de la mère et du père");
+    }
+
+    // ---- GRAND-MÈRE MATERNELLE ----
+    if (hasGdMereM) {
+      var blocGdMereM = hasMere;
+      addResult("Grand-mère maternelle", 1, frac(1, 6), blocGdMereM, blocGdMereM ? "bloquée par la mère" : "", blocGdMereM ? "" : "reçoit 1/6 en l'absence de la mère");
+    }
+
+    // ---- PÈRE ----
+    if (hasPere) {
+      if (hasFils || hasFilsFils) {
+        // Père : fard 1/6, pas d'asaba
+        addResult("Père", 1, frac(1, 6), false, "", "reçoit 1/6 (fard) en présence de fils");
+      } else if (hasFilles || hasFillesFils) {
+        // Père : fard 1/6 + asaba (résidu)
+        addResult("Père", 1, frac(1, 6), false, "", "reçoit 1/6 + le résidu en présence de filles sans fils");
+        asabaPool.push({ label: "Père (résidu)", weight: 1, explanation: "résidu après la part fixe de 1/6" });
+      } else {
+        // Père : asaba pur
+        asabaPool.push({ label: "Père", weight: 1, explanation: "hérite du résidu (عصبة) en l'absence de descendants" });
+      }
+    }
+
+    // ---- GRAND-PÈRE PATERNEL (bloqué par père) ----
+    if (hasGdPere) {
+      var blocGdPere = hasPere;
+      if (!blocGdPere) {
+        if (hasFils || hasFilsFils) {
+          addResult("Grand-père paternel", 1, frac(1, 6), false, "", "reçoit 1/6 en présence de fils, en l'absence du père");
+        } else if (hasFilles || hasFillesFils) {
+          addResult("Grand-père paternel", 1, frac(1, 6), false, "", "reçoit 1/6 + le résidu en présence de filles, en l'absence du père");
+          asabaPool.push({ label: "Grand-père (résidu)", weight: 1, explanation: "résidu après la part fixe de 1/6" });
+        } else {
+          asabaPool.push({ label: "Grand-père paternel", weight: 1, explanation: "hérite du résidu (عصبة) en l'absence du père et des descendants" });
+        }
+      } else {
+        addResult("Grand-père paternel", 1, null, true, "bloqué par le père", "");
+      }
+    }
+
+    // ---- FILS ----
+    if (hasFils) {
+      asabaPool.push({ label: "Fils ×" + c("fils"), count: c("fils"), weight: 2, isFils: true, explanation: "héritent du résidu (عصبة) — un fils reçoit le double d'une fille" });
+    }
+
+    // ---- FILLES ----
+    if (hasFilles && !hasFils) {
+      // Filles seules sans fils
+      var shareFilles = c("filles") === 1 ? frac(1, 2) : frac(2, 3);
+      addResult("Filles ×" + c("filles"), c("filles"), shareFilles, false, "", c("filles") === 1 ? "reçoit 1/2 — une fille unique sans fils" : "reçoivent 2/3 — " + c("filles") + " filles sans fils");
+    } else if (hasFilles && hasFils) {
+      // Filles avec fils → asaba (2:1)
+      asabaPool.push({ label: "Filles ×" + c("filles"), count: c("filles"), weight: 1, isFilles: true, explanation: "héritent du résidu avec les fils — une fille reçoit la moitié d'un fils" });
+    }
+
+    // ---- FILS DU FILS ----
+    if (hasFilsFils && !hasFils) {
+      asabaPool.push({ label: "Fils du fils ×" + c("fils_fils"), count: c("fils_fils"), weight: 2, isFils: true, explanation: "héritent du résidu (عصبة) en l'absence de fils" });
+    } else if (hasFilsFils && hasFils) {
+      addResult("Fils du fils ×" + c("fils_fils"), c("fils_fils"), null, true, "bloqué par les fils", "");
+    }
+
+    // ---- FILLE DU FILS ----
+    if (hasFillesFils) {
+      if (hasFils) {
+        addResult("Fille du fils ×" + c("filles_fils"), c("filles_fils"), null, true, "bloquée par les fils", "");
+      } else if (hasFilsFils) {
+        asabaPool.push({ label: "Fille du fils ×" + c("filles_fils"), count: c("filles_fils"), weight: 1, isFilles: true, explanation: "hérite du résidu avec le fils du fils (عصبة)" });
+      } else if (hasFilles) {
+        var partRestante = subF(frac(2, 3), results.filter(function(r){ return r.label.indexOf("Filles") === 0; })[0] ? results.filter(function(r){ return r.label.indexOf("Filles") === 0; })[0].share : frac(0,1));
+        if (cmpF(partRestante, frac(0,1)) > 0) {
+          addResult("Fille du fils ×" + c("filles_fils"), c("filles_fils"), frac(1, 6), false, "", "reçoit 1/6 pour compléter le plafond des 2/3 avec les filles");
+        } else {
+          addResult("Fille du fils ×" + c("filles_fils"), c("filles_fils"), null, true, "bloquée (plafond 2/3 atteint par les filles)", "");
+        }
+      } else {
+        var nFdf = c("filles_fils");
+        var shareFdf = nFdf === 1 ? frac(1, 2) : frac(2, 3);
+        addResult("Fille du fils ×" + nFdf, nFdf, shareFdf, false, "", nFdf === 1 ? "reçoit 1/2 — seule en l'absence de fils et fils du fils" : "reçoivent 2/3 en l'absence de fils et fils du fils");
+      }
+    }
+
+    // ---- FRÈRES/SŒURS UTÉRINS ----
+    if (hasFrU || hasSrU) {
+      var blocUterin = hasDescendants || hasPere || hasGdPere;
+      if (blocUterin) {
+        if (hasFrU) addResult("Frère utérin ×" + c("fr_uterin"), c("fr_uterin"), null, true, "bloqué par les descendants / père / grand-père", "");
+        if (hasSrU) addResult("Sœur utérine ×" + c("sr_uterine"), c("sr_uterine"), null, true, "bloquée par les descendants / père / grand-père", "");
+      } else {
+        var nbU = c("fr_uterin") + c("sr_uterine");
+        var shareUterinTot = nbU === 1 ? frac(1, 6) : frac(1, 3);
+        var explUterin = nbU === 1 ? "reçoit 1/6 — seul héritier utérin" : "reçoivent 1/3 à partager entre " + nbU + " frères/sœurs utérins";
+        if (hasFrU) addResult("Frère utérin ×" + c("fr_uterin"), c("fr_uterin"), mulF(shareUterinTot, frac(c("fr_uterin"), nbU)), false, "", explUterin);
+        if (hasSrU) addResult("Sœur utérine ×" + c("sr_uterine"), c("sr_uterine"), mulF(shareUterinTot, frac(c("sr_uterine"), nbU)), false, "", explUterin);
+      }
+    }
+
+    // ---- FRÈRES/SŒURS GERMAINS ----
+    if (hasFrG || hasSrG) {
+      var blocGermain = hasDescendants || hasPere;
+      if (blocGermain) {
+        if (hasFrG) addResult("Frère germain ×" + c("fr_germain"), c("fr_germain"), null, true, "bloqué par les descendants / père", "");
+        if (hasSrG) addResult("Sœur germaine ×" + c("sr_germaine"), c("sr_germaine"), null, true, "bloquée par les descendants / père", "");
+      } else {
+        if (hasFrG) {
+          asabaPool.push({ label: "Frère germain ×" + c("fr_germain"), count: c("fr_germain"), weight: 2, explanation: "hérite du résidu (عصبة) — un frère reçoit le double d'une sœur" });
+          if (hasSrG) asabaPool.push({ label: "Sœur germaine ×" + c("sr_germaine"), count: c("sr_germaine"), weight: 1, explanation: "hérite du résidu avec le frère germain — une sœur reçoit la moitié d'un frère" });
+        } else {
+          // Sœurs germaines seules
+          if (!hasGdPere) {
+            var nbSrG = c("sr_germaine");
+            var shareSrG = nbSrG === 1 ? frac(1, 2) : frac(2, 3);
+            addResult("Sœur germaine ×" + nbSrG, nbSrG, shareSrG, false, "", nbSrG === 1 ? "reçoit 1/2 — une sœur germaine unique" : "reçoivent 2/3 — " + nbSrG + " sœurs germaines");
+          }
+        }
+      }
+    }
+
+    // ---- FRÈRES/SŒURS CONSANGUINS (bloqués par frère germain) ----
+    if (hasFrC || hasSrC) {
+      var blocConsanguin = hasDescendants || hasPere || hasFrG;
+      if (blocConsanguin) {
+        if (hasFrC) addResult("Frère consanguin ×" + c("fr_consanguin"), c("fr_consanguin"), null, true, "bloqué par les descendants / père / frère germain", "");
+        if (hasSrC) addResult("Sœur consanguine ×" + c("sr_consanguine"), c("sr_consanguine"), null, true, "bloquée par les descendants / père / frère germain", "");
+      } else {
+        if (hasFrC) {
+          asabaPool.push({ label: "Frère consanguin ×" + c("fr_consanguin"), count: c("fr_consanguin"), weight: 2, explanation: "hérite du résidu (عصبة) en l'absence de frère germain" });
+          if (hasSrC) asabaPool.push({ label: "Sœur consanguine ×" + c("sr_consanguine"), count: c("sr_consanguine"), weight: 1, explanation: "hérite du résidu avec le frère consanguin — une sœur reçoit la moitié d'un frère" });
+        } else {
+          var nbSrC = c("sr_consanguine");
+          if (hasSrG) {
+            // Sœur consanguine avec sœur germaine : 1/6 de complément si total < 2/3
+            addResult("Sœur consanguine ×" + nbSrC, nbSrC, frac(1, 6), false, "", "reçoit 1/6 pour compléter le plafond des 2/3 avec la sœur germaine");
+          } else {
+            var shareSrC = nbSrC === 1 ? frac(1, 2) : frac(2, 3);
+            addResult("Sœur consanguine ×" + nbSrC, nbSrC, shareSrC, false, "", nbSrC === 1 ? "reçoit 1/2 — une sœur consanguine unique" : "reçoivent 2/3 — " + nbSrC + " sœurs consanguines");
+          }
+        }
+      }
+    }
+
+    // ---- CALCUL ASABA (résidu) ----
+    if (asabaPool.length > 0) {
+      var residue = subF(frac(1, 1), totalFard);
+      if (cmpF(residue, frac(0, 1)) > 0) {
+        // Calculer poids total
+        var totalWeight = 0;
+        asabaPool.forEach(function(a) {
+          totalWeight += (a.count || 1) * a.weight;
+        });
+        asabaPool.forEach(function(a) {
+          var cnt = a.count || 1;
+          var shareA = mulF(residue, frac(cnt * a.weight, totalWeight));
+          results.push({ label: a.label, count: cnt, share: shareA, blocked: false, reason: "", isAsaba: true, explanation: a.explanation || "" });
+        });
+      }
+    }
+
+    // ---- AWL : si total > 1, réduction proportionnelle ----
+    var total = { n: 0, d: 1 };
+    results.forEach(function(r) { if (!r.blocked) total = addF(total, r.share); });
+    if (cmpF(total, frac(1, 1)) > 0) {
+      results.forEach(function(r) {
+        if (!r.blocked) r.share = mulF(r.share, frac(total.d, total.n));
+      });
+      total = { n: 1, d: 1 };
+    }
+
+    // ---- RADD : si total < 1 et pas d'asaba ni d'époux ----
+    var hasEpoux = (gender === "f" && c("epoux") > 0) || (gender === "m" && c("epouse") > 0);
+    var totalAfterAsaba = { n: 0, d: 1 };
+    results.forEach(function(r) { if (!r.blocked) totalAfterAsaba = addF(totalAfterAsaba, r.share); });
+    if (cmpF(totalAfterAsaba, frac(1, 1)) < 0 && asabaPool.length === 0) {
+      var residueRadd = subF(frac(1, 1), totalAfterAsaba);
+      // Radd aux héritiers fard sauf époux/épouse
+      var raddEligible = results.filter(function(r) {
+        return !r.blocked && !r.label.startsWith("Épou");
+      });
+      if (raddEligible.length > 0) {
+        var raddTotal = { n: 0, d: 1 };
+        raddEligible.forEach(function(r) { raddTotal = addF(raddTotal, r.share); });
+        raddEligible.forEach(function(r) {
+          var raddPart = mulF(residueRadd, mulF(r.share, frac(raddTotal.d, raddTotal.n)));
+          r.share = addF(r.share, raddPart);
+        });
+      }
+    }
+
+    return results;
+  }
+
+  function calcAndRenderHeritage() {
+    var results = calcHeritageShares(_heirCounts, _heritageGender);
+    var section = $("heritage-results-section");
+    var container = $("heritage-results");
+    if (!section || !container) return;
+
+    var hasAny = Object.keys(_heirCounts).some(function(k) { return _heirCounts[k] > 0; });
+    if (!hasAny) { section.classList.add("hidden"); return; }
+    section.classList.remove("hidden");
+
+    var amountVal = parseFloat($("heritage-amount") ? $("heritage-amount").value : 0) || 0;
+    var hasAsaba = results.some(function(r) { return !r.blocked && r.isAsaba; });
+    var hasFard  = results.some(function(r) { return !r.blocked && !r.isAsaba; });
+
+    var html = "";
+
+    // Legend
+    if (hasAsaba || hasFard) {
+      html += '<div class="heritage-legend">';
+      if (hasFard)  html += '<span class="heritage-legend-item"><span class="heritage-legend-dot heritage-legend-fard-dot"></span>Prescrite (فرض)</span>';
+      if (hasAsaba) html += '<span class="heritage-legend-item"><span class="heritage-legend-dot heritage-legend-asaba-dot"></span>Résiduelle (عصبة)</span>';
+      html += '</div>';
+    }
+
+    results.forEach(function(r) {
+      if (r.blocked) {
+        html += '<div class="heritage-result-row heritage-blocked">' +
+          '<div class="heritage-result-main">' +
+          '<span class="heritage-result-label">' + r.label + '</span>' +
+          '<span class="heritage-result-blocked-reason">— ' + r.reason + '</span>' +
+          '</div></div>';
+      } else {
+        var pctNum = r.share.n / r.share.d * 100;
+        var pctFormatted = pctNum.toFixed(1) + "%";
+        var fstr = fracStr(r.share);
+        var amtStr = amountVal > 0 ? ' <span class="heritage-result-amount">· ' + Math.round(amountVal * r.share.n / r.share.d).toLocaleString("fr-FR") + ' €</span>' : "";
+        var barClass = r.isAsaba ? "heritage-bar-asaba" : "heritage-bar-fard";
+        var expl = r.explanation || "";
+        html += '<div class="heritage-result-row">' +
+          '<div class="heritage-result-main">' +
+          '<span class="heritage-result-label">' + r.label + '</span>' +
+          '<span class="heritage-result-share"><strong>' + fstr + '</strong> <span class="heritage-result-pct">(' + pctFormatted + ')</span>' + amtStr + '</span>' +
+          '</div>' +
+          '<div class="heritage-result-bar-track">' +
+          '<div class="heritage-result-bar-fill ' + barClass + '" style="width:' + Math.min(pctNum, 100).toFixed(2) + '%"></div>' +
+          '</div>' +
+          (expl ? '<p class="heritage-result-explanation">' + expl + '</p>' : '') +
+          '</div>';
+      }
+    });
+
+    // Total line
+    var tot = { n: 0, d: 1 };
+    results.forEach(function(r) { if (!r.blocked) tot = addF(tot, r.share); });
+    html += '<div class="heritage-result-total"><span>Total</span><span>' + (tot.n / tot.d * 100).toFixed(1) + '%</span></div>';
+    container.innerHTML = html;
+  }
+
+  // ============================================================
+  // TESTAMENT — Générateur Wasiyya
+  // ============================================================
+
+  function openTestamentOverlay() {
+    $("testament-overlay").classList.remove("hidden");
+    var btn = $("testament-generate-btn");
+    if (btn) btn.onclick = generateTestament;
+    // Date input mask (auto-insert /)
+    var ddnInput = $("t-ddn");
+    if (ddnInput && !ddnInput._maskSet) {
+      ddnInput._maskSet = true;
+      ddnInput.addEventListener("input", function() {
+        var v = this.value.replace(/[^\d]/g, "").slice(0, 8);
+        if (v.length > 4) v = v.slice(0,2) + "/" + v.slice(2,4) + "/" + v.slice(4);
+        else if (v.length > 2) v = v.slice(0,2) + "/" + v.slice(2);
+        this.value = v;
+      });
+    }
+  }
+
+  function generateTestament() {
+    var nom    = ($("t-nom") ? $("t-nom").value.trim() : "") || "_______________";
+    var ddn    = ($("t-ddn") ? $("t-ddn").value : "") || "";
+    var ville  = ($("t-ville") ? $("t-ville").value.trim() : "") || "_______________";
+    var execNom = ($("t-exec-nom") ? $("t-exec-nom").value.trim() : "") || "_______________";
+    var execRel = ($("t-exec-rel") ? $("t-exec-rel").value.trim() : "") || "";
+    var tutNom  = ($("t-tut-nom") ? $("t-tut-nom").value.trim() : "");
+    var tutRel  = ($("t-tut-rel") ? $("t-tut-rel").value.trim() : "");
+    var dettes  = ($("t-dettes") ? $("t-dettes").value.trim() : "") || "Aucune dette connue à ce jour.";
+    var legsBenef = ($("t-legs-benef") ? $("t-legs-benef").value.trim() : "");
+    var legsDesc  = ($("t-legs-desc") ? $("t-legs-desc").value.trim() : "");
+    var divers  = ($("t-divers") ? $("t-divers").value.trim() : "");
+
+    // Format date (text input, use as-is)
+    var ddnFmt = ddn || "";
+
+    var today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+    // Fill identity
+    var idEl = $("tpd-identity");
+    if (idEl) idEl.textContent = nom + (ddnFmt ? ", né(e) le " + ddnFmt : "") + (ville !== "_______________" ? " — " + ville : "");
+
+    var villeEl = $("tpd-ville-sig");
+    if (villeEl) villeEl.textContent = ville !== "_______________" ? ville : "_________";
+    var dateEl = $("tpd-date-sig");
+    if (dateEl) dateEl.textContent = today;
+
+    // Build body
+    var body = "";
+
+    body += '<div class="tpd-section">';
+    body += '<h2 class="tpd-section-title">I. EXÉCUTEUR TESTAMENTAIRE</h2>';
+    body += '<p>Je désigne <strong>' + execNom + '</strong>' + (execRel ? ' (' + execRel + ')' : '') + ' comme exécuteur testamentaire de ce testament. Je lui confie la responsabilité de faire respecter mes volontés et de veiller à la distribution de mes biens conformément aux règles islamiques.</p>';
+    body += '</div>';
+
+    if (tutNom) {
+      body += '<div class="tpd-section">';
+      body += '<h2 class="tpd-section-title">II. TUTEUR DES ENFANTS MINEURS</h2>';
+      body += '<p>Je désigne <strong>' + tutNom + '</strong>' + (tutRel ? ' (' + tutRel + ')' : '') + ' comme tuteur de mes enfants mineurs, en cas de décès de leurs deux parents.</p>';
+      body += '</div>';
+    }
+
+    body += '<div class="tpd-section">';
+    body += '<h2 class="tpd-section-title">' + (tutNom ? "III" : "II") + '. DETTES ET OBLIGATIONS</h2>';
+    body += '<p>Je demande que les dettes suivantes soient remboursées en priorité, avant tout legs et avant toute distribution aux héritiers&nbsp;:</p>';
+    body += '<p class="tpd-body-text">' + dettes.replace(/\n/g, "<br>") + '</p>';
+    body += '</div>';
+
+    var secNum = tutNom ? 4 : 3;
+    body += '<div class="tpd-section">';
+    body += '<h2 class="tpd-section-title">' + toRoman(secNum) + '. LEGS (dans la limite du tiers de la succession)</h2>';
+    if (legsBenef) {
+      body += '<p>Je lègue à <strong>' + legsBenef + '</strong> ce qui suit&nbsp;:</p>';
+      body += '<p class="tpd-body-text">' + (legsDesc || "À préciser.").replace(/\n/g, "<br>") + '</p>';
+      body += '<p><em>Ce legs ne doit pas dépasser le tiers (1/3) de ma succession nette, conformément à la Sunna du Prophète ﷺ.</em></p>';
+    } else {
+      body += '<p>Je ne désigne pas de legs particulier. La totalité de ma succession sera distribuée selon les règles islamiques du partage successoral (Faraidh).</p>';
+    }
+    body += '</div>';
+
+    secNum++;
+    if (divers) {
+      body += '<div class="tpd-section">';
+      body += '<h2 class="tpd-section-title">' + toRoman(secNum) + '. DISPOSITIONS PARTICULIÈRES</h2>';
+      body += '<p class="tpd-body-text">' + divers.replace(/\n/g, "<br>") + '</p>';
+      body += '</div>';
+      secNum++;
+    }
+
+    body += '<div class="tpd-section">';
+    body += '<h2 class="tpd-section-title">' + toRoman(secNum) + '. DISTRIBUTION DE LA SUCCESSION</h2>';
+    body += '<p>Le reste de ma succession (après règlement des dettes et du legs) sera distribué entre mes héritiers légaux selon les règles islamiques du partage successoral (Faraidh), conformément au Coran et à la Sunna du Prophète ﷺ.</p>';
+    body += '</div>';
+
+    var bodyEl = $("tpd-body");
+    if (bodyEl) bodyEl.innerHTML = body;
+
+    // Show in-app document viewer
+    var printDoc = $("testament-print-doc");
+    var tdvDoc = $("tdv-doc");
+    if (tdvDoc && printDoc) tdvDoc.innerHTML = printDoc.innerHTML;
+    var viewer = $("testament-doc-viewer");
+    if (viewer) {
+      viewer.classList.remove("hidden");
+      var scroll = viewer.querySelector(".tdv-scroll");
+      if (scroll) scroll.scrollTop = 0;
+    }
+  }
+
+  function toRoman(n) {
+    var vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+    var syms = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+    var r = "";
+    vals.forEach(function(v, i) { while (n >= v) { r += syms[i]; n -= v; } });
+    return r;
+  }
+
+  // ============================================================
+  // ZAKAT — Calculateur de Zakat al-Mal
+  // ============================================================
+
+  var _zakatNisabMode = "or"; // "or" ou "argent"
+  var ZAKAT_NISAB_OR_GRAMS = 85;
+  var ZAKAT_NISAB_ARGENT_GRAMS = 595;
+  var ZAKAT_DEFAULT_PRIX_OR = 85; // €/g fallback
+  var ZAKAT_DEFAULT_PRIX_ARGENT = 1; // €/g fallback
+  var ZAKAT_RATE = 0.025; // 2.5%
+
+  function gregorianToHijri(date) {
+    try {
+      var fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+      var parts = fmt.formatToParts(date);
+      var day = "", month = "", year = "";
+      parts.forEach(function(p) {
+        if (p.type === "day") day = p.value;
+        if (p.type === "month") month = p.value;
+        if (p.type === "year") year = p.value;
+      });
+      return { day: day, month: month, year: year, full: day + " " + month + " " + year + " هـ" };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function hijriMonthName(date) {
+    try {
+      var fmt = new Intl.DateTimeFormat("fr-FR-u-ca-islamic-umalqura", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+      return fmt.format(date);
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function openZakatOverlay() {
+    _zakatNisabMode = "or";
+    $("zakat-overlay").classList.remove("hidden");
+
+    // Display current Hijri date
+    var now = new Date();
+    var hijri = gregorianToHijri(now);
+    var hijriEl = $("zakat-hijri-date");
+    var hijriLabel = $("zakat-hijri-label");
+    if (hijriEl && hijri) hijriEl.textContent = hijri.full;
+    if (hijriLabel) hijriLabel.textContent = hijriMonthName(now);
+
+    // Set default gold price
+    var prixInput = $("zakat-prix-gramme");
+    if (prixInput && !prixInput.value) prixInput.value = ZAKAT_DEFAULT_PRIX_OR;
+
+    // Restore saved hawl date
+    var savedHawl = localStorage.getItem("qurani_zakat_hawl");
+    var hawlInput = $("zakat-hawl-date");
+    if (hawlInput && savedHawl) hawlInput.value = savedHawl;
+
+    // Nisab toggle
+    var btnOr = $("zakat-nisab-or");
+    var btnAg = $("zakat-nisab-argent");
+    if (btnOr) btnOr.onclick = function() {
+      _zakatNisabMode = "or";
+      btnOr.classList.add("active"); btnAg.classList.remove("active");
+      if (prixInput) prixInput.value = ZAKAT_DEFAULT_PRIX_OR;
+      calcZakat();
+    };
+    if (btnAg) btnAg.onclick = function() {
+      _zakatNisabMode = "argent";
+      btnAg.classList.add("active"); btnOr.classList.remove("active");
+      if (prixInput) prixInput.value = ZAKAT_DEFAULT_PRIX_ARGENT;
+      calcZakat();
+    };
+
+    // Bind all inputs to recalculate
+    var allInputs = document.querySelectorAll("#zakat-overlay input");
+    allInputs.forEach(function(inp) {
+      inp.oninput = calcZakat;
+    });
+
+    // Hawl date save
+    if (hawlInput) {
+      hawlInput.addEventListener("change", function() {
+        if (this.value) localStorage.setItem("qurani_zakat_hawl", this.value);
+      });
+    }
+
+    calcZakat();
+  }
+
+  function calcZakat() {
+    // Nisab calculation
+    var prixGramme = parseFloat(($("zakat-prix-gramme") || {}).value) || 0;
+    var nisabGrams = _zakatNisabMode === "or" ? ZAKAT_NISAB_OR_GRAMS : ZAKAT_NISAB_ARGENT_GRAMS;
+    var nisabValue = prixGramme * nisabGrams;
+
+    var nisabEl = $("zakat-nisab-result");
+    if (nisabEl) {
+      var metalLabel = _zakatNisabMode === "or" ? "or" : "argent";
+      nisabEl.innerHTML = '<span class="zakat-nisab-label">Nisab actuel</span>' +
+        '<span class="zakat-nisab-value">' + nisabGrams + 'g ' + metalLabel + ' × ' + prixGramme.toFixed(2) + ' € = <strong>' + Math.round(nisabValue).toLocaleString("fr-FR") + ' €</strong></span>';
+    }
+
+    // Hawl status
+    var hawlInput = $("zakat-hawl-date");
+    var hawlStatus = $("zakat-hawl-status");
+    var hawlComplete = true;
+    if (hawlInput && hawlInput.value && hawlStatus) {
+      var hawlStart = new Date(hawlInput.value);
+      var now = new Date();
+      // Lunar year ≈ 354.37 days
+      var lunarYearMs = 354.37 * 24 * 60 * 60 * 1000;
+      var hawlEnd = new Date(hawlStart.getTime() + lunarYearMs);
+      var remaining = hawlEnd.getTime() - now.getTime();
+
+      hawlStatus.classList.remove("hidden");
+      if (remaining <= 0) {
+        var hijriEnd = gregorianToHijri(hawlEnd);
+        hawlStatus.innerHTML = '<span class="zakat-hawl-complete">✓ HAWL COMPLET</span>' +
+          '<span class="zakat-hawl-detail">Le cycle lunaire est terminé. Votre Zakat est due.</span>';
+        hawlComplete = true;
+      } else {
+        var daysLeft = Math.ceil(remaining / (24 * 60 * 60 * 1000));
+        var pct = Math.min(100, ((now - hawlStart) / lunarYearMs) * 100);
+        hawlStatus.innerHTML =
+          '<span class="zakat-hawl-pending">' + daysLeft + ' jours restants</span>' +
+          '<span class="zakat-hawl-detail">Échéance : ' + hawlEnd.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) + '</span>' +
+          '<div class="zakat-hawl-bar-track"><div class="zakat-hawl-bar-fill" style="width:' + pct.toFixed(1) + '%"></div></div>';
+        hawlComplete = false;
+      }
+    } else if (hawlStatus) {
+      hawlStatus.classList.add("hidden");
+    }
+
+    // Sum all wealth
+    var ids = ["zakat-epargne", "zakat-or", "zakat-argent-metal", "zakat-invest", "zakat-commerce", "zakat-crypto", "zakat-autres"];
+    var biens = [];
+    var labels = ["Épargne & Liquidités", "Or", "Argent (métal)", "Investissements", "Marchandises", "Crypto-monnaies", "Autres"];
+    var totalBiens = 0;
+    ids.forEach(function(id, i) {
+      var v = parseFloat(($(id) || {}).value) || 0;
+      biens.push({ label: labels[i], value: v });
+      totalBiens += v;
+    });
+
+    var dettes = parseFloat(($("zakat-dettes") || {}).value) || 0;
+    var netWealth = Math.max(0, totalBiens - dettes);
+
+    // Results
+    var section = $("zakat-results-section");
+    var container = $("zakat-results");
+    if (!section || !container) return;
+
+    var hasAny = totalBiens > 0;
+    if (!hasAny) { section.classList.add("hidden"); return; }
+    section.classList.remove("hidden");
+
+    var aboveNisab = netWealth >= nisabValue;
+    var zakatDue = aboveNisab ? netWealth * ZAKAT_RATE : 0;
+
+    var html = '';
+
+    // Breakdown
+    html += '<div class="zakat-breakdown">';
+    biens.forEach(function(b) {
+      if (b.value > 0) {
+        html += '<div class="zakat-breakdown-row">' +
+          '<span class="zakat-breakdown-label">' + b.label + '</span>' +
+          '<span class="zakat-breakdown-value">' + Math.round(b.value).toLocaleString("fr-FR") + ' €</span></div>';
+      }
+    });
+    if (dettes > 0) {
+      html += '<div class="zakat-breakdown-row zakat-breakdown-deduct">' +
+        '<span class="zakat-breakdown-label">− Dettes</span>' +
+        '<span class="zakat-breakdown-value">−' + Math.round(dettes).toLocaleString("fr-FR") + ' €</span></div>';
+    }
+    html += '<div class="zakat-breakdown-row zakat-breakdown-total">' +
+      '<span class="zakat-breakdown-label">Patrimoine net zakatable</span>' +
+      '<span class="zakat-breakdown-value">' + Math.round(netWealth).toLocaleString("fr-FR") + ' €</span></div>';
+    html += '</div>';
+
+    // Nisab comparison
+    html += '<div class="zakat-comparison">';
+    if (aboveNisab) {
+      html += '<div class="zakat-comparison-badge zakat-above-nisab">AU-DESSUS DU NISAB (' + Math.round(nisabValue).toLocaleString("fr-FR") + ' €)</div>';
+    } else {
+      html += '<div class="zakat-comparison-badge zakat-below-nisab">EN DESSOUS DU NISAB (' + Math.round(nisabValue).toLocaleString("fr-FR") + ' €)</div>';
+      html += '<p class="zakat-no-zakat">Votre patrimoine net est inférieur au Nisab. Pas de Zakat due.</p>';
+    }
+    html += '</div>';
+
+    // Zakat amount
+    if (aboveNisab) {
+      html += '<div class="zakat-final">';
+      html += '<div class="zakat-final-label">ZAKAT DUE (2,5%)</div>';
+      html += '<div class="zakat-final-amount">' + Math.round(zakatDue).toLocaleString("fr-FR") + ' €</div>';
+      if (!hawlComplete && hawlInput && hawlInput.value) {
+        html += '<p class="zakat-hawl-note">Le Hawl n\'est pas encore terminé. Ce montant sera dû à l\'échéance du cycle lunaire.</p>';
+      }
+      html += '</div>';
+
+      // Bar visualization
+      var barPct = Math.min((zakatDue / netWealth) * 100 * 10, 100); // scale for visibility
+      html += '<div class="zakat-bar-container">' +
+        '<div class="zakat-bar-track"><div class="zakat-bar-fill" style="width:' + barPct.toFixed(1) + '%"></div></div>' +
+        '<div class="zakat-bar-labels"><span>0 €</span><span>' + Math.round(netWealth).toLocaleString("fr-FR") + ' €</span></div></div>';
+    }
+
+    // Quranic reference
+    html += '<p class="zakat-reference">﴿ خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا ﴾<br><span class="zakat-ref-fr">« Prélève de leurs biens une aumône par laquelle tu les purifies et les bénis. » — At-Tawba 9:103</span></p>';
+
+    container.innerHTML = html;
   }
 
   function refreshMoiCounts() {
@@ -11481,6 +12495,34 @@
     if (!firebaseReady || !currentUser) return;
     clearTimeout(_syncTimer);
     _syncTimer = setTimeout(syncToCloud, 5000);
+  }
+
+  // ============================================================
+  //  SHOOTING STARS — Dashboard hero
+  // ============================================================
+  function initShootingStars() {
+    var container = $("dash-shooting-stars");
+    if (!container) return;
+
+    function createStar() {
+      var tabEl = $("tab-accueil");
+      if (tabEl && tabEl.offsetParent === null) return; // not on dashboard
+      var star = document.createElement("div");
+      star.className = "shooting-star";
+      star.style.left = (25 + Math.random() * 65) + "vw";
+      star.style.top  = (4  + Math.random() * 48) + "vh";
+      var len = 70 + Math.random() * 90;
+      star.style.width = len + "px";
+      container.appendChild(star);
+      setTimeout(function() { if (star.parentNode) star.remove(); }, 900);
+    }
+
+    // First star shortly after load, then every 3 s
+    setTimeout(createStar, 1600);
+    setInterval(function() {
+      createStar();
+      if (Math.random() > 0.5) setTimeout(createStar, 380 + Math.random() * 300);
+    }, 3000);
   }
 
   init();

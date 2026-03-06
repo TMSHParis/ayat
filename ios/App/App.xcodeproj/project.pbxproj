@@ -11,16 +11,13 @@
 		3A3564B62F4C88D200BF64CA /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3564B52F4C88D200BF64CA /* WidgetKit.framework */; };
 		3A3564B82F4C88D200BF64CA /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3564B72F4C88D200BF64CA /* SwiftUI.framework */; };
 		3A3564C52F4C88D300BF64CA /* QuraniWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3A3564B32F4C88D200BF64CA /* QuraniWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		3A3564E42F4C8B6200BF64CA /* QuraniWidgetsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564E02F4C8B6200BF64CA /* QuraniWidgetsControl.swift */; };
-		3A3564E52F4C8B6200BF64CA /* QuraniWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564DF2F4C8B6200BF64CA /* QuraniWidgetsBundle.swift */; };
-		3A3564E62F4C8B6200BF64CA /* NextPrayerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564DA2F4C8B6200BF64CA /* NextPrayerWidget.swift */; };
-		3A3564E72F4C8B6200BF64CA /* SharedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564E12F4C8B6200BF64CA /* SharedData.swift */; };
-		3A3564E82F4C8B6200BF64CA /* QuraniWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564DC2F4C8B6200BF64CA /* QuraniWidgetBundle.swift */; };
-		3A3564E92F4C8B6200BF64CA /* QuraniWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564DE2F4C8B6200BF64CA /* QuraniWidgets.swift */; };
-		3A3564EA2F4C8B6200BF64CA /* PrayerTimesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564DB2F4C8B6200BF64CA /* PrayerTimesWidget.swift */; };
-		3A3564EB2F4C8B6200BF64CA /* VerseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3564E22F4C8B6200BF64CA /* VerseWidget.swift */; };
 		3A3564ED2F4C8B6200BF64CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A3564D82F4C8B6200BF64CA /* Assets.xcassets */; };
 		3A3564FC2F4C8D5000BF64CA /* QuraniWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3A3564F22F4C8D4F00BF64CA /* QuraniWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3A9A971B2F58CD5C007C5B68 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3564B52F4C88D200BF64CA /* WidgetKit.framework */; };
+		3A9A971C2F58CD5C007C5B68 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3564B72F4C88D200BF64CA /* SwiftUI.framework */; };
+		3A9A97272F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3A9A97882F599E94007C5B68 /* SharedDataPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A97872F599E94007C5B68 /* SharedDataPlugin.swift */; };
+		3A9A978A2F59BD0D007C5B68 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A97892F59BD0D007C5B68 /* ViewController.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
@@ -44,6 +41,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3A3564F12F4C8D4F00BF64CA;
 			remoteInfo = "QuraniWatch Watch App";
+		};
+		3A9A97252F58CD5C007C5B68 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3A9A97192F58CD5C007C5B68;
+			remoteInfo = QuraniWatchComplicationExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -70,6 +74,17 @@
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3A9A97282F58CD5C007C5B68 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3A9A97272F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -91,6 +106,9 @@
 		3A3564E12F4C8B6200BF64CA /* SharedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedData.swift; sourceTree = "<group>"; };
 		3A3564E22F4C8B6200BF64CA /* VerseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerseWidget.swift; sourceTree = "<group>"; };
 		3A3564F22F4C8D4F00BF64CA /* QuraniWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "QuraniWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuraniWatchComplicationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A9A97872F599E94007C5B68 /* SharedDataPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataPlugin.swift; sourceTree = "<group>"; };
+		3A9A97892F59BD0D007C5B68 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -110,11 +128,19 @@
 			);
 			target = 3A3564B22F4C88D200BF64CA /* QuraniWidgetsExtension */;
 		};
+		3A9A97312F58D62C007C5B68 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3A9A97192F58CD5C007C5B68 /* QuraniWatchComplicationExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3A3564B92F4C88D200BF64CA /* QuraniWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3A3564C92F4C88D300BF64CA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = QuraniWidgets; sourceTree = "<group>"; };
 		3A3564F32F4C8D4F00BF64CA /* QuraniWatch Watch App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "QuraniWatch Watch App"; sourceTree = "<group>"; };
+		3A9A971D2F58CD5C007C5B68 /* QuraniWatchComplication */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3A9A97312F58D62C007C5B68 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = QuraniWatchComplication; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +157,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A9A97172F58CD5C007C5B68 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A9A971C2F58CD5C007C5B68 /* SwiftUI.framework in Frameworks */,
+				3A9A971B2F58CD5C007C5B68 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,12 +210,15 @@
 		504EC2FB1FED79650016851F = {
 			isa = PBXGroup;
 			children = (
+				3A9A97892F59BD0D007C5B68 /* ViewController.swift */,
+				3A9A97872F599E94007C5B68 /* SharedDataPlugin.swift */,
 				3A3564D62F4C894900BF64CA /* QuraniWidgetsExtension.entitlements */,
 				3A3564E32F4C8B6200BF64CA /* QuraniWidgets */,
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				3A3564B92F4C88D200BF64CA /* QuraniWidgets */,
 				3A3564F32F4C8D4F00BF64CA /* QuraniWatch Watch App */,
+				3A9A971D2F58CD5C007C5B68 /* QuraniWatchComplication */,
 				3A3564B42F4C88D200BF64CA /* Frameworks */,
 				504EC3051FED79650016851F /* Products */,
 			);
@@ -192,6 +230,7 @@
 				504EC3041FED79650016851F /* App.app */,
 				3A3564B32F4C88D200BF64CA /* QuraniWidgetsExtension.appex */,
 				3A3564F22F4C8D4F00BF64CA /* QuraniWatch Watch App.app */,
+				3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -244,10 +283,12 @@
 				3A3564EE2F4C8D4F00BF64CA /* Sources */,
 				3A3564EF2F4C8D4F00BF64CA /* Frameworks */,
 				3A3564F02F4C8D4F00BF64CA /* Resources */,
+				3A9A97282F58CD5C007C5B68 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3A9A97262F58CD5C007C5B68 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3A3564F32F4C8D4F00BF64CA /* QuraniWatch Watch App */,
@@ -258,6 +299,28 @@
 			productName = "QuraniWatch Watch App";
 			productReference = 3A3564F22F4C8D4F00BF64CA /* QuraniWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		3A9A97192F58CD5C007C5B68 /* QuraniWatchComplicationExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3A9A972C2F58CD5C007C5B68 /* Build configuration list for PBXNativeTarget "QuraniWatchComplicationExtension" */;
+			buildPhases = (
+				3A9A97162F58CD5C007C5B68 /* Sources */,
+				3A9A97172F58CD5C007C5B68 /* Frameworks */,
+				3A9A97182F58CD5C007C5B68 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3A9A971D2F58CD5C007C5B68 /* QuraniWatchComplication */,
+			);
+			name = QuraniWatchComplicationExtension;
+			packageProductDependencies = (
+			);
+			productName = QuraniWatchComplicationExtension;
+			productReference = 3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		504EC3031FED79650016851F /* App */ = {
 			isa = PBXNativeTarget;
@@ -289,7 +352,7 @@
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 0920;
 				TargetAttributes = {
 					3A3564B22F4C88D200BF64CA = {
@@ -297,6 +360,9 @@
 					};
 					3A3564F12F4C8D4F00BF64CA = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					3A9A97192F58CD5C007C5B68 = {
+						CreatedOnToolsVersion = 26.3;
 					};
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
@@ -324,6 +390,7 @@
 				504EC3031FED79650016851F /* App */,
 				3A3564B22F4C88D200BF64CA /* QuraniWidgetsExtension */,
 				3A3564F12F4C8D4F00BF64CA /* QuraniWatch Watch App */,
+				3A9A97192F58CD5C007C5B68 /* QuraniWatchComplicationExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -338,6 +405,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		3A3564F02F4C8D4F00BF64CA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A9A97182F58CD5C007C5B68 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -364,14 +438,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A3564E42F4C8B6200BF64CA /* QuraniWidgetsControl.swift in Sources */,
-				3A3564E52F4C8B6200BF64CA /* QuraniWidgetsBundle.swift in Sources */,
-				3A3564E62F4C8B6200BF64CA /* NextPrayerWidget.swift in Sources */,
-				3A3564E72F4C8B6200BF64CA /* SharedData.swift in Sources */,
-				3A3564E82F4C8B6200BF64CA /* QuraniWidgetBundle.swift in Sources */,
-				3A3564E92F4C8B6200BF64CA /* QuraniWidgets.swift in Sources */,
-				3A3564EA2F4C8B6200BF64CA /* PrayerTimesWidget.swift in Sources */,
-				3A3564EB2F4C8B6200BF64CA /* VerseWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,11 +448,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3A9A97162F58CD5C007C5B68 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		504EC3001FED79650016851F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A9A978A2F59BD0D007C5B68 /* ViewController.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				3A9A97882F599E94007C5B68 /* SharedDataPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -402,6 +477,11 @@
 			isa = PBXTargetDependency;
 			target = 3A3564F12F4C8D4F00BF64CA /* QuraniWatch Watch App */;
 			targetProxy = 3A3564FA2F4C8D5000BF64CA /* PBXContainerItemProxy */;
+		};
+		3A9A97262F58CD5C007C5B68 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3A9A97192F58CD5C007C5B68 /* QuraniWatchComplicationExtension */;
+			targetProxy = 3A9A97252F58CD5C007C5B68 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -438,7 +518,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = QuraniWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -453,7 +533,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.QuraniWidgets;
@@ -482,7 +562,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = QuraniWidgetsExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -497,7 +577,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.QuraniWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -524,7 +604,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = "QuraniWatch Watch App/QuraniWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -538,7 +618,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.watchkitapp;
@@ -570,7 +650,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = "QuraniWatch Watch App/QuraniWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -584,7 +664,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -593,6 +673,96 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		3A9A97292F58CD5C007C5B68 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = QuraniWatchComplication/QuraniWatchComplication.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = TKGTW43774;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuraniWatchComplication/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QuraniWatchComplication;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 3.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.watchkitapp.QuraniWatchComplication;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		3A9A972A2F58CD5C007C5B68 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_ENTITLEMENTS = QuraniWatchComplication/QuraniWatchComplication.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = TKGTW43774;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuraniWatchComplication/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = QuraniWatchComplication;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 3.1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani.watchkitapp.QuraniWatchComplication;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -717,16 +887,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -742,16 +912,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -777,6 +947,15 @@
 			buildConfigurations = (
 				3A3564FE2F4C8D5000BF64CA /* Debug */,
 				3A3564FF2F4C8D5000BF64CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3A9A972C2F58CD5C007C5B68 /* Build configuration list for PBXNativeTarget "QuraniWatchComplicationExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A9A97292F58CD5C007C5B68 /* Debug */,
+				3A9A972A2F58CD5C007C5B68 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

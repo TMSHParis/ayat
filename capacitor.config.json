@@ -6,8 +6,9 @@
     "allowsInlineMediaPlayback": true
   },
   "server": {
+    "url": "https://ayat-theta.vercel.app",
     "iosScheme": "https",
-    "allowNavigation": ["*.youtube.com", "*.googlevideo.com", "*.github.io"]
+    "allowNavigation": ["*.youtube.com", "*.googlevideo.com", "*.github.io", "*.vercel.app", "*.firebaseapp.com", "*.googleapis.com", "*.gstatic.com", "appleid.apple.com", "idmsa.apple.com", "*.apple.com", "accounts.google.com"]
   },
   "plugins": {
     "CapacitorHttp": {

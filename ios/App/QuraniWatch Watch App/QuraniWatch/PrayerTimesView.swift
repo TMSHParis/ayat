@@ -41,14 +41,18 @@ struct PrayerTimesView: View {
 
                         Spacer(minLength: 12)
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 28)
                 }
             } else {
                 fallbackView
             }
         }
         .onAppear { loadData() }
-        .onReceive(timer) { _ in now = Date() }
+        .onReceive(timer) { _ in
+            now = Date()
+            // Re-check si les données ont été mises à jour par WatchConnectivityManager
+            if prayerData == nil { loadData() }
+        }
     }
 
     // ────────────────────────────────────
@@ -166,10 +170,7 @@ struct PrayerTimesView: View {
     }
 
     private func loadData() {
-        prayerData = PrayerTimesData.load() ?? PrayerTimesData(
-            fajr: "06:22", sunrise: "07:52", dhuhr: "13:04",
-            asr: "16:12", maghrib: "18:38", isha: "20:02",
-            date: "", timestamp: Date()
-        )
+        prayerData = PrayerTimesData.load()
+        print("⌚ [Watch UI] loadData — data \(prayerData != nil ? "loaded ✅ fajr=\(prayerData!.fajr)" : "nil ❌")")
     }
 }

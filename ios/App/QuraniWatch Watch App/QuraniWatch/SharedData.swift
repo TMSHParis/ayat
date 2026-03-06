@@ -40,6 +40,15 @@ struct PrayerTimesData {
         ]
     }
 
+    // Parse "HH:MM" ou "HH:MM (EET)" → [heure, minute]
+    private func parseTimeParts(_ time: String) -> [Int] {
+        return time.split(separator: ":").compactMap { part -> Int? in
+            let digits = String(part).trimmingCharacters(in: .whitespaces)
+                .prefix(while: { $0.isNumber })
+            return Int(digits)
+        }
+    }
+
     func nextPrayer() -> (name: String, nameAr: String, time: String, date: Date)? {
         let now = Date()
         let calendar = Calendar.current
@@ -51,23 +60,23 @@ struct PrayerTimesData {
             ("Isha", "العشاء", isha)
         ]
         for (name, nameAr, time) in prayerList {
-            let parts = time.split(separator: ":").compactMap { Int($0) }
+            let parts = parseTimeParts(time)
             guard parts.count >= 2 else { continue }
             var components = calendar.dateComponents([.year, .month, .day], from: now)
             components.hour = parts[0]
             components.minute = parts[1]
             if let prayerDate = calendar.date(from: components), prayerDate > now {
-                return (name, nameAr, time, prayerDate)
+                return (name, nameAr, String(time.prefix(5)), prayerDate)
             }
         }
-        let parts = fajr.split(separator: ":").compactMap { Int($0) }
+        let parts = parseTimeParts(fajr)
         guard parts.count >= 2 else { return nil }
         var components = calendar.dateComponents([.year, .month, .day], from: now)
         components.hour = parts[0]
         components.minute = parts[1]
         if let fajrDate = calendar.date(from: components),
            let tomorrow = calendar.date(byAdding: .day, value: 1, to: fajrDate) {
-            return ("Fajr", "الفجر", fajr, tomorrow)
+            return ("Fajr", "الفجر", String(fajr.prefix(5)), tomorrow)
         }
         return nil
     }

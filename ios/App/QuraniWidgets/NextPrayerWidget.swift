@@ -21,7 +21,14 @@ struct NextPrayerProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NextPrayerEntry>) -> Void) {
         let entry = makeEntry()
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
+        // Refresh at prayer time so the widget updates to the next prayer immediately
+        let nextUpdate: Date
+        if let prayerDate = entry.prayerDate {
+            // Refresh 1 minute after the prayer time
+            nextUpdate = prayerDate.addingTimeInterval(60)
+        } else {
+            nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
+        }
         completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 
@@ -33,6 +40,8 @@ struct NextPrayerProvider: TimelineProvider {
         return NextPrayerEntry(date: Date(), prayerName: next.name, prayerNameAr: next.nameAr, prayerTime: String(next.time.prefix(5)), prayerDate: next.date, isPlaceholder: false)
     }
 }
+
+// MARK: - Home Screen (systemSmall)
 
 struct NextPrayerWidgetView: View {
     var entry: NextPrayerEntry
@@ -75,15 +84,105 @@ struct NextPrayerWidgetView: View {
     }
 }
 
+// MARK: - Lock Screen Circular
+
+struct NextPrayerCircularView: View {
+    var entry: NextPrayerEntry
+
+    var body: some View {
+        ZStack {
+            AccessoryWidgetBackground()
+            VStack(spacing: 1) {
+                Image(systemName: "moon.stars.fill")
+                    .font(.system(size: 10))
+                Text(entry.prayerTime)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .minimumScaleFactor(0.6)
+            }
+        }
+        .containerBackground(for: .widget) { Color.clear }
+    }
+}
+
+// MARK: - Lock Screen Rectangular
+
+struct NextPrayerRectangularView: View {
+    var entry: NextPrayerEntry
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "moon.stars.fill")
+                .font(.title3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.prayerName)
+                    .font(.headline)
+                    .fontWeight(.bold)
+                Text(entry.prayerTime)
+                    .font(.system(.body, design: .monospaced))
+                    .fontWeight(.semibold)
+            }
+            Spacer()
+            Text(entry.prayerNameAr)
+                .font(.title3)
+        }
+        .containerBackground(for: .widget) { Color.clear }
+    }
+}
+
+// MARK: - Lock Screen Inline
+
+struct NextPrayerInlineView: View {
+    var entry: NextPrayerEntry
+
+    var body: some View {
+        Label {
+            Text("\(entry.prayerName) \(entry.prayerTime)")
+        } icon: {
+            Image(systemName: "moon.stars.fill")
+        }
+        .containerBackground(for: .widget) { Color.clear }
+    }
+}
+
+// MARK: - Widget
+
 struct NextPrayerWidget: Widget {
     let kind: String = "NextPrayerWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: NextPrayerProvider()) { entry in
-            NextPrayerWidgetView(entry: entry)
+            switch WidgetFamily(rawValue: entry.date.hashValue) {
+            default:
+                NextPrayerAdaptiveView(entry: entry)
+            }
         }
         .configurationDisplayName("Prochaine pri\u{00e8}re")
         .description("Affiche la prochaine pri\u{00e8}re et son horaire.")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([
+            .systemSmall,
+            .accessoryCircular,
+            .accessoryRectangular,
+            .accessoryInline
+        ])
+    }
+}
+
+// MARK: - Adaptive View (dispatches by family)
+
+struct NextPrayerAdaptiveView: View {
+    var entry: NextPrayerEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        switch family {
+        case .accessoryCircular:
+            NextPrayerCircularView(entry: entry)
+        case .accessoryRectangular:
+            NextPrayerRectangularView(entry: entry)
+        case .accessoryInline:
+            NextPrayerInlineView(entry: entry)
+        default:
+            NextPrayerWidgetView(entry: entry)
+        }
     }
 }

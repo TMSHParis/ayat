@@ -58,6 +58,9 @@
       <!-- Ambient sun/moon glow overlay -->
       <div class="dash-ambient-glow" id="dash-ambient-glow"></div>
 
+      <!-- Shooting stars layer -->
+      <div id="dash-shooting-stars" aria-hidden="true"></div>
+
       <!-- Compact Prayer Bar -->
       <div class="dash-prayer-bar" id="dash-prayer-bar">
         <div class="dash-prayer-timeline" id="dash-prayer-timeline"></div>
@@ -81,6 +84,16 @@
         </div>
         <div class="dash-card-prompt">Avez-vous fait vos invocations de protection&nbsp;?</div>
         <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+      </div>
+
+      <!-- Sourate du jour -->
+      <div class="dash-card dash-surat-card" id="dash-surat-card">
+        <div class="dash-card-label-row">
+          <span class="dash-card-label">SOURATE DU JOUR</span>
+          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="dash-card-prompt" id="dash-surat-name"></div>
+        <button class="dash-card-btn" id="dash-surat-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
       </div>
 
       <!-- Thin separator -->
@@ -212,8 +225,11 @@
       <div class="khatm-section-divider">
         <div class="khatm-section-line"></div>
         <div class="khatm-section-header">
-          <span class="khatm-section-title">LECTURE LIBRE</span>
-          <p class="khatm-section-desc">Parcourez le Coran sourate par sourate, indépendamment de votre Khatm.</p>
+          <div>
+            <span class="khatm-section-title">LECTURE LIBRE</span>
+            <p class="khatm-section-desc">PARCOUREZ LE CORAN SOURATE PAR SOURATE, INDÉPENDAMMENT DE VOTRE KHATM.</p>
+          </div>
+          <svg class="khatm-section-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
 
@@ -341,6 +357,7 @@
         <div id="auth-logged-out">
           <div class="moi-sep"></div>
           <div class="moi-item" id="auth-toggle-btn">
+            <span class="moi-item-dot" style="background:#A0C8A8"></span>
             <div class="moi-item-text">
               <span class="moi-item-label">Connexion</span>
               <span class="moi-item-count">SYNCHRONISER VOS DONN&Eacute;ES</span>
@@ -371,7 +388,89 @@
 
       <div class="moi-section">
         <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-stats">
+          <span class="moi-item-dot" style="background:#F0B0C0"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Statistiques</span>
+            <span class="moi-item-count" id="moi-stats-count">VOS CHIFFRES</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-khatms">
+          <span class="moi-item-dot" style="background:#F5D08A"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Khatms</span>
+            <span class="moi-item-count" id="moi-khatms-count">AUCUN</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-ayati">
+          <span class="moi-item-dot" style="background:#8ECFA8"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Ayati</span>
+            <span class="moi-item-count">IDENTIFIER UN VERSET</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-hifz">
+          <span class="moi-item-dot" style="background:#8ABEDC"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Mémorisation</span>
+            <span class="moi-item-count">HIFZ — APPRENTISSAGE PAR CŒUR</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-heritage">
+          <span class="moi-item-dot" style="background:#B8A8D8"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Héritage</span>
+            <span class="moi-item-count">CALCUL DES PARTS ISLAMIQUES</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-testament">
+          <span class="moi-item-dot" style="background:#DCA8B8"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Testament</span>
+            <span class="moi-item-count">WASIYYA — TESTAMENT ISLAMIQUE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-zakat">
+          <span class="moi-item-dot" style="background:#8BC99A"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Zakat</span>
+            <span class="moi-item-count">CALCULATEUR DE ZAKAT AL-MAL</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-contact">
+          <span class="moi-item-dot" style="background:#F0BCA0"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Besoin d&rsquo;une Appli&thinsp;?</span>
+            <span class="moi-item-count">CONTACTEZ-NOUS</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-notes">
+          <span class="moi-item-dot" style="background:#8AD4C4"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Notes</span>
+            <span class="moi-item-count" id="moi-notes-count">AUCUNE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
         <div class="moi-item" id="moi-favoris">
+          <span class="moi-item-dot" style="background:#F0A888"></span>
           <div class="moi-item-text">
             <span class="moi-item-label">Favoris</span>
             <span class="moi-item-count" id="moi-favoris-count">0</span>
@@ -382,31 +481,8 @@
           </div>
         </div>
         <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-notes">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Notes</span>
-            <span class="moi-item-count" id="moi-notes-count">AUCUNE</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-khatms">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Khatms</span>
-            <span class="moi-item-count" id="moi-khatms-count">AUCUN</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-stats">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Statistiques</span>
-            <span class="moi-item-count" id="moi-stats-count">VOS CHIFFRES</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
         <div class="moi-item" id="moi-videos">
+          <span class="moi-item-dot" style="background:#98B8F0"></span>
           <div class="moi-item-text">
             <span class="moi-item-label">Vidéos</span>
             <span class="moi-item-count" id="moi-videos-count">VIDÉO DU JOUR</span>
@@ -415,6 +491,7 @@
         </div>
         <div class="moi-sep"></div>
         <div class="moi-item" id="moi-podcast">
+          <span class="moi-item-dot" style="background:#B8C4F0"></span>
           <div class="moi-item-text">
             <span class="moi-item-label">Podcast</span>
             <span class="moi-item-count">COLLECTIF D'ÉTUDIANTS DE MÉDINE</span>
@@ -423,33 +500,10 @@
         </div>
         <div class="moi-sep"></div>
         <div class="moi-item" id="moi-islamsounnah">
+          <span class="moi-item-dot" style="background:#A8D4A0"></span>
           <div class="moi-item-text">
             <span class="moi-item-label">IslamSounnah</span>
             <span class="moi-item-count">TÉLÉCHARGER LE YOUTUBE ISLAMIQUE</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-ayati">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Ayati</span>
-            <span class="moi-item-count">IDENTIFIER UN VERSET</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-hifz">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Mémorisation</span>
-            <span class="moi-item-count">HIFZ — APPRENTISSAGE PAR CŒUR</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-contact">
-          <div class="moi-item-text">
-            <span class="moi-item-label">Besoin d&rsquo;une Appli&thinsp;?</span>
-            <span class="moi-item-count">CONTACTEZ-NOUS</span>
           </div>
           <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
@@ -621,6 +675,12 @@
       <div class="kr-lang-opt" data-lang="ar">Arabe</div>
       <div class="kr-lang-opt" data-lang="fr">Français</div>
       <div class="kr-lang-opt active" data-lang="ar+fr">Arabe &amp; Français</div>
+      <div class="kr-lang-opt" data-lang="en">Anglais</div>
+      <div class="kr-lang-opt" data-lang="ar+en">Arabe &amp; Anglais</div>
+      <div class="kr-lang-opt" data-lang="ph">Phonétique</div>
+      <div class="kr-lang-opt" data-lang="ar+ph">Arabe &amp; Phonétique</div>
+      <div class="kr-lang-opt" data-lang="fr+ph">Français &amp; Phonétique</div>
+      <div class="kr-lang-opt" data-lang="en+ph">Anglais &amp; Phonétique</div>
     </div>
     <!-- Mode de lecture -->
     <div class="kr-panel-row" id="kr-mode-row">
@@ -786,25 +846,31 @@
 <!-- ====== MOI SETTINGS — gradient overlay ====== -->
 <div id="moi-settings-overlay" class="overlay hidden moi-cat-overlay">
   <div class="moi-cat-scroll">
-    <div class="moi-cat-topbar">
-      <button class="moi-cat-back" id="moi-settings-back" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
+    <div class="moi-settings-hero">
+      <div class="moi-settings-hero-bg" id="moi-settings-hero-bg"></div>
+      <div class="moi-settings-hero-fade"></div>
+      <div class="moi-settings-hero-inner">
+        <button class="moi-cat-back" id="moi-settings-back" aria-label="Retour">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
     </div>
-    <h1 class="moi-cat-title">R&eacute;glages</h1>
     <div class="moi-settings-list">
       <div class="moi-sep"></div>
       <div class="moi-settings-item" id="moi-set-about">
+        <span class="moi-item-dot" style="background:#A8D4F0"></span>
         <span class="moi-settings-item-label">&Agrave; propos</span>
         <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="moi-sep"></div>
       <div class="moi-settings-item" id="moi-set-help">
+        <span class="moi-item-dot" style="background:#C8E0A8"></span>
         <span class="moi-settings-item-label">Aide</span>
         <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="moi-sep"></div>
       <div class="moi-settings-item" id="moi-set-method">
+        <span class="moi-item-dot" style="background:#F5D08A"></span>
         <span class="moi-settings-item-label">M&eacute;thode de Calcul</span>
         <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
@@ -1180,23 +1246,25 @@
 
 <!-- ====== VIDEOS OVERLAY ====== -->
 <div id="videos-overlay" class="overlay hidden moi-cat-overlay">
-  <!-- Sticky player block — no topbar, player at very top -->
-  <div class="video-sticky-player">
-    <button class="video-top-back" id="video-top-back" aria-label="Retour">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+  <!-- Header bar — always visible, ABOVE the player -->
+  <div class="vid-top-bar">
+    <button class="vid-top-bar-back" id="video-top-back" aria-label="Retour">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div class="video-player-wrap" id="video-player-wrap">
-      <div class="video-thumb-state" id="video-thumb-state">
-        <img class="video-thumb-img" id="video-thumb-img" alt="">
-        <button class="video-play-btn" id="video-play-btn" aria-label="Lire">
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-            <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
-            <polygon points="23 17 40 28 23 39" fill="white"/>
-          </svg>
-        </button>
-      </div>
-      <div class="video-iframe-state hidden" id="video-iframe-state"></div>
+    <span class="vid-top-bar-label">VIDÉO DU JOUR</span>
+  </div>
+  <!-- Player below header -->
+  <div class="video-player-wrap" id="video-player-wrap">
+    <div class="video-thumb-state" id="video-thumb-state">
+      <img class="video-thumb-img" id="video-thumb-img" alt="">
+      <button class="video-play-btn" id="video-play-btn" aria-label="Lire">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+          <polygon points="23 17 40 28 23 39" fill="white"/>
+        </svg>
+      </button>
     </div>
+    <div class="video-iframe-state hidden" id="video-iframe-state"></div>
   </div>
   <!-- Scrollable content below player -->
   <div class="videos-scroll" id="videos-scroll">
@@ -1221,22 +1289,23 @@
 
 <!-- ====== PODCAST OVERLAY ====== -->
 <div id="podcast-overlay" class="overlay hidden moi-cat-overlay">
-  <div class="video-sticky-player">
-    <button class="video-top-back" id="pod-top-back" aria-label="Retour">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
+  <div class="vid-top-bar">
+    <button class="vid-top-bar-back" id="pod-top-back" aria-label="Retour">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div class="video-player-wrap" id="pod-player-wrap">
-      <div class="video-thumb-state" id="pod-thumb-state">
-        <img class="video-thumb-img" id="pod-thumb-img" alt="">
-        <button class="video-play-btn" id="pod-play-btn" aria-label="Lire">
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-            <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
-            <polygon points="23 17 40 28 23 39" fill="white"/>
-          </svg>
-        </button>
-      </div>
-      <div class="video-iframe-state hidden" id="pod-iframe-state"></div>
+    <span class="vid-top-bar-label">PODCAST DU JOUR</span>
+  </div>
+  <div class="video-player-wrap" id="pod-player-wrap">
+    <div class="video-thumb-state" id="pod-thumb-state">
+      <img class="video-thumb-img" id="pod-thumb-img" alt="">
+      <button class="video-play-btn" id="pod-play-btn" aria-label="Lire">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="27" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+          <polygon points="23 17 40 28 23 39" fill="white"/>
+        </svg>
+      </button>
     </div>
+    <div class="video-iframe-state hidden" id="pod-iframe-state"></div>
   </div>
   <div class="videos-scroll" id="pod-scroll">
     <div class="video-info">
@@ -1282,6 +1351,289 @@
         <svg class="is-store-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
       </a>
     </div>
+  </div>
+</div>
+
+<!-- ====== HERITAGE OVERLAY ====== -->
+<div id="heritage-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll" id="heritage-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="heritage-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Héritage</h1>
+    <div class="moi-cat-body">
+      <p class="heritage-intro">Calculez les parts islamiques (Faraidh) conformément au Coran et à la Sunna.</p>
+      <div class="heritage-section">
+        <h3 class="heritage-section-title">LE DÉFUNT</h3>
+        <div class="heritage-gender-row">
+          <button class="heritage-gender-btn active" id="heritage-gender-m" data-gender="m">HOMME</button>
+          <button class="heritage-gender-btn" id="heritage-gender-f" data-gender="f">FEMME</button>
+        </div>
+        <div class="heritage-field">
+          <label class="heritage-label">Montant de la succession <span class="heritage-opt">(optionnel)</span></label>
+          <div class="heritage-amount-row">
+            <input class="heritage-amount-input" id="heritage-amount" type="number" placeholder="" min="0">
+            <span class="heritage-currency">€</span>
+          </div>
+          <p class="heritage-amount-hint">Après dettes, frais funéraires et legs (wasiyyah). Laissez vide pour afficher uniquement les fractions.</p>
+        </div>
+      </div>
+      <div class="heritage-section">
+        <h3 class="heritage-section-title">LES HÉRITIERS</h3>
+        <div id="heritage-heirs-grid"></div>
+      </div>
+      <div class="heritage-section hidden" id="heritage-results-section">
+        <h3 class="heritage-section-title">RÉSULTATS</h3>
+        <div id="heritage-results"></div>
+        <p class="heritage-madhab-note">Calcul selon le consensus des quatre madhhabs sunnites. Basé sur les versets coraniques et la Sunnah. Vérifié sur 133 cas de test d'érudits. Consultez un érudit qualifié pour les cas complexes.</p>
+      </div>
+      <p class="moi-privacy-note">Aucune information n'est collectée ni stockée. Tout est calculé localement sur votre appareil.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TESTAMENT OVERLAY ====== -->
+<div id="testament-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="testament-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Testament</h1>
+    <div class="moi-cat-body">
+      <p class="testament-intro">Rédigez votre testament islamique (Wasiyya) conformément à la Sunna. Répondez aux questions ci-dessous puis générez votre document.</p>
+      <div class="testament-section">
+        <h3 class="testament-section-title">I. IDENTITÉ</h3>
+        <div class="testament-field">
+          <label class="testament-label">Prénom et nom complet</label>
+          <input class="testament-input" id="t-nom" type="text" placeholder="Mohammed Martin">
+        </div>
+        <div class="testament-field-row">
+          <div class="testament-field">
+            <label class="testament-label">Date de naissance</label>
+            <input class="testament-input" id="t-ddn" type="text" placeholder="JJ/MM/AAAA" inputmode="numeric">
+          </div>
+          <div class="testament-field">
+            <label class="testament-label">Ville et pays</label>
+            <input class="testament-input" id="t-ville" type="text" placeholder="Paris, France">
+          </div>
+        </div>
+      </div>
+      <div class="testament-section">
+        <h3 class="testament-section-title">II. EXÉCUTEUR TESTAMENTAIRE</h3>
+        <p class="testament-hint">La personne chargée de faire respecter vos volontés après votre décès.</p>
+        <div class="testament-field">
+          <label class="testament-label">Nom de l&rsquo;exécuteur</label>
+          <input class="testament-input" id="t-exec-nom" type="text" placeholder="Prénom Nom">
+        </div>
+        <div class="testament-field">
+          <label class="testament-label">Relation</label>
+          <input class="testament-input" id="t-exec-rel" type="text" placeholder="Mon frère, Mon ami...">
+        </div>
+      </div>
+      <div class="testament-section">
+        <h3 class="testament-section-title">III. TUTEUR DES ENFANTS MINEURS <span class="testament-opt">(si applicable)</span></h3>
+        <div class="testament-field">
+          <label class="testament-label">Nom du tuteur</label>
+          <input class="testament-input" id="t-tut-nom" type="text" placeholder="Prénom Nom">
+        </div>
+        <div class="testament-field">
+          <label class="testament-label">Relation</label>
+          <input class="testament-input" id="t-tut-rel" type="text" placeholder="Mon frère, Ma mère...">
+        </div>
+      </div>
+      <div class="testament-section">
+        <h3 class="testament-section-title">IV. DETTES ET OBLIGATIONS</h3>
+        <p class="testament-hint">Les dettes sont remboursées en priorité, avant tout legs ou distribution aux héritiers.</p>
+        <div class="testament-field">
+          <label class="testament-label">Description des dettes à rembourser</label>
+          <textarea class="testament-textarea" id="t-dettes" placeholder="Ex&nbsp;: Je dois 2&thinsp;000&thinsp;€ à mon frère Ahmed (prêt en 2023).&#10;Je dois compléter 3 jours de jeûne...&#10;Aucune dette connue."></textarea>
+        </div>
+      </div>
+      <div class="testament-section">
+        <h3 class="testament-section-title">V. LEGS <span class="testament-opt">(maximum 1/3 de la succession)</span></h3>
+        <p class="testament-hint">Le legs ne peut dépasser le tiers de la succession et ne peut pas bénéficier à un héritier légal.</p>
+        <div class="testament-field">
+          <label class="testament-label">Bénéficiaire</label>
+          <input class="testament-input" id="t-legs-benef" type="text" placeholder="Nom ou organisation caritative">
+        </div>
+        <div class="testament-field">
+          <label class="testament-label">Description du legs</label>
+          <textarea class="testament-textarea" id="t-legs-desc" placeholder="Ex&nbsp;: Je lègue 5&thinsp;000&thinsp;€ à l&rsquo;association X pour la construction d&rsquo;une école.&#10;Je lègue mon appartement à ma nièce Fatima."></textarea>
+        </div>
+      </div>
+      <div class="testament-section">
+        <h3 class="testament-section-title">VI. DISPOSITIONS PARTICULIÈRES</h3>
+        <div class="testament-field">
+          <textarea class="testament-textarea" id="t-divers" placeholder="Ex&nbsp;: Je souhaite être inhumé selon le rite islamique.&#10;Je demande à ma famille de faire des invocations (du'a) en ma faveur.&#10;Je demande à mes proches de ne pas se lamenter excessivement."></textarea>
+        </div>
+      </div>
+      <button class="testament-generate-btn" id="testament-generate-btn">GÉNÉRER LE TESTAMENT →</button>
+      <p class="moi-privacy-note">Aucune information n'est collectée ni stockée. Tout reste sur votre appareil.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ZAKAT OVERLAY ====== -->
+<div id="zakat-overlay" class="overlay hidden moi-cat-overlay">
+  <div class="moi-cat-scroll" id="zakat-scroll">
+    <div class="moi-cat-topbar">
+      <button class="moi-cat-back" id="zakat-close" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <h1 class="moi-cat-title">Zakat</h1>
+    <div class="moi-cat-body">
+      <p class="zakat-intro">Calculez votre Zakat al-Mal selon les règles islamiques. Le seuil (Nisab) est basé sur 85g d'or ou 595g d'argent.</p>
+
+      <div class="zakat-section">
+        <h3 class="zakat-section-title">CALENDRIER LUNAIRE (HAWL)</h3>
+        <p class="zakat-hint">La Zakat est due après qu'un cycle lunaire complet (Hawl) se soit écoulé depuis que votre épargne a atteint le Nisab.</p>
+        <div class="zakat-hijri-display">
+          <div class="zakat-hijri-date" id="zakat-hijri-date"></div>
+          <div class="zakat-hijri-label" id="zakat-hijri-label"></div>
+        </div>
+        <div class="zakat-field">
+          <label class="zakat-label">Date de début du Hawl <span class="zakat-opt">(quand l'épargne a atteint le Nisab)</span></label>
+          <input class="zakat-input" id="zakat-hawl-date" type="date">
+        </div>
+        <div class="zakat-hawl-status hidden" id="zakat-hawl-status"></div>
+      </div>
+
+      <div class="zakat-section">
+        <h3 class="zakat-section-title">NISAB (SEUIL MINIMUM)</h3>
+        <div class="zakat-nisab-toggle">
+          <button class="zakat-nisab-btn active" id="zakat-nisab-or" data-nisab="or">OR (85g)</button>
+          <button class="zakat-nisab-btn" id="zakat-nisab-argent" data-nisab="argent">ARGENT (595g)</button>
+        </div>
+        <div class="zakat-field">
+          <label class="zakat-label">Prix du gramme <span class="zakat-opt">(cours actuel)</span></label>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input" id="zakat-prix-gramme" type="number" placeholder="85" min="0" step="0.01">
+            <span class="zakat-currency">€/g</span>
+          </div>
+        </div>
+        <div class="zakat-nisab-result" id="zakat-nisab-result"></div>
+      </div>
+
+      <div class="zakat-section">
+        <h3 class="zakat-section-title">VOS BIENS</h3>
+        <p class="zakat-hint">Entrez la valeur actuelle de chaque catégorie de biens.</p>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Épargne &amp; Liquidités</label>
+          <span class="zakat-field-hint">Comptes bancaires, espèces, livrets</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-epargne" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Or</label>
+          <span class="zakat-field-hint">Bijoux, pièces, lingots (valeur marchande)</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-or" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Argent (métal)</label>
+          <span class="zakat-field-hint">Bijoux, pièces en argent</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-argent-metal" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Investissements</label>
+          <span class="zakat-field-hint">Actions, fonds, obligations, parts sociales</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-invest" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Marchandises commerciales</label>
+          <span class="zakat-field-hint">Stock destiné à la vente</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-commerce" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Crypto-monnaies</label>
+          <span class="zakat-field-hint">Bitcoin, Ethereum, etc.</span>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-crypto" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+
+        <div class="zakat-field">
+          <label class="zakat-label">Autres biens zakatable</label>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input zakat-bien" id="zakat-autres" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="zakat-section">
+        <h3 class="zakat-section-title">DETTES À DÉDUIRE</h3>
+        <p class="zakat-hint">Dettes à court terme que vous devez rembourser prochainement.</p>
+        <div class="zakat-field">
+          <label class="zakat-label">Total des dettes</label>
+          <div class="zakat-amount-row">
+            <input class="zakat-amount-input" id="zakat-dettes" type="number" placeholder="0" min="0">
+            <span class="zakat-currency">€</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="zakat-section hidden" id="zakat-results-section">
+        <h3 class="zakat-section-title">RÉSULTAT</h3>
+        <div id="zakat-results"></div>
+      </div>
+
+      <p class="moi-privacy-note">Aucune information n'est collectée ni stockée. Tout est calculé localement sur votre appareil.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TESTAMENT PRINT DOCUMENT ====== -->
+<div id="testament-print-doc">
+  <div class="tpd-bismillah">بسم الله الرحمن الرحيم</div>
+  <h1 class="tpd-title">TESTAMENT ISLAMIQUE</h1>
+  <p class="tpd-subtitle" id="tpd-identity"></p>
+  <div class="tpd-shahada">أشهد أن لا إله إلا الله وأن محمداً رسول الله</div>
+  <p class="tpd-shahada-fr">Je témoigne qu'il n'y a de dieu qu'Allah et que Muhammad est Son messager (paix et bénédictions sur lui).</p>
+  <div id="tpd-body"></div>
+  <div class="tpd-signature-block">
+    <p class="tpd-sig-lieu">Fait à <span id="tpd-ville-sig"></span>, le <span id="tpd-date-sig"></span></p>
+    <div class="tpd-sig-line">Signature&nbsp;: ___________________________</div>
+  </div>
+</div>
+
+<!-- ====== TESTAMENT DOCUMENT VIEWER ====== -->
+<div id="testament-doc-viewer" class="overlay hidden">
+  <div class="tdv-topbar">
+    <button class="tdv-close-btn" id="tdv-close-btn" aria-label="Retour">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="tdv-label">APERÇU</span>
+    <button class="tdv-print-btn" id="tdv-print-btn">IMPRIMER / PDF →</button>
+  </div>
+  <div class="tdv-scroll">
+    <div class="tdv-doc" id="tdv-doc"></div>
+    <p class="tdv-tip">Sur iPhone&nbsp;: Partager → Imprimer → presser longuement l'aperçu → Enregistrer en PDF</p>
   </div>
 </div>
 
@@ -2078,13 +2430,19 @@
   <div id="spm-lang-opts" class="hidden">
     <div class="spm-lang-opt" data-lang="ar">Arabe seulement</div>
     <div class="spm-lang-opt" data-lang="fr">Français seulement</div>
+    <div class="spm-lang-opt" data-lang="en">Anglais seulement</div>
     <div class="spm-lang-opt" data-lang="ar-fr">Arabe &amp; Français</div>
+    <div class="spm-lang-opt" data-lang="ar-en">Arabe &amp; Anglais</div>
+    <div class="spm-lang-opt" data-lang="ph">Phonétique</div>
+    <div class="spm-lang-opt" data-lang="ar-ph">Arabe &amp; Phonétique</div>
+    <div class="spm-lang-opt" data-lang="fr-ph">Français &amp; Phonétique</div>
+    <div class="spm-lang-opt" data-lang="en-ph">Anglais &amp; Phonétique</div>
   </div>
   <div class="spm-sep"></div>
   <div id="spm-mode-row" class="spm-btn">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
     <span>Mode de lecture</span>
-    <span id="spm-mode-val" style="margin-left:auto;font-size:0.7rem;opacity:0.5;font-family:'Space Mono',monospace">MINIMAL</span>
+    <span id="spm-mode-val" style="margin-left:auto;font-size:0.7rem;opacity:0.5;font-family:'Space Mono',monospace;white-space:nowrap">MINIMAL</span>
     <svg id="spm-mode-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
   </div>
   <div id="spm-mode-opts" class="hidden">

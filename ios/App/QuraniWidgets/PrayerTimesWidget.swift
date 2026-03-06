@@ -31,7 +31,13 @@ struct PrayerTimesProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PrayerTimesEntry>) -> Void) {
         let entry = makeEntry()
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
+        // Refresh at next prayer time so highlighted prayer updates immediately
+        let nextUpdate: Date
+        if let data = PrayerTimesData.load(), let next = data.nextPrayer() {
+            nextUpdate = next.date.addingTimeInterval(60)
+        } else {
+            nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
+        }
         completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 
@@ -48,6 +54,8 @@ struct PrayerTimesProvider: TimelineProvider {
         )
     }
 }
+
+// MARK: - Home Screen (systemMedium)
 
 struct PrayerTimesWidgetView: View {
     var entry: PrayerTimesEntry
@@ -103,15 +111,62 @@ struct PrayerTimesWidgetView: View {
     }
 }
 
+// MARK: - Lock Screen Rectangular (compact 5 prayers)
+
+struct PrayerTimesRectangularView: View {
+    var entry: PrayerTimesEntry
+
+    var body: some View {
+        // Filter out Shourouq for lock screen — only the 5 salawat
+        let salawat = entry.prayers.filter { $0.name != "Shourouq" }
+        VStack(alignment: .leading, spacing: 1) {
+            ForEach(Array(salawat.enumerated()), id: \.offset) { _, prayer in
+                let isNext = prayer.name == entry.nextPrayerName
+                HStack(spacing: 4) {
+                    Text(prayer.nameAr)
+                        .font(.system(size: 10))
+                        .frame(width: 28, alignment: .trailing)
+                        .fontWeight(isNext ? .bold : .regular)
+                    Text(prayer.time)
+                        .font(.system(size: 10, design: .monospaced))
+                        .fontWeight(isNext ? .bold : .regular)
+                    Spacer()
+                }
+                .opacity(isNext ? 1.0 : 0.6)
+            }
+        }
+        .containerBackground(for: .widget) { Color.clear }
+    }
+}
+
+// MARK: - Widget
+
 struct PrayerTimesWidget: Widget {
     let kind: String = "PrayerTimesWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PrayerTimesProvider()) { entry in
-            PrayerTimesWidgetView(entry: entry)
+            PrayerTimesAdaptiveView(entry: entry)
         }
         .configurationDisplayName("Horaires de pri\u{00e8}re")
         .description("Affiche les horaires des 5 pri\u{00e8}res et Shourouq.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([
+            .systemMedium,
+            .accessoryRectangular
+        ])
+    }
+}
+
+struct PrayerTimesAdaptiveView: View {
+    var entry: PrayerTimesEntry
+    @Environment(\.widgetFamily) var family
+
+    var body: some View {
+        switch family {
+        case .accessoryRectangular:
+            PrayerTimesRectangularView(entry: entry)
+        default:
+            PrayerTimesWidgetView(entry: entry)
+        }
     }
 }
