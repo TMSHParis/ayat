@@ -1,10 +1,13 @@
-const CACHE_NAME = "qurani-v338";
+const CACHE_NAME = "qurani-v377";
 
 const PRECACHE = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
+  "./audio-processor.js",
+  "./follow-worker.js",
+  "./vocab.json",
   "./quran.json",
   "./quran-fr.json",
   "./quran-en.json",
@@ -56,6 +59,17 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
+
+  // API routes — always network, never cache (critical for large model download)
+  if (url.pathname.startsWith("/api/")) {
+    return; // let browser handle directly, no SW interception
+  }
+
+  // External CDN resources (ONNX Runtime, WASM) — always network, never cache
+  if (url.hostname.includes("cdn.jsdelivr.net") ||
+      url.hostname.includes("onnxruntime")) {
+    return; // let browser handle directly
+  }
 
   // Firebase & Google auth: always network, never cache
   if (url.hostname.includes("firebase") ||

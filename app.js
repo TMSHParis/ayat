@@ -607,6 +607,15 @@
       readingMode: "minimal",
       tajwidColors: true,
       minimalColors: false,
+      showHassanates: true,
+      showDashStats: false,
+      _sv: 2,
+      minTheme: 'dark',
+      minLang: 'ar',
+      minMode: 'minimal',
+      minSize: 100,
+      minSurahIdx: 0,
+      minAyahIdx: 0,
     };
   }
 
@@ -616,6 +625,11 @@
       if (!raw) return defaultState();
       var parsed = JSON.parse(raw);
       var s = Object.assign(defaultState(), parsed);
+      // Migration v2 : forcer showDashStats à false pour tous les utilisateurs existants
+      if (!parsed._sv || parsed._sv < 2) {
+        s.showDashStats = false;
+        s._sv = 2;
+      }
       var today = getLocalDateStr();
       if (s.lastReadDate !== today) {
         s.todayReadCount = 0;
@@ -913,9 +927,12 @@
     $("surah-overlay").classList.add("hidden");
     renderFreeReading();
     $("ayah-scroll").scrollTop = 0;
+    $("freeread-follow-btn").classList.remove("hidden");
   }
 
   function exitFreeReading() {
+    followCleanup();
+    $("freeread-follow-btn").classList.add("hidden");
     stopAudio();
     freeReadMode = false;
     freeReadSurahIdx = 0;
@@ -1192,6 +1209,30 @@
     });
     document.querySelectorAll("#tajwid-color-buttons .setting-btn").forEach(function (btn) {
       btn.classList.toggle("active", (btn.dataset.tajwidColors === "true") === !!state.tajwidColors);
+    });
+    // Hassanates visibility
+    var showH = state.showHassanates !== false;
+    var hassWrap = $("stat-hassanates-wrap");
+    if (hassWrap) hassWrap.classList.toggle("hidden", !showH);
+    var dashHassBlock = $("dash-hassanates-block");
+    var dashHassDivider = $("dash-hassanates-divider");
+    var dashHassProgress = $("dash-hassanates-progress-line");
+    if (dashHassBlock) dashHassBlock.classList.toggle("hidden", !showH);
+    if (dashHassDivider) dashHassDivider.classList.toggle("hidden", !showH);
+    // Dashboard stats section visibility
+    var showDS = state.showDashStats !== false;
+    var dashStatsSec = $("dash-stats-section");
+    if (dashStatsSec) dashStatsSec.classList.toggle("hidden", !showDS);
+    // La ligne de progression des stats se cache si stats cachées OU hassanates cachés
+    if (dashHassProgress) dashHassProgress.classList.toggle("hidden", !showH || !showDS);
+    if (dashHassBlock) dashHassBlock.classList.toggle("hidden", !showH);
+    if (dashHassDivider) dashHassDivider.classList.toggle("hidden", !showH);
+    // Sync stats-overlay prefs buttons
+    document.querySelectorAll("#stats-hassanates-btns .stats-pref-opt").forEach(function (btn) {
+      btn.classList.toggle("active", (btn.dataset.hassanates === "true") === (state.showHassanates !== false));
+    });
+    document.querySelectorAll("#stats-dashstats-btns .stats-pref-opt").forEach(function (btn) {
+      btn.classList.toggle("active", (btn.dataset.dashstats === "true") === (state.showDashStats !== false));
     });
     var modeHint = $("mode-hint");
     if (modeHint) {
@@ -3167,11 +3208,9 @@
   }
 
   function setDashBg() {
+    // Fond noir sobre — pas d'image prayer sur le dashboard
     var dashBg = document.getElementById("dash-bg");
-    if (!dashBg || !PRAYER_BG_IMAGES || !PRAYER_BG_IMAGES.length) return;
-    var num = PRAYER_BG_IMAGES[Math.floor(Math.random() * PRAYER_BG_IMAGES.length)];
-    var ext = [20, 36, 40, 64].indexOf(num) >= 0 ? "png" : "jpg";
-    dashBg.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
+    if (dashBg) dashBg.style.backgroundImage = "none";
   }
 
   function getDailySurahIdx() {
@@ -3193,10 +3232,55 @@
     if (!surah) return;
     var nameFr = SURAH_NAMES_FR[surah.surahNumber] || ("Sourate " + surah.surahNumber);
     nameEl.textContent = surah.surahNameAr + " \u2014 " + nameFr;
+
+    // Daily surah progress
+    var totalVerses = surah.ayahs.length;
+    var num = surah.surahNumber;
+    // Real verse count (excluding basmala)
+    var realCount = (num !== 1 && num !== 9) ? totalVerses - 1 : totalVerses;
+    var progress = _spGetDailyProgress();
+    var versesRead = 0;
+    if (progress && progress.surahIdx === idx && progress.highWater >= 0) {
+      versesRead = progress.highWater + 1; // highWater is 0-based index
+    }
+    var remaining = Math.max(0, totalVerses - versesRead);
+    var pct = totalVerses > 0 ? Math.min(versesRead / totalVerses * 100, 100) : 0;
+
+    // Remaining label
+    var remEl = $("dash-surat-remaining");
+    if (remEl) {
+      if (versesRead > 0 && remaining > 0) {
+        remEl.textContent = remaining + " verset" + (remaining > 1 ? "s" : "") + " restant" + (remaining > 1 ? "s" : "");
+      } else if (remaining === 0 && versesRead > 0) {
+        remEl.textContent = "\u2713 Termin\u00e9e";
+      } else {
+        remEl.textContent = realCount + " versets";
+      }
+    }
+
+    // Progress bar
+    var fillEl = $("dash-surat-progress-fill");
+    if (fillEl) {
+      fillEl.style.width = pct + "%";
+    }
   }
 
-  // Choix fixé une fois au démarrage, stable toute la session
-  var _dashShowInvoc = (Math.random() < 0.5);
+  /** Vendredi 10h→Maghrib = sourate du jour (Al-Kahf), sinon invocations */
+  function _dashShouldShowSurat() {
+    var now = new Date();
+    if (now.getDay() !== 5) return false; // pas vendredi
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    if (nowMin < 10 * 60) return false; // avant 10h
+    // après Maghrib → invocations du soir
+    if (prayerTimesCache && prayerTimesCache.Maghrib) {
+      var parts = (prayerTimesCache.Maghrib + "").split(":");
+      var magMin = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
+      if (!isNaN(magMin) && nowMin >= magMin) return false;
+    } else {
+      if (nowMin >= 18 * 60) return false;
+    }
+    return true; // vendredi entre 10h et Maghrib
+  }
 
   function initDashboardCards() {
     var labelEl = $("dash-card-label");
@@ -3207,16 +3291,16 @@
     updateDashKhatmCard();
     updateDashStats();
     updateDashSuratCard();
-    // Appliquer le choix de session (ne change plus jusqu'à fermeture de l'app)
+    // Vendredi 10h→Maghrib : sourate du jour, sinon invocations
     var invocCard = document.querySelector(".dash-invocation-card");
     var suratCard = $("dash-surat-card");
     if (invocCard && suratCard) {
-      if (_dashShowInvoc) {
-        invocCard.classList.remove("hidden");
-        suratCard.classList.add("hidden");
-      } else {
+      if (_dashShouldShowSurat()) {
         invocCard.classList.add("hidden");
         suratCard.classList.remove("hidden");
+      } else {
+        invocCard.classList.remove("hidden");
+        suratCard.classList.add("hidden");
       }
     }
   }
@@ -4151,6 +4235,527 @@
     _closeBack("recit-overlay", function() {
       if (recitIsListening) recitStopListening();
     });
+  }
+
+  // ===========================================================
+  // ============  SUIVI DE RÉCITATION (AUTO-SCROLL)  ==========
+  // ===========================================================
+
+  var followMode = false;
+  var followIsListening = false;
+  var followContext = null;        // "khatm" or "freeread"
+  var followVerseQueue = [];       // [{si, ai, words, wordsNorm, text}]
+  var followCurrentIdx = 0;
+  var followMatchedCount = 0;
+  var followWorker = null;
+  var followWorkerReady = false;
+  var followAudioCtx = null;
+  var followMicStream = null;
+  var followWatchdogTimer = null;
+  var followLastTranscriptTime = 0;
+  var followAudioChunksSent = 0;
+  var followUserScrolling = false;       // true while user is manually scrolling
+  var followUserScrollTimer = null;      // debounce timer to clear flag
+  var followScrollListenerBound = false; // to avoid binding multiple times
+
+  /** Build the verse queue starting from the current position */
+  function followLoadVerseQueue() {
+    followVerseQueue = [];
+    followCurrentIdx = 0;
+    followMatchedCount = 0;
+
+    if (followContext === "khatm") {
+      // Gather visible + upcoming verses from #kr-scroll
+      var allVerses = krScrollEl.querySelectorAll(".kr-verse");
+      for (var i = 0; i < allVerses.length; i++) {
+        var si = parseInt(allVerses[i].dataset.si, 10);
+        var ai = parseInt(allVerses[i].dataset.ai, 10);
+        var text = surahs[si].ayahs[ai];
+        var words = text.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+        followVerseQueue.push({
+          si: si, ai: ai, text: text,
+          words: words,
+          wordsNorm: words.map(function(w) { return normalizeArabic(w); }),
+          el: allVerses[i]
+        });
+      }
+      // Find current verse (the one closest to the top of viewport)
+      if (allVerses.length > 0) {
+        var scrollRect = krScrollEl.getBoundingClientRect();
+        var midY = scrollRect.top + scrollRect.height * 0.35;
+        for (var j = 0; j < followVerseQueue.length; j++) {
+          var rect = followVerseQueue[j].el.getBoundingClientRect();
+          if (rect.bottom >= midY) {
+            followCurrentIdx = j;
+            break;
+          }
+        }
+      }
+    } else if (followContext === "freeread") {
+      // Load all verses from the Surah Player's reader
+      var spContainer = $("sp-reader-content");
+      if (!spContainer) return;
+      var spVerses = spContainer.querySelectorAll(".sp-verse");
+      for (var k = 0; k < spVerses.length; k++) {
+        var spSi = spCurrentSurahIdx;
+        var spAi = parseInt(spVerses[k].dataset.i, 10);
+        var text2 = surahs[spSi].ayahs[spAi];
+        var words2 = text2.replace(/^\s+|\s+$/g, "").split(/\s+/).filter(Boolean);
+        followVerseQueue.push({
+          si: spSi, ai: spAi, text: text2,
+          words: words2,
+          wordsNorm: words2.map(function(w) { return normalizeArabic(w); }),
+          el: spVerses[k]
+        });
+      }
+      // Find current verse (closest to top of viewport)
+      var spScrollEl = $("sp-reader-scroll");
+      if (spScrollEl && spVerses.length > 0) {
+        var spRect = spScrollEl.getBoundingClientRect();
+        var spMidY = spRect.top + spRect.height * 0.35;
+        for (var m = 0; m < followVerseQueue.length; m++) {
+          var mRect = followVerseQueue[m].el.getBoundingClientRect();
+          if (mRect.bottom >= spMidY) {
+            followCurrentIdx = m;
+            break;
+          }
+        }
+      }
+    }
+    followHighlightCurrent();
+  }
+
+  function followHighlightCurrent() {
+    // Remove previous highlights (both contexts)
+    var prev = document.querySelector(".kr-verse-follow-active");
+    if (prev) prev.classList.remove("kr-verse-follow-active");
+    var prev2 = document.querySelector(".sp-verse-follow-active");
+    if (prev2) prev2.classList.remove("sp-verse-follow-active");
+
+    if (followVerseQueue[followCurrentIdx]) {
+      var el = followVerseQueue[followCurrentIdx].el;
+      if (el) {
+        if (followContext === "khatm") el.classList.add("kr-verse-follow-active");
+        else if (followContext === "freeread") el.classList.add("sp-verse-follow-active");
+      }
+    }
+  }
+
+  // Helpers for follow matching
+  function _followSim(a, b) {
+    if (!a || !b) return 0;
+    var dist = levenshtein(a, b);
+    var mx = Math.max(a.length, b.length);
+    return mx > 0 ? (1 - dist / mx) : 0;
+  }
+  function _followThresh(word) {
+    return word.length <= 3 ? 0.75 : 0.55;
+  }
+
+  /** Scan-based matching: find best alignment of verse words anywhere in spoken words */
+  function _followScanMatch(wordsNorm, spoken) {
+    var bestCount = 0;
+    var limit = Math.min(spoken.length, 40); // don't scan too far
+    for (var start = 0; start < limit; start++) {
+      var matched = 0;
+      var si = start;
+      var wi = 0;
+      var skips = 0;
+      while (wi < wordsNorm.length && si < spoken.length) {
+        var sim = _followSim(wordsNorm[wi], spoken[si]);
+        if (sim >= _followThresh(wordsNorm[wi])) {
+          matched++;
+          wi++; si++; skips = 0;
+        } else {
+          si++; skips++;
+          if (skips > 3) break; // too many consecutive misses
+        }
+      }
+      if (matched > bestCount) bestCount = matched;
+      if (bestCount >= wordsNorm.length) break; // perfect match, stop early
+    }
+    return bestCount;
+  }
+
+  // ---- SUIVI VOCAL — Progressive scroll during recitation ----
+  // Teleprompter-style: scroll to keep reading position at ~35% from top.
+  // Gradually reveals next verse before highlight moves.
+  // Respects manual user scroll without breaking the pipeline.
+
+  /** Bind touch/wheel listeners on scrollEl to detect manual scrolls */
+  function followBindScrollListeners(scrollEl) {
+    if (!scrollEl || followScrollListenerBound) return;
+    followScrollListenerBound = true;
+
+    var markUserScroll = function() {
+      if (!followIsListening) return;
+      followUserScrolling = true;
+      if (followUserScrollTimer) clearTimeout(followUserScrollTimer);
+      followUserScrollTimer = setTimeout(function() {
+        followUserScrolling = false;
+      }, 1500); // resume auto-scroll 1.5s after user stops touching
+    };
+
+    scrollEl.addEventListener("touchstart", markUserScroll, { passive: true });
+    scrollEl.addEventListener("touchmove", markUserScroll, { passive: true });
+    scrollEl.addEventListener("wheel", markUserScroll, { passive: true });
+
+    // Store cleanup function
+    scrollEl._followCleanup = function() {
+      scrollEl.removeEventListener("touchstart", markUserScroll);
+      scrollEl.removeEventListener("touchmove", markUserScroll);
+      scrollEl.removeEventListener("wheel", markUserScroll);
+      followScrollListenerBound = false;
+    };
+  }
+
+  function followProgressiveScroll(pct) {
+    // Don't fight manual scrolling
+    if (followUserScrolling) return;
+
+    var scrollEl, verseEl;
+
+    if (followContext === "khatm") {
+      scrollEl = krScrollEl;
+      var verse = followVerseQueue[followCurrentIdx];
+      if (!verse || !verse.el) return;
+      verseEl = verse.el;
+    } else if (followContext === "freeread") {
+      scrollEl = $("sp-reader-scroll");
+      var spVerse = followVerseQueue[followCurrentIdx];
+      if (!spVerse || !spVerse.el) return;
+      verseEl = spVerse.el;
+    } else {
+      return;
+    }
+    if (!scrollEl) return;
+
+    // Bind scroll listeners on first call
+    followBindScrollListeners(scrollEl);
+
+    var scrollRect = scrollEl.getBoundingClientRect();
+    var verseRect = verseEl.getBoundingClientRect();
+    var verseHeight = verseEl.offsetHeight;
+    var containerH = scrollEl.clientHeight;
+
+    // Reading position ON SCREEN (relative to scroll container top)
+    var readScreenY = (verseRect.top - scrollRect.top) + pct * verseHeight;
+
+    // Boost: when past 40% of current verse, gradually reveal the next verse
+    var boost = 0;
+    if (pct > 0.4 && followCurrentIdx + 1 < followVerseQueue.length) {
+      var nextEl = followVerseQueue[followCurrentIdx + 1].el;
+      if (nextEl) {
+        // From 40%→100%, boost goes from 0 → 40% of next verse height
+        var boostPct = (pct - 0.4) / 0.6;
+        boost = boostPct * nextEl.offsetHeight * 0.4;
+      }
+    }
+
+    var targetZone = containerH * 0.35;
+    var effectiveReadY = readScreenY + boost;
+
+    // Only scroll FORWARD — never scroll back
+    if (effectiveReadY > targetZone + 5) {
+      var targetScrollTop = scrollEl.scrollTop + (effectiveReadY - targetZone);
+      if (targetScrollTop > scrollEl.scrollTop) {
+        scrollEl.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+      }
+    }
+  }
+
+  /** Process partial speech recognition transcript */
+  function followProcessPartial(transcript) {
+    var norm = normalizeArabic(transcript);
+    var spoken = norm.split(/\s+/).filter(Boolean);
+    if (!spoken.length) return;
+
+    var verse = followVerseQueue[followCurrentIdx];
+    if (!verse) return;
+
+    var wordsNorm = verse.wordsNorm;
+
+    // Scan-based matching: find verse words anywhere in transcript
+    var matchCount = _followScanMatch(wordsNorm, spoken);
+
+    // Keep best match count across calls (transcript grows over time)
+    if (matchCount > followMatchedCount) followMatchedCount = matchCount;
+
+    var pct = wordsNorm.length > 0 ? followMatchedCount / wordsNorm.length : 0;
+    console.log("[follow] v" + followCurrentIdx + " | match=" + followMatchedCount + "/" + wordsNorm.length + " (" + Math.round(pct * 100) + "%) | spoken=" + spoken.length + " mots | «" + spoken.slice(-6).join(" ") + "»");
+
+    // Progressive scroll: smoothly scroll as user reads through the verse
+    followProgressiveScroll(pct);
+
+    if (pct >= 0.65) {
+      followAdvance();
+      return;
+    }
+
+    // Lookahead: check if spoken words already match the START of the next verse
+    if (followCurrentIdx + 1 < followVerseQueue.length) {
+      var nextVerse = followVerseQueue[followCurrentIdx + 1];
+      var nextNorm = nextVerse.wordsNorm;
+      var nextCount = _followScanMatch(nextNorm.slice(0, 4), spoken.slice(-8));
+      if (nextCount >= 2) {
+        console.log("[follow] next verse lookahead: " + nextCount + " mots → advance");
+        followAdvance();
+        return;
+      }
+    }
+  }
+
+  /** Advance to the next verse */
+  function followAdvance() {
+    followMatchedCount = 0;
+    // Soft reset: keep recent audio for faster next detection
+    if (followWorker) followWorker.postMessage({ type: "advance" });
+    console.log("[follow] ▶ ADVANCE to verse " + (followCurrentIdx + 1));
+
+    if (followContext === "khatm") {
+      followCurrentIdx++;
+      if (followCurrentIdx >= followVerseQueue.length) {
+        // End of loaded verses
+        followStopListening();
+        return;
+      }
+      followHighlightCurrent();
+      // Smooth scroll to bring the new verse into starting position
+      followProgressiveScroll(0);
+
+    } else if (followContext === "freeread") {
+      // Advance to next verse in the Surah Player
+      followCurrentIdx++;
+      if (followCurrentIdx >= followVerseQueue.length) {
+        // End of surah
+        followStopListening();
+        return;
+      }
+      followHighlightCurrent();
+      followProgressiveScroll(0);
+    }
+  }
+
+  /** Start audio capture after worker is ready */
+  async function followStartAudioCapture() {
+    if (!followMicStream) return;
+    followWorker.postMessage({ type: "reset" });
+    followAudioChunksSent = 0;
+    followLastTranscriptTime = Date.now();
+
+    // Create AudioContext — explicitly request 16kHz if supported
+    followAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    console.log("[follow] AudioContext created, state=" + followAudioCtx.state + " sampleRate=" + followAudioCtx.sampleRate);
+
+    // Handle AudioContext suspension (iOS puts it to sleep)
+    followAudioCtx.onstatechange = function() {
+      console.log("[follow] AudioContext state changed to: " + followAudioCtx.state);
+      if (followAudioCtx.state === "suspended" || followAudioCtx.state === "interrupted") {
+        console.warn("[follow] AudioContext suspended — attempting resume...");
+        followAudioCtx.resume().then(function() {
+          console.log("[follow] AudioContext resumed OK, state=" + followAudioCtx.state);
+        }).catch(function(err) {
+          console.error("[follow] AudioContext resume failed:", err);
+        });
+      }
+    };
+
+    // Ensure it's running (may be suspended on mobile without gesture)
+    if (followAudioCtx.state !== "running") {
+      await followAudioCtx.resume();
+      console.log("[follow] AudioContext after resume: state=" + followAudioCtx.state);
+    }
+
+    await followAudioCtx.audioWorklet.addModule("audio-processor.js");
+    var source = followAudioCtx.createMediaStreamSource(followMicStream);
+    var workletNode = new AudioWorkletNode(followAudioCtx, "audio-stream-processor");
+    workletNode.port.onmessage = function(e) {
+      if (followWorker && followWorkerReady) {
+        followAudioChunksSent++;
+        followWorker.postMessage({ type: "audio", samples: e.data }, [e.data]);
+      }
+    };
+    source.connect(workletNode);
+    // Silent output to keep processing chain alive
+    var silencer = followAudioCtx.createGain();
+    silencer.gain.value = 0;
+    workletNode.connect(silencer);
+    silencer.connect(followAudioCtx.destination);
+
+    // Start watchdog timer to detect stalled pipeline
+    followStartWatchdog();
+  }
+
+  /** Watchdog: periodically check that the audio pipeline is still alive */
+  function followStartWatchdog() {
+    followStopWatchdog();
+    followWatchdogTimer = setInterval(function() {
+      if (!followIsListening) { followStopWatchdog(); return; }
+
+      // 1. Check AudioContext state — resume if suspended
+      if (followAudioCtx && followAudioCtx.state !== "running") {
+        console.warn("[follow-watchdog] AudioContext is " + followAudioCtx.state + " — resuming...");
+        followAudioCtx.resume().catch(function() {});
+      }
+
+      // 2. Check mic stream is still active
+      if (followMicStream) {
+        var tracks = followMicStream.getAudioTracks();
+        if (tracks.length === 0 || tracks[0].readyState === "ended") {
+          console.error("[follow-watchdog] Mic stream ended! Restarting...");
+          followStopListening();
+          showToast("Le micro s'est arr\u00eat\u00e9. Relancez le suivi.");
+          return;
+        }
+      }
+
+      // 3. Check we're still getting transcripts (log diagnostics every 10s)
+      var timeSinceTranscript = Date.now() - followLastTranscriptTime;
+      if (timeSinceTranscript > 15000 && followAudioChunksSent > 0) {
+        console.warn("[follow-watchdog] No transcript for " + (timeSinceTranscript / 1000).toFixed(0) + "s (chunks=" + followAudioChunksSent + ") — pinging worker");
+        // Send ping to worker to check its health
+        if (followWorker) followWorker.postMessage({ type: "ping" });
+      }
+    }, 5000); // Check every 5 seconds
+  }
+
+  function followStopWatchdog() {
+    if (followWatchdogTimer) {
+      clearInterval(followWatchdogTimer);
+      followWatchdogTimer = null;
+    }
+  }
+
+  /** Start listening for recitation (ONNX-based) */
+  async function followStartListening() {
+    if (followIsListening) return;
+    try {
+      // 1. Request mic
+      followMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // 2. Init worker if needed
+      if (!followWorker) {
+        followWorker = new Worker("follow-worker.js");
+        followWorker.onmessage = function(e) {
+          var msg = e.data;
+          if (msg.type === "ready") {
+            followWorkerReady = true;
+            // Cancel delayed overlay timer + hide overlay if shown
+            if (followWorker._overlayTimer) { clearTimeout(followWorker._overlayTimer); followWorker._overlayTimer = null; }
+            var overlay = $("follow-progress-overlay");
+            if (overlay) overlay.classList.add("hidden");
+            followStartAudioCapture();
+          } else if (msg.type === "progress") {
+            var bar = $("follow-progress-bar");
+            var txt = $("follow-progress-text");
+            if (msg.total > 0) {
+              var pct = Math.round(msg.loaded / msg.total * 100);
+              if (bar) bar.style.width = pct + "%";
+              if (txt) txt.textContent = pct + "%";
+            } else {
+              var mb = (msg.loaded / 1048576).toFixed(1);
+              if (bar) bar.style.width = Math.min(msg.loaded / 120000000 * 100, 95) + "%";
+              if (txt) txt.textContent = mb + " Mo";
+            }
+          } else if (msg.type === "status") {
+            var st = $("follow-progress-status");
+            if (st) st.textContent = msg.message;
+          } else if (msg.type === "transcript") {
+            followLastTranscriptTime = Date.now();
+            followProcessPartial(msg.text);
+          } else if (msg.type === "pong") {
+            console.log("[follow-watchdog] Worker pong: processing=" + msg.isProcessing + " age=" + msg.processingAge + "ms chunks=" + msg.chunks + " inferences=" + msg.inferences + " buffer=" + msg.bufferLen);
+          } else if (msg.type === "heartbeat") {
+            console.log("[follow-watchdog] Worker heartbeat: " + msg.status + " inferences=" + msg.inferences);
+          } else if (msg.type === "error") {
+            showToast("Erreur mod\u00e8le vocal : " + msg.message);
+            followStopListening();
+          }
+        };
+      }
+
+      followIsListening = true;
+      followLoadVerseQueue();
+      var kBtn = $("kr-follow-btn");
+      var spBtn = $("sp-follow-btn");
+      if (followContext === "khatm" && kBtn) kBtn.classList.add("follow-active");
+      if (followContext === "freeread" && spBtn) spBtn.classList.add("follow-active");
+
+      if (!followWorkerReady) {
+        // Init worker — only show overlay if init takes >1.5s (= model download needed)
+        followWorker._overlayTimer = setTimeout(function() {
+          var overlay = $("follow-progress-overlay");
+          if (overlay && !followWorkerReady) overlay.classList.remove("hidden");
+        }, 1500);
+        followWorker.postMessage({ type: "init" });
+        // Audio capture starts when 'ready' is received
+      } else {
+        // Worker already ready, start audio directly
+        followStartAudioCapture();
+      }
+    } catch (err) {
+      console.error("Follow start error:", err);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        showToast("Acc\u00e8s au micro refus\u00e9");
+      } else {
+        showToast("Erreur micro");
+      }
+    }
+  }
+
+  function followStopListening() {
+    if (!followIsListening) return;
+    followIsListening = false;
+    // Stop watchdog
+    followStopWatchdog();
+    // Stop audio capture
+    if (followAudioCtx) {
+      try { followAudioCtx.close(); } catch (e) {}
+      followAudioCtx = null;
+    }
+    if (followMicStream) {
+      followMicStream.getTracks().forEach(function(t) { t.stop(); });
+      followMicStream = null;
+    }
+    // Hide progress overlay + cancel timer
+    if (followWorker && followWorker._overlayTimer) { clearTimeout(followWorker._overlayTimer); followWorker._overlayTimer = null; }
+    var overlay = $("follow-progress-overlay");
+    if (overlay) overlay.classList.add("hidden");
+    // Reset worker audio buffer (keep worker alive for next use)
+    if (followWorker) { followWorker.postMessage({ type: "reset" }); }
+    // Clean up scroll listeners
+    followUserScrolling = false;
+    if (followUserScrollTimer) { clearTimeout(followUserScrollTimer); followUserScrollTimer = null; }
+    var cleanScrollEl = (followContext === "khatm") ? krScrollEl : $("sp-reader-scroll");
+    if (cleanScrollEl && cleanScrollEl._followCleanup) { cleanScrollEl._followCleanup(); }
+    // Remove highlights
+    var prev = document.querySelector(".kr-verse-follow-active");
+    if (prev) prev.classList.remove("kr-verse-follow-active");
+    var prev2 = document.querySelector(".sp-verse-follow-active");
+    if (prev2) prev2.classList.remove("sp-verse-follow-active");
+    // Update UI
+    var kBtn = $("kr-follow-btn");
+    var spBtn = $("sp-follow-btn");
+    if (kBtn) kBtn.classList.remove("follow-active");
+    if (spBtn) spBtn.classList.remove("follow-active");
+    followMode = false;
+  }
+
+  function followToggle(context) {
+    if (followIsListening) {
+      followStopListening();
+    } else {
+      followContext = context;
+      followMode = true;
+      followStartListening();
+    }
+  }
+
+  function followCleanup() {
+    if (followIsListening) followStopListening();
+    followMode = false;
+    followVerseQueue = [];
+    followCurrentIdx = 0;
   }
 
   // ===========================================================
@@ -7788,6 +8393,7 @@
   }
 
   function closeKhatmReader() {
+    followCleanup();
     stopReadingTimer();
     stopKrAudio();
     _krFlushVersesRead(); // Flush any pending verse count to stats
@@ -7979,6 +8585,7 @@
 
   function initKhatmReader() {
     $("kr-back").addEventListener("click", closeKhatmReader);
+    if ($("kr-follow-btn")) $("kr-follow-btn").addEventListener("click", function() { followToggle("khatm"); });
     // Khatm audio controls
     $("kr-audio-btn").addEventListener("click", toggleKrAudio);
     $("kr-audio-auto-btn").addEventListener("click", function() {
@@ -8364,7 +8971,7 @@
   var spPlaylistVerseIndices = []; // maps playlist index → ayah i in surahs[].ayahs
   var spPlaylistIdx = 0;
   var spCurrentVerseI = -1;        // current highlighted ayah index in reader
-  var spAutoNext = true;            // auto-advance to next verse
+  var spAutoNext = false;           // auto-advance to next verse (off by default)
 
   function getSpLang() {
     return localStorage.getItem(SP_LANG_KEY) || "ar-fr";
@@ -8666,6 +9273,7 @@
       _spLastCountedVerse = verseI;
       var letters = getVerseLetters(spCurrentSurahIdx, verseI);
       recordReading(1, letters);
+      _spSaveDailyProgress(verseI);
     }
     var verses = document.querySelectorAll("#sp-reader-content .sp-verse");
     verses.forEach(function(el) {
@@ -8853,9 +9461,42 @@
     });
   }
 
+  // --- Sourate du jour progress tracking ---
+  function _spDailyKey() {
+    var d = new Date();
+    return "sp-daily-" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function _spSaveDailyProgress(verseIdx) {
+    var dailyIdx = getDailySurahIdx();
+    if (spCurrentSurahIdx !== dailyIdx) return;
+    var key = _spDailyKey();
+    var surah = surahs[dailyIdx];
+    if (!surah) return;
+    var total = surah.ayahs.length;
+    try {
+      var existing = JSON.parse(localStorage.getItem(key) || "{}");
+      var prev = existing.highWater || -1;
+      if (verseIdx > prev) {
+        existing.surahIdx = dailyIdx;
+        existing.highWater = verseIdx;
+        existing.total = total;
+        localStorage.setItem(key, JSON.stringify(existing));
+      }
+    } catch (e) {}
+  }
+  function _spGetDailyProgress() {
+    var key = _spDailyKey();
+    try {
+      var data = JSON.parse(localStorage.getItem(key) || "null");
+      if (!data || data.surahIdx == null) return null;
+      return data;
+    } catch (e) { return null; }
+  }
+
   // SP scroll-based verse counting (for manual reading without audio)
   var _spScrollCountTimer = null;
   var _spHighWaterVerse = -1;
+  var _spSavePositionTimer = null;
   function _spOnReaderScroll() {
     if (spIsPlaying) return; // Audio mode already counts via spSetActiveVerse
     clearTimeout(_spScrollCountTimer);
@@ -8871,8 +9512,40 @@
         }
         recordReading(diff, totalLetters);
         _spHighWaterVerse = visI;
+        _spSaveDailyProgress(visI);
       }
     }, 800); // debounce 800ms — count when user pauses scrolling
+
+    // Save reading position (debounced)
+    clearTimeout(_spSavePositionTimer);
+    _spSavePositionTimer = setTimeout(function() {
+      var visI = spGetVisibleVerse();
+      if (visI >= 0 && spCurrentSurahIdx >= 0) {
+        var scrollEl = $("sp-reader-scroll");
+        var scrollTop = scrollEl ? scrollEl.scrollTop : 0;
+        try {
+          localStorage.setItem("sp-pos-" + spCurrentSurahIdx, JSON.stringify({
+            verseIdx: visI,
+            scrollTop: scrollTop,
+            ts: Date.now()
+          }));
+        } catch (e) {}
+      }
+    }, 500);
+  }
+  /** Restore saved reading position for a surah (if recent) */
+  function _spRestorePosition(surahIdx) {
+    try {
+      var raw = localStorage.getItem("sp-pos-" + surahIdx);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      // Expire after 30 days
+      if (Date.now() - data.ts > 30 * 86400000) {
+        localStorage.removeItem("sp-pos-" + surahIdx);
+        return null;
+      }
+      return data;
+    } catch (e) { return null; }
   }
 
   function openSurahPlayer(surahIdx) {
@@ -8895,9 +9568,46 @@
     spRefreshLangOpts();
     updateSpmModeDisplay();
     updateSpmSizeDisplay();
+    // Restore saved reading position (if any)
+    var savedPos = _spRestorePosition(surahIdx);
+    if (savedPos && savedPos.verseIdx > 0) {
+      setTimeout(function() {
+        var scrollEl2 = $("sp-reader-scroll");
+        if (!scrollEl2) return;
+        // Try scrolling to the saved verse element
+        var verseEl = scrollEl2.querySelector('.sp-verse[data-i="' + savedPos.verseIdx + '"]');
+        if (verseEl) {
+          verseEl.scrollIntoView({ block: "start" });
+          // Set high water mark so we don't re-count already-read verses
+          _spHighWaterVerse = savedPos.verseIdx;
+        } else if (savedPos.scrollTop > 0) {
+          scrollEl2.scrollTop = savedPos.scrollTop;
+        }
+      }, 150);
+    }
+  }
+
+  /** Save current reading position immediately */
+  function _spSavePositionNow() {
+    if (spCurrentSurahIdx < 0) return;
+    var scrollEl = $("sp-reader-scroll");
+    var visI = spGetVisibleVerse();
+    if (visI >= 0) {
+      try {
+        localStorage.setItem("sp-pos-" + spCurrentSurahIdx, JSON.stringify({
+          verseIdx: visI,
+          scrollTop: scrollEl ? scrollEl.scrollTop : 0,
+          ts: Date.now()
+        }));
+      } catch (e) {}
+    }
   }
 
   function closeSurahPlayer() {
+    // Stop Suivi Vocal if active
+    followCleanup();
+    // Save reading position before closing
+    _spSavePositionNow();
     // Minimize: hide the full-screen overlay but keep audio playing
     var overlay = $("surah-player");
     if (!overlay) return;
@@ -8907,9 +9617,15 @@
     stopReadingTimer();
     // Show mini player if audio is playing
     if (spIsPlaying) spShowMiniPlayer();
+    // Refresh dashboard sourate du jour progress
+    updateDashSuratCard();
   }
 
   function spFullClose() {
+    // Stop Suivi Vocal if active
+    followCleanup();
+    // Save reading position before fully closing
+    _spSavePositionNow();
     // Fully stop and close everything
     if (spAudioEl) { spAudioEl.pause(); spIsPlaying = false; spAudioEl.src = ""; }
     spUpdatePlayBtn();
@@ -8973,6 +9689,10 @@
     // Close button
     var closeBtn = $("sp-close");
     if (closeBtn) closeBtn.addEventListener("click", closeSurahPlayer);
+
+    // Suivi Vocal mic button
+    var spFollowBtn = $("sp-follow-btn");
+    if (spFollowBtn) spFollowBtn.addEventListener("click", function() { followToggle("freeread"); });
 
     // Tab switching
     var tabReader = $("sp-tab-reader");
@@ -9492,6 +10212,7 @@
     // ---- EVENT LISTENERS ----
     $("next-btn").addEventListener("click", goNext);
     $("prev-btn").addEventListener("click", goPrev);
+    $("freeread-follow-btn").addEventListener("click", function() { followToggle("freeread"); });
 
     $("ayah-container").addEventListener("touchstart", onTouchStart, { passive: true });
     $("ayah-container").addEventListener("touchend", onTouchEnd);
@@ -9841,6 +10562,21 @@
       btn.addEventListener("click", function () {
         state.tajwidColors = btn.dataset.tajwidColors === "true";
         applyMode();
+        saveState();
+        render();
+      });
+    });
+
+    document.querySelectorAll("#stats-hassanates-btns .stats-pref-opt").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.showHassanates = btn.dataset.hassanates === "true";
+        saveState();
+        render();
+      });
+    });
+    document.querySelectorAll("#stats-dashstats-btns .stats-pref-opt").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.showDashStats = btn.dataset.dashstats === "true";
         saveState();
         render();
       });
@@ -11828,7 +12564,7 @@
     renderStats();
     var ov = $("stats-overlay");
     if (ov) {
-      // Random background image (same pool as prayer)
+      // Random background image (same pool as prayer) — appliqué sur #stats-bg pour le blur
       var imgs = PRAYER_BG_IMAGES;
       var idx;
       do { idx = Math.floor(Math.random() * imgs.length); }
@@ -11836,7 +12572,8 @@
       _lastStatsBg = idx;
       var num = imgs[idx];
       var ext = [20, 36, 40, 64].indexOf(num) >= 0 ? "png" : "jpg";
-      ov.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
+      var statsBg = $("stats-bg");
+      if (statsBg) statsBg.style.backgroundImage = "url('img/prayer/" + num + "." + ext + "')";
       ov.classList.remove("hidden");
     }
   }
@@ -12525,6 +13262,333 @@
     }, 3000);
   }
 
+  // ================================================================
+  // MIN READER — Mode Concentration (lecture verset par verset)
+  // ================================================================
+
+  function openMinHub() {
+    renderMinHubPrefs();
+    updateMinHubItems();
+    // Always show the main hub screen (reset pickers)
+    var picker = $('min-surah-picker');
+    var vpicker = $('min-verse-picker');
+    var inner = $('min-hub-inner');
+    if (picker) picker.classList.add('hidden');
+    if (vpicker) vpicker.classList.add('hidden');
+    if (inner) inner.classList.remove('hidden');
+    $('min-hub-overlay').classList.remove('hidden');
+  }
+
+  function openMinSurahPicker() {
+    $('min-hub-inner').classList.add('hidden');
+    renderMinSurahList();
+    $('min-surah-picker').classList.remove('hidden');
+  }
+
+  function closeMinSurahPicker() {
+    $('min-surah-picker').classList.add('hidden');
+    $('min-hub-inner').classList.remove('hidden');
+  }
+
+  function renderMinSurahList() {
+    var list = $('min-picker-list');
+    if (!list || !surahs) return;
+    list.innerHTML = '';
+    surahs.forEach(function(s, si) {
+      var num = s.surahNumber || (si + 1);
+      var item = document.createElement('div');
+      item.className = 'min-picker-surah';
+      item.innerHTML =
+        '<span class="min-picker-num">' + num + '</span>' +
+        '<span class="min-picker-name">' + (SURAH_TRANSLIT[num] || '') + '</span>' +
+        '<span class="min-picker-ar">' + (s.surahNameAr || '') + '</span>' +
+        '<span class="min-picker-count">' + s.ayahs.length + 'v</span>';
+      item.addEventListener('click', function() {
+        openMinVersePicker(si);
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function openMinVersePicker(surahIdx) {
+    if (!surahs || !surahs[surahIdx]) return;
+    var s = surahs[surahIdx];
+    var num = s.surahNumber || (surahIdx + 1);
+    var nameEl = $('min-vpicker-surah-name');
+    if (nameEl) nameEl.textContent = (SURAH_TRANSLIT[num] || '') + '  ·  ' + (s.surahNameAr || '');
+    renderMinVerseGrid(surahIdx);
+    $('min-surah-picker').classList.add('hidden');
+    $('min-verse-picker').classList.remove('hidden');
+  }
+
+  function closeMinVersePicker() {
+    $('min-verse-picker').classList.add('hidden');
+    $('min-surah-picker').classList.remove('hidden');
+  }
+
+  function renderMinVerseGrid(surahIdx) {
+    var grid = $('min-vpicker-grid');
+    if (!grid || !surahs || !surahs[surahIdx]) return;
+    var total = surahs[surahIdx].ayahs.length;
+    grid.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+      (function(ai) {
+        var cell = document.createElement('div');
+        cell.className = 'min-vpicker-cell';
+        cell.textContent = ai + 1;
+        cell.addEventListener('click', function() {
+          state.minContext = 'libre';
+          openMinReader(surahIdx, ai);
+        });
+        grid.appendChild(cell);
+      })(i);
+    }
+  }
+
+  function closeMinHub() {
+    $('min-hub-overlay').classList.add('hidden');
+  }
+
+  function openMinReader(surahIdx, ayahIdx) {
+    state.minSurahIdx = surahIdx || 0;
+    state.minAyahIdx = ayahIdx || 0;
+    saveState();
+    closeMinHub();
+    renderMinReader();
+    $('min-reader-overlay').classList.remove('hidden');
+  }
+
+  function closeMinReader() {
+    $('min-reader-overlay').classList.add('hidden');
+    openMinHub();
+  }
+
+  function renderMinHubPrefs() {
+    document.querySelectorAll('#min-theme-btns .min-pref-opt').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.minTheme === (state.minTheme || 'dark'));
+    });
+    document.querySelectorAll('#min-lang-btns .min-pref-opt').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.minLang === (state.minLang || 'ar'));
+    });
+    document.querySelectorAll('#min-mode-btns .min-pref-opt').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.minMode === (state.minMode || 'minimal'));
+    });
+    document.querySelectorAll('#min-size-btns .min-pref-opt').forEach(function(btn) {
+      btn.classList.toggle('active', parseInt(btn.dataset.minSize) === (state.minSize || 100));
+    });
+  }
+
+  function updateMinHubItems() {
+    // Khatm item
+    var khatmNameEl = $('min-hub-khatm-name');
+    var khatmItem = $('min-hub-khatm');
+    if (khatm && khatm.surahIdx !== undefined && surahs && surahs[khatm.surahIdx]) {
+      var kSurah = surahs[khatm.surahIdx];
+      var kNum = kSurah.surahNumber || (khatm.surahIdx + 1);
+      if (khatmNameEl) khatmNameEl.textContent = (SURAH_TRANSLIT[kNum] || kSurah.surahNameAr || '') + '  ·  v.' + (khatm.ayahIdx + 1);
+      if (khatmItem) { khatmItem.style.opacity = '1'; khatmItem.style.pointerEvents = ''; }
+    } else {
+      if (khatmNameEl) khatmNameEl.textContent = 'Aucun khatm actif';
+      if (khatmItem) { khatmItem.style.opacity = '0.35'; khatmItem.style.pointerEvents = 'none'; }
+    }
+    // Libre item
+    var libreNameEl = $('min-hub-libre-name');
+    if (libreNameEl && totalAyat > 0 && surahs) {
+      var pos = linearToPosition(state.globalIndex % totalAyat);
+      var lSurah = surahs[pos.surahIdx];
+      if (lSurah) {
+        var lNum = lSurah.surahNumber || (pos.surahIdx + 1);
+        libreNameEl.textContent = (SURAH_TRANSLIT[lNum] || lSurah.surahNameAr || '') + '  ·  v.' + (pos.ayahIdx + 1);
+      }
+    }
+  }
+
+  function renderMinReader() {
+    var ov = $('min-reader-overlay');
+    if (!ov || !surahs) return;
+    // Apply theme
+    ov.className = 'overlay min-t-' + (state.minTheme || 'dark');
+    var surahIdx = state.minSurahIdx || 0;
+    var ayahIdx = state.minAyahIdx || 0;
+    var surah = surahs[surahIdx];
+    if (!surah) return;
+    var ayahText = surah.ayahs[ayahIdx] || '';
+    var arEl = $('min-verse-ar');
+    var frEl = $('min-verse-fr');
+    var sizeScale = state.minSize || 100;
+    var arPx = Math.round(26 * sizeScale / 100);
+    var showAr = (state.minLang || 'ar') !== 'fr';
+    var showFr = (state.minLang || 'ar') === 'ar-fr' || (state.minLang || 'ar') === 'fr';
+    arEl.style.display = showAr ? '' : 'none';
+    frEl.style.display = showFr ? '' : 'none';
+    if (showAr) {
+      arEl.style.fontSize = arPx + 'px';
+      if (state.minMode === 'tajwid') {
+        var _rm = state.readingMode, _tc = state.tajwidColors, _dl = state.displayLang;
+        state.readingMode = 'tajwid'; state.tajwidColors = true; state.displayLang = 'ar';
+        renderAyahText(arEl, { text: ayahText, surahNumber: surah.surahNumber, ayahNumber: ayahIdx + 1 });
+        state.readingMode = _rm; state.tajwidColors = _tc; state.displayLang = _dl;
+        // renderAyahText écrase le className — on le remet à zéro pour préserver les styles min reader
+        arEl.className = '';
+        arEl.style.fontSize = arPx + 'px';
+      } else {
+        arEl.textContent = ayahText;
+      }
+    }
+    if (showFr) {
+      var frSurah = surahsFr && surahsFr[surahIdx];
+      frEl.textContent = frSurah ? (frSurah.ayahs[ayahIdx] || '') : '';
+      frEl.style.fontSize = Math.max(12, Math.round(arPx * 0.52)) + 'px';
+    }
+    // Info bar
+    var surahNum = surah.surahNumber || (surahIdx + 1);
+    $('min-surah-name').textContent = SURAH_TRANSLIT[surahNum] || surah.surahNameAr || '';
+    $('min-verse-num').textContent = 'v. ' + (ayahIdx + 1);
+    // Khatm progress bar
+    var bar = $('min-khatm-bar');
+    if (bar) {
+      if (state.minContext === 'khatm' && totalAyat > 0) {
+        var linear = positionToLinear(surahIdx, ayahIdx);
+        bar.style.width = (linear / totalAyat * 100).toFixed(2) + '%';
+        bar.style.display = '';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+  }
+
+  function minNextVerse() {
+    var si = state.minSurahIdx || 0;
+    var ai = state.minAyahIdx || 0;
+    if (!surahs) return;
+    var surah = surahs[si];
+    if (!surah) return;
+    if (ai < surah.ayahs.length - 1) {
+      state.minAyahIdx = ai + 1;
+    } else if (si < surahs.length - 1) {
+      state.minSurahIdx = si + 1;
+      state.minAyahIdx = 0;
+    }
+    saveState();
+    _animateMinVerse();
+  }
+
+  function minPrevVerse() {
+    var si = state.minSurahIdx || 0;
+    var ai = state.minAyahIdx || 0;
+    if (!surahs) return;
+    if (ai > 0) {
+      state.minAyahIdx = ai - 1;
+    } else if (si > 0) {
+      state.minSurahIdx = si - 1;
+      state.minAyahIdx = surahs[si - 1].ayahs.length - 1;
+    }
+    saveState();
+    _animateMinVerse();
+  }
+
+  function _animateMinVerse() {
+    var wrap = $('min-verse-wrap');
+    if (!wrap) return;
+    wrap.style.transition = 'none';
+    wrap.style.opacity = '0';
+    setTimeout(function() {
+      renderMinReader();
+      wrap.style.transition = 'opacity 0.2s ease';
+      wrap.style.opacity = '1';
+    }, 110);
+  }
+
+  function initMinReader() {
+    // Triangle button in QURAN tab
+    var minModeBtn = $('min-mode-btn');
+    if (minModeBtn) minModeBtn.addEventListener('click', function() { openMinHub(); });
+
+    // MOI Minimal item
+    var moiMinimal = $('moi-minimal');
+    if (moiMinimal) moiMinimal.addEventListener('click', function() { openMinHub(); });
+
+    // Hub back
+    var minHubBack = $('min-hub-back');
+    if (minHubBack) minHubBack.addEventListener('click', function() { closeMinHub(); });
+
+    // Picker back (surah → hub)
+    var minPickerBack = $('min-picker-back');
+    if (minPickerBack) minPickerBack.addEventListener('click', function() { closeMinSurahPicker(); });
+
+    // Verse picker back (verse → surah)
+    var minVpickerBack = $('min-vpicker-back');
+    if (minVpickerBack) minVpickerBack.addEventListener('click', function() { closeMinVersePicker(); });
+
+    // Hub items
+    var minHubKhatm = $('min-hub-khatm');
+    if (minHubKhatm) minHubKhatm.addEventListener('click', function() {
+      if (khatm && khatm.surahIdx !== undefined) {
+        state.minContext = 'khatm';
+        openMinReader(khatm.surahIdx, khatm.ayahIdx || 0);
+      }
+    });
+    var minHubLibre = $('min-hub-libre');
+    if (minHubLibre) minHubLibre.addEventListener('click', function() {
+      openMinSurahPicker();
+    });
+
+    // Hub prefs
+    document.querySelectorAll('#min-theme-btns .min-pref-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() { state.minTheme = btn.dataset.minTheme; saveState(); renderMinHubPrefs(); });
+    });
+    document.querySelectorAll('#min-lang-btns .min-pref-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() { state.minLang = btn.dataset.minLang; saveState(); renderMinHubPrefs(); });
+    });
+    document.querySelectorAll('#min-mode-btns .min-pref-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() { state.minMode = btn.dataset.minMode; saveState(); renderMinHubPrefs(); });
+    });
+    document.querySelectorAll('#min-size-btns .min-pref-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() { state.minSize = parseInt(btn.dataset.minSize); saveState(); renderMinHubPrefs(); });
+    });
+
+    // Reader back
+    var minReaderBack = $('min-reader-back');
+    if (minReaderBack) minReaderBack.addEventListener('click', function(e) { e.stopPropagation(); closeMinReader(); });
+
+    // Reader touch navigation (tap + swipe)
+    var readerEl = $('min-reader-overlay');
+    if (readerEl) {
+      var _tx = 0, _ty = 0, _moved = false;
+      readerEl.addEventListener('touchstart', function(e) {
+        _tx = e.touches[0].clientX;
+        _ty = e.touches[0].clientY;
+        _moved = false;
+      }, { passive: true });
+      readerEl.addEventListener('touchmove', function(e) {
+        var dx = Math.abs(e.touches[0].clientX - _tx);
+        var dy = Math.abs(e.touches[0].clientY - _ty);
+        if (dx > 8 || dy > 8) _moved = true;
+      }, { passive: true });
+      readerEl.addEventListener('touchend', function(e) {
+        var ex = e.changedTouches[0].clientX;
+        var ey = e.changedTouches[0].clientY;
+        var dx = ex - _tx, dy = ey - _ty;
+        var adx = Math.abs(dx), ady = Math.abs(dy);
+        if (e.target.closest('#min-reader-back')) return;
+        if (!_moved) {
+          // Tap
+          if (ex < window.innerWidth / 2) minPrevVerse(); else minNextVerse();
+        } else if (adx > 40 && adx > ady) {
+          // Horizontal swipe only → change verse (vertical = scroll natif)
+          if (dx < 0) minNextVerse(); else minPrevVerse();
+        }
+      }, { passive: true });
+      // Desktop click
+      readerEl.addEventListener('click', function(e) {
+        if ('ontouchstart' in window) return;
+        if (e.target.closest('#min-reader-back')) return;
+        if (e.clientX < window.innerWidth / 2) minPrevVerse(); else minNextVerse();
+      });
+    }
+  }
+
   init();
   initFirebase();
+  initMinReader();
 })();

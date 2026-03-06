@@ -93,11 +93,16 @@
           <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
         </div>
         <div class="dash-card-prompt" id="dash-surat-name"></div>
-        <button class="dash-card-btn" id="dash-surat-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+        <div class="dash-surat-btn-row">
+          <button class="dash-card-btn" id="dash-surat-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+          <span class="dash-surat-remaining" id="dash-surat-remaining"></span>
+        </div>
       </div>
 
-      <!-- Thin separator -->
-      <div class="dash-thin-line"></div>
+      <!-- Sourate du jour progress -->
+      <div class="dash-surat-progress-line">
+        <div class="dash-surat-progress-fill" id="dash-surat-progress-fill"></div>
+      </div>
 
       <!-- Today's Verse / Khatm -->
       <div class="dash-verse-section" id="dash-reading-card">
@@ -128,8 +133,8 @@
             <span class="dash-stat-value" id="dash-stat-verses">0</span>
             <span class="dash-stat-label">Versets lus</span>
           </div>
-          <div class="dash-stat-divider"></div>
-          <div class="dash-stat-block">
+          <div class="dash-stat-divider" id="dash-hassanates-divider"></div>
+          <div class="dash-stat-block" id="dash-hassanates-block">
             <span class="dash-stat-value dash-stat-value--gold" id="dash-stat-hassanates">0</span>
             <span class="dash-stat-label">Hassanates</span>
           </div>
@@ -137,7 +142,7 @@
       </div>
 
       <!-- Stats progress bar separator -->
-      <div class="dash-khatm-progress-line">
+      <div class="dash-khatm-progress-line" id="dash-hassanates-progress-line">
         <div class="dash-stats-progress-fill" id="dash-stats-progress-fill"></div>
       </div>
 
@@ -165,6 +170,9 @@
       <div id="khatm-hero">
         <div id="khatm-hero-bg"></div>
         <div id="khatm-hero-fade"></div>
+        <button id="min-mode-btn" aria-label="Mode concentration">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 4 21 20 3 20"/></svg>
+        </button>
         <div id="khatm-hero-content">
           <button id="kh-search-btn" aria-label="Rechercher">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -293,6 +301,9 @@
           </svg>
         </button>
       </div>
+      <button id="freeread-follow-btn" class="follow-fab hidden" aria-label="Suivi récitation">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
     </div>
     <div class="goal-reached hidden" id="goal-reached">
       <p>Objectif du jour atteint &#x2713;</p>
@@ -388,15 +399,6 @@
 
       <div class="moi-section">
         <div class="moi-sep"></div>
-        <div class="moi-item" id="moi-stats">
-          <span class="moi-item-dot" style="background:#F0B0C0"></span>
-          <div class="moi-item-text">
-            <span class="moi-item-label">Statistiques</span>
-            <span class="moi-item-count" id="moi-stats-count">VOS CHIFFRES</span>
-          </div>
-          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </div>
-        <div class="moi-sep"></div>
         <div class="moi-item" id="moi-khatms">
           <span class="moi-item-dot" style="background:#F5D08A"></span>
           <div class="moi-item-text">
@@ -411,6 +413,15 @@
           <div class="moi-item-text">
             <span class="moi-item-label">Ayati</span>
             <span class="moi-item-count">IDENTIFIER UN VERSET</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-minimal">
+          <span class="moi-item-dot" style="background:#D4C4B0"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Minimal</span>
+            <span class="moi-item-count">LECTURE VERSET PAR VERSET</span>
           </div>
           <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
@@ -495,6 +506,15 @@
           <div class="moi-item-text">
             <span class="moi-item-label">Podcast</span>
             <span class="moi-item-count">COLLECTIF D'ÉTUDIANTS DE MÉDINE</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-stats">
+          <span class="moi-item-dot" style="background:#F0B0C0"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Statistiques</span>
+            <span class="moi-item-count" id="moi-stats-count">VOS CHIFFRES</span>
           </div>
           <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
@@ -970,6 +990,7 @@
 
 <!-- ====== STATS OVERLAY ====== -->
 <div id="stats-overlay" class="overlay hidden moi-cat-overlay">
+  <div id="stats-bg"></div>
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="stats-close" aria-label="Retour">
@@ -1006,6 +1027,132 @@
           <p class="stat-hadith-source">Rapport&eacute; par At-Tirmidhi</p>
         </div>
       </div>
+      <!-- Préférences stats -->
+      <div class="stats-prefs">
+        <div class="stats-pref-row" id="stats-hassanates-btns">
+          <span class="stats-pref-label">Hassanates</span>
+          <div class="stats-pref-toggle">
+            <button class="stats-pref-opt" data-hassanates="true">Afficher</button>
+            <span class="stats-pref-sep">·</span>
+            <button class="stats-pref-opt" data-hassanates="false">Masquer</button>
+          </div>
+        </div>
+        <div class="stats-pref-row" id="stats-dashstats-btns">
+          <span class="stats-pref-label">Sur l'accueil</span>
+          <div class="stats-pref-toggle">
+            <button class="stats-pref-opt" data-dashstats="true">Afficher</button>
+            <span class="stats-pref-sep">·</span>
+            <button class="stats-pref-opt" data-dashstats="false">Masquer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MIN HUB OVERLAY — Mode Concentration ====== -->
+<div id="min-hub-overlay" class="overlay hidden">
+  <button class="min-back-btn" id="min-hub-back" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <div id="min-hub-inner">
+    <div id="min-hub-title">MODE CONCENTRATION</div>
+    <div id="min-hub-items">
+      <div class="min-hub-item" id="min-hub-khatm">
+        <div class="min-hub-item-meta">KHATM</div>
+        <div class="min-hub-item-name" id="min-hub-khatm-name">—</div>
+        <svg class="min-hub-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+      <div class="min-hub-sep"></div>
+      <div class="min-hub-item" id="min-hub-libre">
+        <div class="min-hub-item-meta">LECTURE LIBRE</div>
+        <div class="min-hub-item-name" id="min-hub-libre-name">—</div>
+        <svg class="min-hub-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+    </div>
+    <div id="min-hub-prefs">
+      <div class="min-hub-pref-row">
+        <span class="min-pref-label">Thème</span>
+        <div class="min-pref-toggle" id="min-theme-btns">
+          <button class="min-pref-opt" data-min-theme="light">Blanc</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-theme="sepia">Sépia</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-theme="dark">Noir</button>
+        </div>
+      </div>
+      <div class="min-hub-pref-row">
+        <span class="min-pref-label">Langue</span>
+        <div class="min-pref-toggle" id="min-lang-btns">
+          <button class="min-pref-opt" data-min-lang="ar">Arabe</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-lang="ar-fr">Arabe+Fr</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-lang="fr">Français</button>
+        </div>
+      </div>
+      <div class="min-hub-pref-row">
+        <span class="min-pref-label">Mode</span>
+        <div class="min-pref-toggle" id="min-mode-btns">
+          <button class="min-pref-opt" data-min-mode="minimal">Minimal</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-mode="tajwid">Couleurs</button>
+        </div>
+      </div>
+      <div class="min-hub-pref-row">
+        <span class="min-pref-label">Taille</span>
+        <div class="min-pref-toggle" id="min-size-btns">
+          <button class="min-pref-opt" data-min-size="85">85%</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-size="100">100%</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-size="115">115%</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-min-size="130">130%</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Surah picker (hidden by default, slides in over hub) -->
+  <div id="min-surah-picker" class="hidden">
+    <div id="min-picker-header">
+      <button id="min-picker-back" class="min-back-btn" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div id="min-picker-label">SOURATE</div>
+    </div>
+    <div id="min-picker-list"></div>
+  </div>
+
+  <!-- Verse picker (hidden by default, slides in over surah picker) -->
+  <div id="min-verse-picker" class="hidden">
+    <div id="min-vpicker-header">
+      <button id="min-vpicker-back" class="min-back-btn" aria-label="Retour">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div id="min-vpicker-label">VERSET</div>
+    </div>
+    <div id="min-vpicker-surah-name"></div>
+    <div id="min-vpicker-grid"></div>
+  </div>
+</div>
+
+<!-- ====== MIN READER OVERLAY — Lecture verset par verset ====== -->
+<div id="min-reader-overlay" class="overlay hidden">
+  <button id="min-reader-back" class="min-back-btn" aria-label="Retour">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <div id="min-verse-wrap">
+    <div id="min-verse-ar" dir="rtl" lang="ar"></div>
+    <div id="min-verse-fr"></div>
+  </div>
+  <div id="min-bottom-area">
+    <div id="min-khatm-bar"></div>
+    <div id="min-reader-info">
+      <span id="min-surah-name"></span>
+      <span class="min-info-dot">·</span>
+      <span id="min-verse-num"></span>
     </div>
   </div>
 </div>
@@ -2332,6 +2479,11 @@
       <svg id="sp-hdr-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       <svg id="sp-hdr-pause-icon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
     </button>
+    <!-- Suivi Vocal mic button — hidden for now
+    <button id="sp-follow-btn" aria-label="Suivi récitation">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    </button>
+    -->
     <button id="sp-auto-btn" aria-label="Lecture auto">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
     </button>
@@ -2518,5 +2670,14 @@
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
 <script src="app.js"></script>
+<!-- Follow mode: model download progress overlay -->
+<div id="follow-progress-overlay" class="hidden">
+  <div class="follow-progress-content">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    <div id="follow-progress-status">Téléchargement du modèle vocal...</div>
+    <div class="follow-progress-bar-wrap"><div id="follow-progress-bar"></div></div>
+    <div id="follow-progress-text">0%</div>
+  </div>
+</div>
 </body>
 </html>
