@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <pattern id="grid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="10" x2="10" y2="0" stroke="rgba(255,255,255,0.11)" stroke-width="0.7"/>
+      <line x1="0" y1="0" x2="10" y2="10" stroke="rgba(255,255,255,0.11)" stroke-width="0.7"/>
+    </pattern>
+  </defs>
+
+  <!-- Blue border band (frame shape, center is transparent) -->
+  <path d="M0,0 H80 V26 H54 V54 H80 V80 H0 V54 H26 V26 H0 Z" fill="#1752a8"/>
+  <path d="M0,0 H80 V26 H54 V54 H80 V80 H0 V54 H26 V26 H0 Z" fill="url(#grid)"/>
+
+  <!-- Outer gold line -->
+  <rect x="1" y="1" width="78" height="78" fill="none" stroke="#c8a050" stroke-width="1.5"/>
+  <!-- Inner gold line (edge of content area) -->
+  <rect x="25" y="25" width="30" height="30" fill="none" stroke="#c8a050" stroke-width="1"/>
+
+  <!-- Top edge center ornament -->
+  <g transform="translate(40,13)">
+    <polygon points="0,-8 5.5,-2.5 8,-8 2.5,0 8,8 5.5,2.5 0,8 -5.5,2.5 -8,8 -2.5,0 -8,-8 -5.5,-2.5"
+             fill="rgba(255,255,255,0.35)" stroke="none"/>
+    <circle r="4.5" fill="#c03055"/>
+    <circle r="2" fill="#fff5d0"/>
+    <circle r="0.9" fill="#a02030"/>
+  </g>
+
+  <!-- Bottom edge center ornament -->
+  <g transform="translate(40,67)">
+    <polygon points="0,-8 5.5,-2.5 8,-8 2.5,0 8,8 5.5,2.5 0,8 -5.5,2.5 -8,8 -2.5,0 -8,-8 -5.5,-2.5"
+             fill="rgba(255,255,255,0.35)" stroke="none"/>
+    <circle r="4.5" fill="#c03055"/>
+    <circle r="2" fill="#fff5d0"/>
+    <circle r="0.9" fill="#a02030"/>
+  </g>
+
+  <!-- Left edge center ornament -->
+  <g transform="translate(13,40)">
+    <polygon points="0,-8 5.5,-2.5 8,-8 2.5,0 8,8 5.5,2.5 0,8 -5.5,2.5 -8,8 -2.5,0 -8,-8 -5.5,-2.5"
+             fill="rgba(255,255,255,0.35)" stroke="none"/>
+    <circle r="4.5" fill="#c03055"/>
+    <circle r="2" fill="#fff5d0"/>
+    <circle r="0.9" fill="#a02030"/>
+  </g>
+
+  <!-- Right edge center ornament -->
+  <g transform="translate(67,40)">
+    <polygon points="0,-8 5.5,-2.5 8,-8 2.5,0 8,8 5.5,2.5 0,8 -5.5,2.5 -8,8 -2.5,0 -8,-8 -5.5,-2.5"
+             fill="rgba(255,255,255,0.35)" stroke="none"/>
+    <circle r="4.5" fill="#c03055"/>
+    <circle r="2" fill="#fff5d0"/>
+    <circle r="0.9" fill="#a02030"/>
+  </g>
+
+  <!-- Corner: Top-Left at (13,13) -->
+  <circle cx="13" cy="13" r="11" fill="#1a65c8"/>
+  <polygon points="13,3 15.8,8.5 22,6.5 17.5,11.5 22,16.5 15.8,14.5 13,20 10.2,14.5 4,16.5 8.5,11.5 4,6.5 10.2,8.5"
+           fill="rgba(255,255,255,0.4)" stroke="none"/>
+  <circle cx="13" cy="13" r="5.5" fill="#c03055"/>
+  <circle cx="13" cy="13" r="2.8" fill="#fff5d0"/>
+  <circle cx="13" cy="13" r="1.1" fill="#a02030"/>
+
+  <!-- Corner: Top-Right at (67,13) -->
+  <circle cx="67" cy="13" r="11" fill="#1a65c8"/>
+  <polygon points="67,3 69.8,8.5 76,6.5 71.5,11.5 76,16.5 69.8,14.5 67,20 64.2,14.5 58,16.5 62.5,11.5 58,6.5 64.2,8.5"
+           fill="rgba(255,255,255,0.4)" stroke="none"/>
+  <circle cx="67" cy="13" r="5.5" fill="#c03055"/>
+  <circle cx="67" cy="13" r="2.8" fill="#fff5d0"/>
+  <circle cx="67" cy="13" r="1.1" fill="#a02030"/>
+
+  <!-- Corner: Bottom-Left at (13,67) -->
+  <circle cx="13" cy="67" r="11" fill="#1a65c8"/>
+  <polygon points="13,57 15.8,62.5 22,60.5 17.5,65.5 22,70.5 15.8,68.5 13,74 10.2,68.5 4,70.5 8.5,65.5 4,60.5 10.2,62.5"
+           fill="rgba(255,255,255,0.4)" stroke="none"/>
+  <circle cx="13" cy="67" r="5.5" fill="#c03055"/>
+  <circle cx="13" cy="67" r="2.8" fill="#fff5d0"/>
+  <circle cx="13" cy="67" r="1.1" fill="#a02030"/>
+
+  <!-- Corner: Bottom-Right at (67,67) -->
+  <circle cx="67" cy="67" r="11" fill="#1a65c8"/>
+  <polygon points="67,57 69.8,62.5 76,60.5 71.5,65.5 76,70.5 69.8,68.5 67,74 64.2,68.5 58,70.5 62.5,65.5 58,60.5 64.2,62.5"
+           fill="rgba(255,255,255,0.4)" stroke="none"/>
+  <circle cx="67" cy="67" r="5.5" fill="#c03055"/>
+  <circle cx="67" cy="67" r="2.8" fill="#fff5d0"/>
+  <circle cx="67" cy="67" r="1.1" fill="#a02030"/>
+</svg>

@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TKGTW43774.com.tmshparis.qurani"],
+        "components": [
+          {
+            "/": "/auth-callback*",
+            "comment": "OAuth callback for native app sign-in"
+          }
+        ]
+      }
+    ]
+  }
+}

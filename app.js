@@ -2534,6 +2534,8 @@
       var loc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
       savePrayerLocation(loc);
       fetchPrayerTimes(loc.lat, loc.lon);
+      // Reverse geocode pour obtenir le nom de ville
+      _reverseGeocode(loc.lat, loc.lon);
     }, function (err) {
       $("prayer-loading").classList.add("hidden");
       $("prayer-error").classList.remove("hidden");
@@ -2775,7 +2777,7 @@
         asr: ct(t.Asr), maghrib: ct(t.Maghrib), isha: ct(t.Isha),
         midnight: ct(t.Midnight), lastThird: ct(t.LastThird),
         date: "", nextPrayer: "", nextTime: "",
-        method: getPrayerMethod(), city: ""
+        method: getPrayerMethod(), city: (getSavedPrayerLocation() || {}).name || ""
       });
     }
   }
@@ -2898,6 +2900,18 @@
       }
     }
 
+    // Afficher la localisation
+    var locEl = $("prayer-bottom-location");
+    var savedLoc = getSavedPrayerLocation();
+    if (locEl) {
+      if (savedLoc && savedLoc.name) {
+        locEl.textContent = savedLoc.name;
+        locEl.style.display = "";
+      } else {
+        locEl.style.display = "none";
+      }
+    }
+
     // Show loading done
     $("prayer-loading").classList.add("hidden");
   }
@@ -2905,6 +2919,25 @@
   function startPrayerCountdown() {
     if (prayerCountdownInterval) clearInterval(prayerCountdownInterval);
     prayerCountdownInterval = setInterval(renderPrayerTimes, 1000);
+  }
+
+  function _reverseGeocode(lat, lon) {
+    fetch("/api/geocode/reverse?lat=" + lat + "&lon=" + lon + "&format=json&zoom=10&addressdetails=1",
+      { headers: { "Accept-Language": "fr,en" } })
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (!result || result.error) return;
+        var addr = result.address || {};
+        var city = addr.city || addr.town || addr.village || addr.municipality || "";
+        if (!city && result.display_name) city = result.display_name.split(",")[0];
+        if (city) {
+          var loc = getSavedPrayerLocation();
+          if (loc) { loc.name = city; savePrayerLocation(loc); }
+          var locEl = $("prayer-bottom-location");
+          if (locEl) { locEl.textContent = city; locEl.style.display = ""; }
+        }
+      })
+      .catch(function() {});
   }
 
   function closePrayerOverlay() {
@@ -3294,13 +3327,16 @@
     // Vendredi 10h→Maghrib : sourate du jour, sinon invocations
     var invocCard = document.querySelector(".dash-invocation-card");
     var suratCard = $("dash-surat-card");
+    var suratFill = $("dash-surat-progress-fill");
     if (invocCard && suratCard) {
       if (_dashShouldShowSurat()) {
         invocCard.classList.add("hidden");
         suratCard.classList.remove("hidden");
+        if (suratFill) suratFill.style.display = "";
       } else {
         invocCard.classList.remove("hidden");
         suratCard.classList.add("hidden");
+        if (suratFill) suratFill.style.display = "none";
       }
     }
   }
@@ -7422,6 +7458,9 @@
   var kwFromStart = true;
   var kwStartSurahIdx = 0;
   var kwSelectedSurahIdx = -1;
+  var kwFromMinimal = false; // true when wizard opened from Mode Concentration
+
+  // =====================================================================
 
   function loadKhatm() {
     try {
@@ -7795,7 +7834,16 @@
     };
     saveKhatm();
     closeKhatmWizard();
-    openKhatmReader(surahIdx, ayahIdx, goalDays);
+    if (kwFromMinimal) {
+      kwFromMinimal = false;
+      state.minContext = 'khatm';
+      state.minSurahIdx = surahIdx;
+      state.minAyahIdx = ayahIdx;
+      saveState();
+      openMinReader(surahIdx, ayahIdx);
+    } else {
+      openKhatmReader(surahIdx, ayahIdx, goalDays);
+    }
     // Update hero button
     var heroBtn = $("khatm-hero-btn");
     var heroMenu = $("khatm-hero-menu");
@@ -10419,7 +10467,6 @@
     var moiHifz = $("moi-hifz");
     if (moiHifz) moiHifz.addEventListener("click", openHifzFromMoi);
 
-
     // ---- LISTEN ----
     $("listen-close").addEventListener("click", closeListenOverlay);
     $("listen-play-btn").addEventListener("click", listenToggle);
@@ -10581,6 +10628,29 @@
         render();
       });
     });
+
+    // Stats reset button
+    var statsResetBtn = $("stats-reset-btn");
+    if (statsResetBtn) {
+      statsResetBtn.addEventListener("click", function() {
+        var sheet = $("stats-reset-sheet");
+        if (!sheet) return;
+        sheet.classList.remove("hidden");
+        var cancelBtn = $("srs-cancel");
+        var confirmBtn = $("srs-confirm");
+        var backdrop = $("srs-backdrop");
+        function closeSheet() { sheet.classList.add("hidden"); }
+        if (cancelBtn) cancelBtn.onclick = closeSheet;
+        if (backdrop) backdrop.onclick = closeSheet;
+        if (confirmBtn) confirmBtn.onclick = function() {
+          stats = { totalVersesRead: 0, readDates: [], streak: 0, totalReadingSeconds: 0, totalHassanates: 0 };
+          saveStats(stats);
+          closeSheet();
+          renderStats();
+          renderDashStats();
+        };
+      });
+    }
 
     // reset-btn removed from settings HTML (kept for safety)
     if ($("reset-btn")) {
@@ -12188,6 +12258,7 @@
   // ============================================================
 
   var _zakatNisabMode = "or"; // "or" ou "argent"
+  var ZAKAT_DATA_KEY = "qurani_zakat_data";
   var ZAKAT_NISAB_OR_GRAMS = 85;
   var ZAKAT_NISAB_ARGENT_GRAMS = 595;
   var ZAKAT_DEFAULT_PRIX_OR = 85; // €/g fallback
@@ -12227,6 +12298,9 @@
     _zakatNisabMode = "or";
     $("zakat-overlay").classList.remove("hidden");
 
+    // Restaurer les données sauvegardées
+    _restoreZakatData();
+
     // Display current Hijri date
     var now = new Date();
     var hijri = gregorianToHijri(now);
@@ -12235,7 +12309,7 @@
     if (hijriEl && hijri) hijriEl.textContent = hijri.full;
     if (hijriLabel) hijriLabel.textContent = hijriMonthName(now);
 
-    // Set default gold price
+    // Set default gold price (seulement si pas de donnée restaurée)
     var prixInput = $("zakat-prix-gramme");
     if (prixInput && !prixInput.value) prixInput.value = ZAKAT_DEFAULT_PRIX_OR;
 
@@ -12244,9 +12318,16 @@
     var hawlInput = $("zakat-hawl-date");
     if (hawlInput && savedHawl) hawlInput.value = savedHawl;
 
-    // Nisab toggle
+    // Nisab toggle — refléter le mode restauré
     var btnOr = $("zakat-nisab-or");
     var btnAg = $("zakat-nisab-argent");
+    if (btnOr && btnAg) {
+      if (_zakatNisabMode === "argent") {
+        btnAg.classList.add("active"); btnOr.classList.remove("active");
+      } else {
+        btnOr.classList.add("active"); btnAg.classList.remove("active");
+      }
+    }
     if (btnOr) btnOr.onclick = function() {
       _zakatNisabMode = "or";
       btnOr.classList.add("active"); btnAg.classList.remove("active");
@@ -12398,6 +12479,34 @@
     html += '<p class="zakat-reference">﴿ خُذْ مِنْ أَمْوَالِهِمْ صَدَقَةً تُطَهِّرُهُمْ وَتُزَكِّيهِم بِهَا ﴾<br><span class="zakat-ref-fr">« Prélève de leurs biens une aumône par laquelle tu les purifies et les bénis. » — At-Tawba 9:103</span></p>';
 
     container.innerHTML = html;
+    _saveZakatData();
+  }
+
+  function _saveZakatData() {
+    try {
+      var data = {};
+      ["zakat-epargne", "zakat-or", "zakat-argent-metal", "zakat-invest",
+       "zakat-commerce", "zakat-crypto", "zakat-autres", "zakat-dettes",
+       "zakat-prix-gramme"].forEach(function(id) {
+        var el = $(id);
+        if (el && el.value) data[id] = el.value;
+      });
+      data.nisabMode = _zakatNisabMode;
+      localStorage.setItem(ZAKAT_DATA_KEY, JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function _restoreZakatData() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(ZAKAT_DATA_KEY));
+      if (!saved) return;
+      Object.keys(saved).forEach(function(id) {
+        if (id === "nisabMode") return;
+        var el = $(id);
+        if (el) el.value = saved[id];
+      });
+      if (saved.nisabMode) _zakatNisabMode = saved.nisabMode;
+    } catch(e) {}
   }
 
   function refreshMoiCounts() {
@@ -12886,6 +12995,15 @@
       if (appleBtn) appleBtn.addEventListener("click", signInWithApple);
       if (logoutBtn) logoutBtn.addEventListener("click", signOutUser);
 
+      // Auto-sync quand l'app revient au premier plan
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener("appStateChange", function(state) {
+          if (state.isActive && currentUser) {
+            syncFromCloud();
+          }
+        });
+      }
+
       var authToggle = $("auth-toggle-btn");
       if (authToggle) authToggle.addEventListener("click", function() {
         openAuthOverlay();
@@ -12924,14 +13042,14 @@
 
   function signInWithGoogle() {
     if (!auth) return;
+    if (_isNativeApp()) return _signInNative("google");
     var btn = $("auth-google-btn");
     var originalHTML = btn ? btn.innerHTML : "";
     if (btn) { btn.disabled = true; btn.textContent = "Connexion..."; }
     var provider = new firebase.auth.GoogleAuthProvider();
-    // Use signInWithPopup with same-origin authDomain (ayat-theta.vercel.app)
-    // This avoids WKWebView storage partitioning issues in Capacitor
     auth.signInWithPopup(provider).then(function(result) {
       currentUser = result.user;
+      localStorage.setItem("qurani-auth-provider", "google");
       closeAuthOverlay();
       updateAuthUI();
       syncFromCloud();
@@ -12939,20 +13057,19 @@
       if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
       if (err.code === "auth/popup-closed-by-user") return;
       if (err.code === "auth/cancelled-popup-request") return;
-      console.error("Google sign-in error:", err.code, err.message);
       showToast("Erreur : " + (err.message || err.code));
     });
   }
 
   function signInWithApple() {
     if (!auth) return;
+    if (_isNativeApp()) return _signInNative("apple");
     var btn = $("auth-apple-btn");
     var originalHTML = btn ? btn.innerHTML : "";
     if (btn) { btn.disabled = true; btn.textContent = "Connexion..."; }
     var provider = new firebase.auth.OAuthProvider("apple.com");
     provider.addScope("email");
     provider.addScope("name");
-    // Use signInWithPopup with same-origin authDomain (ayat-theta.vercel.app)
     auth.signInWithPopup(provider).then(function(result) {
       currentUser = result.user;
       closeAuthOverlay();
@@ -12962,15 +13079,146 @@
       if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
       if (err.code === "auth/popup-closed-by-user") return;
       if (err.code === "auth/cancelled-popup-request") return;
-      console.error("Apple sign-in error:", err.code, err.message);
       showToast("Erreur : " + (err.message || err.code));
     });
+  }
+
+  // Helpers nonce pour Apple Sign-In natif
+  function _genNonce(len) {
+    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var arr = new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(function(b) { return chars[b % chars.length]; }).join("");
+  }
+  function _sha256Hex(str) {
+    if (typeof crypto === "undefined" || !crypto.subtle) {
+      return Promise.resolve(null); // pas de crypto.subtle en HTTP (dev local)
+    }
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function(hash) {
+      return Array.from(new Uint8Array(hash)).map(function(b) {
+        return b.toString(16).padStart(2, "0");
+      }).join("");
+    });
+  }
+
+  // Apple Sign-In natif via AppleSignInPlugin
+  function _signInAppleNative() {
+    var cap = window.Capacitor;
+    if (!cap) { showToast("Capacitor non disponible"); return; }
+
+    var available = cap.isPluginAvailable ? cap.isPluginAvailable("AppleSignIn") : false;
+    if (!available) { showToast("Plugin Apple non disponible"); return; }
+    closeAuthOverlay();
+
+    // Le SDK Firebase JS attend aud=service_id, mais le token natif a aud=bundle_id.
+    // On passe par /api/apple-auth (Vercel) qui vérifie le token Apple
+    // et retourne un Firebase custom token.
+    cap.nativePromise("AppleSignIn", "authorize", {}).then(function(result) {
+      var resp = result.response || {};
+      var identityToken = resp.identityToken;
+      if (!identityToken) throw new Error("Pas d'identityToken dans la réponse");
+      var displayName = [resp.givenName, resp.familyName].filter(Boolean).join(" ");
+      if (displayName) localStorage.setItem("qurani-apple-name", displayName);
+      var savedName = localStorage.getItem("qurani-apple-name") || "";
+      return fetch("https://ayat-theta.vercel.app/api/apple-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: identityToken, displayName: displayName })
+      }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error("Serveur: " + t); });
+        return r.json();
+      }).then(function(data) {
+        if (data.error) throw new Error(data.error);
+        return auth.signInWithCustomToken(data.customToken).then(function(cred) {
+          // Mettre à jour le profil Firebase avec le nom Apple (seulement si disponible)
+          var name = data.displayName || displayName || savedName;
+          if (name && cred.user && !cred.user.displayName) {
+            return cred.user.updateProfile({ displayName: name }).then(function() { return cred; });
+          }
+          return cred;
+        });
+      });
+    }).then(function(result) {
+      currentUser = result.user;
+      localStorage.setItem("qurani-auth-provider", "apple");
+      updateAuthUI();
+      syncFromCloud();
+      showToast("Connexion réussie !");
+    }).catch(function(err) {
+      console.error("[Apple Auth] ERREUR:", err);
+      var msg = (err && (err.message || err.code || "")) + "";
+      if (msg.indexOf("1001") >= 0 || msg.indexOf("cancel") >= 0) return;
+      showToast("Erreur Apple : " + msg);
+    });
+  }
+
+  // Google Sign-In via @capacitor/browser (SFSafariViewController)
+  function _signInNative(providerName) {
+    if (!window.Capacitor || !window.Capacitor.Plugins) return;
+
+    // Apple : utiliser le plugin natif (pas SFSafariViewController)
+    if (providerName === "apple") {
+      _signInAppleNative();
+      return;
+    }
+
+    var Browser = window.Capacitor.Plugins.Browser;
+    var App = window.Capacitor.Plugins.App;
+    if (!Browser) { showToast("Navigateur non disponible"); return; }
+
+    closeAuthOverlay();
+    showToast("Ouverture de la connexion...");
+
+    Browser.open({
+      url: "https://ayat-theta.vercel.app/auth-native.html?provider=" + providerName,
+      presentationStyle: "popover"
+    });
+
+    if (!window._authCallbackRegistered) {
+      window._authCallbackRegistered = true;
+      App.addListener("appUrlOpen", function(event) {
+        var url = event.url || "";
+        var isAuthCallback = url.indexOf("com.tmshparis.qurani://auth-callback") >= 0 ||
+                             url.indexOf("ayat-theta.vercel.app/auth-callback") >= 0;
+        if (!isAuthCallback) return;
+
+        Browser.close().catch(function() {});
+
+        var qs = url.split("?")[1] || "";
+        var params = {};
+        qs.split("&").forEach(function(pair) {
+          var parts = pair.split("=");
+          if (parts.length === 2) params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+        });
+
+        if (!params.idToken && !params.accessToken) { showToast("Erreur de connexion"); return; }
+
+        var credential;
+        if (params.provider === "google.com" && params.idToken) {
+          credential = firebase.auth.GoogleAuthProvider.credential(params.idToken, params.accessToken || null);
+        }
+
+        if (credential && auth) {
+          auth.signInWithCredential(credential).then(function(result) {
+            currentUser = result.user;
+            localStorage.setItem("qurani-auth-provider", "google");
+            updateAuthUI();
+            syncFromCloud();
+            showToast("Connexion réussie !");
+          }).catch(function(err) {
+            console.error("signInWithCredential error:", err);
+            showToast("Erreur : " + (err.message || err.code));
+          });
+        }
+      });
+    }
   }
 
   function signOutUser() {
     if (!auth) return;
     auth.signOut().then(function() {
       currentUser = null;
+      localStorage.removeItem("qurani-auth-provider");
       updateAuthUI();
       showToast("Déconnexion réussie");
     });
@@ -12986,14 +13234,45 @@
       var nameEl = $("auth-name");
       var emailEl = $("auth-email");
       var avatarEl = $("auth-avatar");
-      if (nameEl) nameEl.textContent = currentUser.displayName || "Utilisateur";
+      var initialsEl = $("auth-initials");
+      var badgeEl = $("auth-provider-badge");
+      var displayName = currentUser.displayName || localStorage.getItem("qurani-apple-name") || "Utilisateur";
+      if (nameEl) nameEl.textContent = displayName;
       if (emailEl) emailEl.textContent = currentUser.email || "";
-      if (avatarEl) {
-        if (currentUser.photoURL) {
-          avatarEl.src = currentUser.photoURL;
-          avatarEl.style.display = "";
-        } else {
-          avatarEl.style.display = "none";
+      // Avatar ou initiales
+      if (currentUser.photoURL) {
+        if (avatarEl) { avatarEl.src = currentUser.photoURL; avatarEl.style.display = ""; }
+        if (initialsEl) initialsEl.style.display = "none";
+      } else {
+        if (avatarEl) avatarEl.style.display = "none";
+        if (initialsEl) {
+          var parts = displayName.split(" ").filter(Boolean);
+          initialsEl.textContent = parts.length >= 2
+            ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+            : displayName.slice(0, 2).toUpperCase();
+          initialsEl.style.display = "";
+        }
+      }
+      // Badge provider
+      if (badgeEl) {
+        var provider = localStorage.getItem("qurani-auth-provider") || "";
+        if (!provider && currentUser.providerData && currentUser.providerData[0]) {
+          provider = currentUser.providerData[0].providerId === "google.com" ? "google" : "";
+        }
+        badgeEl.textContent = provider === "google" ? "Google" : provider === "apple" ? "Apple" : "";
+      }
+      // Restore last sync timestamp
+      var timeEl2 = $("auth-sync-time");
+      if (timeEl2) {
+        var savedTs = localStorage.getItem("qurani-last-sync-ts");
+        if (savedTs) {
+          var d2 = new Date(savedTs);
+          var today2 = new Date();
+          var sameDay2 = d2.toDateString() === today2.toDateString();
+          var label2 = sameDay2
+            ? d2.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+            : d2.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) + " " + d2.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          timeEl2.textContent = "· " + label2;
         }
       }
     } else {
@@ -13039,17 +13318,27 @@
     updateSyncStatus("EN COURS...");
     var data = collectSyncData();
     data._lastModified = firebase.firestore.FieldValue.serverTimestamp();
+    var timeout = setTimeout(function() {
+      if (syncInProgress) {
+        syncInProgress = false;
+        updateSyncStatus("ERREUR");
+        console.warn("[Sync] syncToCloud timeout après 20s");
+      }
+    }, 20000);
     db.collection("users").doc(currentUser.uid).set(
       { syncData: data },
       { merge: true }
     ).then(function() {
+      clearTimeout(timeout);
       syncInProgress = false;
-      updateSyncStatus("À JOUR");
+      updateSyncStatus("TERMINÉ ✓");
       showToast("Données synchronisées");
     }).catch(function(err) {
+      clearTimeout(timeout);
       syncInProgress = false;
       updateSyncStatus("ERREUR");
       showToast("Erreur de synchronisation");
+      console.error("[Sync] syncToCloud erreur:", err);
     });
   }
 
@@ -13057,17 +13346,27 @@
     if (!firebaseReady || !currentUser || syncInProgress) return;
     syncInProgress = true;
     updateSyncStatus("EN COURS...");
+    var timeout = setTimeout(function() {
+      if (syncInProgress) {
+        syncInProgress = false;
+        updateSyncStatus("ERREUR");
+        console.warn("[Sync] syncFromCloud timeout après 20s");
+      }
+    }, 20000);
     db.collection("users").doc(currentUser.uid).get().then(function(doc) {
+      clearTimeout(timeout);
+      syncInProgress = false;
       if (doc.exists && doc.data().syncData) {
         resolveAndApplySync(doc.data().syncData);
-        updateSyncStatus("À JOUR");
+        updateSyncStatus("TERMINÉ ✓");
       } else {
         syncToCloud();
       }
-      syncInProgress = false;
     }).catch(function(err) {
+      clearTimeout(timeout);
       syncInProgress = false;
       updateSyncStatus("ERREUR");
+      console.error("[Sync] syncFromCloud erreur:", err);
     });
   }
 
@@ -13223,9 +13522,41 @@
     return Object.keys(map).map(function(k) { return map[k]; });
   }
 
+  var _syncStatusTimer;
   function updateSyncStatus(text) {
     var el = $("auth-sync-status");
-    if (el) el.textContent = text;
+    var bar = $("auth-sync-bar");
+    var timeEl = $("auth-sync-time");
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove("auth-sync-status--ok", "auth-sync-status--err");
+    var loading = (text === "EN COURS...");
+    if (bar) bar.classList.toggle("auth-sync-bar--hidden", !loading);
+    if (text === "TERMINÉ ✓" || text === "À JOUR") {
+      el.classList.add("auth-sync-status--ok");
+      if (text === "TERMINÉ ✓") {
+        var now = new Date();
+        var ts = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        localStorage.setItem("qurani-last-sync-ts", now.toISOString());
+        if (timeEl) timeEl.textContent = "· " + ts;
+        clearTimeout(_syncStatusTimer);
+        _syncStatusTimer = setTimeout(function() { updateSyncStatus("À JOUR"); }, 3000);
+      } else if (text === "À JOUR" && timeEl && !timeEl.textContent) {
+        // Restore timestamp from localStorage on page reload
+        var saved = localStorage.getItem("qurani-last-sync-ts");
+        if (saved) {
+          var d = new Date(saved);
+          var today = new Date();
+          var sameDay = d.toDateString() === today.toDateString();
+          var label = sameDay
+            ? d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+            : d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          timeEl.textContent = "· " + label;
+        }
+      }
+    } else if (text === "ERREUR") {
+      el.classList.add("auth-sync-status--err");
+    }
   }
 
   function debouncedSync() {
@@ -13266,9 +13597,17 @@
   // MIN READER — Mode Concentration (lecture verset par verset)
   // ================================================================
 
+  function applyMinThemeToHub() {
+    var hubOv = $('min-hub-overlay');
+    if (!hubOv) return;
+    hubOv.classList.remove('min-t-light', 'min-t-sepia', 'min-t-dark');
+    hubOv.classList.add('min-t-' + (state.minTheme || 'dark'));
+  }
+
   function openMinHub() {
     renderMinHubPrefs();
     updateMinHubItems();
+    applyMinThemeToHub();
     // Always show the main hub screen (reset pickers)
     var picker = $('min-surah-picker');
     var vpicker = $('min-verse-picker');
@@ -13388,8 +13727,8 @@
       if (khatmNameEl) khatmNameEl.textContent = (SURAH_TRANSLIT[kNum] || kSurah.surahNameAr || '') + '  ·  v.' + (khatm.ayahIdx + 1);
       if (khatmItem) { khatmItem.style.opacity = '1'; khatmItem.style.pointerEvents = ''; }
     } else {
-      if (khatmNameEl) khatmNameEl.textContent = 'Aucun khatm actif';
-      if (khatmItem) { khatmItem.style.opacity = '0.35'; khatmItem.style.pointerEvents = 'none'; }
+      if (khatmNameEl) khatmNameEl.textContent = 'Commencer un khatm';
+      if (khatmItem) { khatmItem.style.opacity = '0.7'; khatmItem.style.pointerEvents = ''; }
     }
     // Libre item
     var libreNameEl = $('min-hub-libre-name');
@@ -13400,6 +13739,12 @@
         var lNum = lSurah.surahNumber || (pos.surahIdx + 1);
         libreNameEl.textContent = (SURAH_TRANSLIT[lNum] || lSurah.surahNameAr || '') + '  ·  v.' + (pos.ayahIdx + 1);
       }
+    }
+    // Reset khatm row — visible only when khatm is active
+    var resetRow = $('min-reset-khatm-row');
+    if (resetRow) {
+      if (khatm && khatm.active) resetRow.classList.remove('hidden');
+      else resetRow.classList.add('hidden');
     }
   }
 
@@ -13444,15 +13789,49 @@
     var surahNum = surah.surahNumber || (surahIdx + 1);
     $('min-surah-name').textContent = SURAH_TRANSLIT[surahNum] || surah.surahNameAr || '';
     $('min-verse-num').textContent = 'v. ' + (ayahIdx + 1);
-    // Khatm progress bar
+    // Khatm progress bar + top strip + complete button
     var bar = $('min-khatm-bar');
-    if (bar) {
-      if (state.minContext === 'khatm' && totalAyat > 0) {
-        var linear = positionToLinear(surahIdx, ayahIdx);
-        bar.style.width = (linear / totalAyat * 100).toFixed(2) + '%';
-        bar.style.display = '';
+    var topEl = $('min-khatm-top');
+    var dayLbl = $('min-khatm-day-lbl');
+    var countLbl = $('min-khatm-count-lbl');
+    var completeBtn = $('min-complete-btn');
+    if (state.minContext === 'khatm' && khatm && khatm.active) {
+      var portion = getTodayPortion();
+      if (portion && portion.versesForToday > 0) {
+        // Progress bar
+        if (bar) {
+          var dayPct = Math.min(portion.versesReadToday / portion.versesForToday * 100, 100);
+          bar.style.width = dayPct.toFixed(1) + '%';
+          bar.style.display = '';
+        }
+        // Top strip: "JOUR 3  ·  12 / 20"
+        if (topEl) topEl.classList.remove('hidden');
+        if (dayLbl) dayLbl.textContent = 'JOUR ' + portion.dayNumber;
+        if (countLbl) countLbl.textContent = '· ' + Math.min(portion.versesReadToday, portion.versesForToday) + ' / ' + portion.versesForToday;
+        // Complete button: appears when day quota reached
+        if (completeBtn) {
+          if (portion.versesReadToday >= portion.versesForToday) {
+            completeBtn.textContent = 'COMPLÉTER JOUR ' + portion.dayNumber;
+            completeBtn.classList.remove('hidden');
+          } else {
+            completeBtn.classList.add('hidden');
+          }
+        }
       } else {
-        bar.style.display = 'none';
+        if (bar) { bar.style.width = '0%'; bar.style.display = ''; }
+        if (topEl) topEl.classList.add('hidden');
+        if (completeBtn) completeBtn.classList.add('hidden');
+      }
+    } else {
+      if (topEl) topEl.classList.add('hidden');
+      if (completeBtn) completeBtn.classList.add('hidden');
+      if (bar) {
+        if (surah.ayahs.length > 0) {
+          bar.style.width = ((ayahIdx + 1) / surah.ayahs.length * 100).toFixed(1) + '%';
+          bar.style.display = '';
+        } else {
+          bar.style.display = 'none';
+        }
       }
     }
   }
@@ -13463,12 +13842,23 @@
     if (!surahs) return;
     var surah = surahs[si];
     if (!surah) return;
+    // Compter les lettres du verset actuellement affiché (avant d'avancer)
+    var letters = countArabicLetters(surah.ayahs[ai] || '');
     if (ai < surah.ayahs.length - 1) {
       state.minAyahIdx = ai + 1;
     } else if (si < surahs.length - 1) {
       state.minSurahIdx = si + 1;
       state.minAyahIdx = 0;
     }
+    // Sync khatm position
+    if (state.minContext === 'khatm' && khatm && khatm.active) {
+      khatm.surahIdx = state.minSurahIdx;
+      khatm.ayahIdx = state.minAyahIdx;
+      saveKhatm();
+      state.todayReadCount++;
+    }
+    // Hassanates + versets lus (khatm ET lecture libre)
+    recordReading(1, letters);
     saveState();
     _animateMinVerse();
   }
@@ -13482,6 +13872,12 @@
     } else if (si > 0) {
       state.minSurahIdx = si - 1;
       state.minAyahIdx = surahs[si - 1].ayahs.length - 1;
+    }
+    // Sync khatm position
+    if (state.minContext === 'khatm' && khatm && khatm.active) {
+      khatm.surahIdx = state.minSurahIdx;
+      khatm.ayahIdx = state.minAyahIdx;
+      saveKhatm();
     }
     saveState();
     _animateMinVerse();
@@ -13499,10 +13895,40 @@
     }, 110);
   }
 
+  function minCompleteKhatmDay() {
+    var portion = getTodayPortion();
+    if (!portion || !khatm) return;
+    if (portion.finished) {
+      khatm.surahIdx = 0;
+      khatm.ayahIdx = 0;
+      khatm.active = false;
+    } else {
+      khatm.surahIdx = portion.endPos.surahIdx;
+      khatm.ayahIdx = portion.endPos.ayahIdx;
+    }
+    saveKhatm();
+    showToast('Jour ' + portion.dayNumber + ' complété ✓');
+    closeMinReader();
+  }
+
   function initMinReader() {
     // Triangle button in QURAN tab
     var minModeBtn = $('min-mode-btn');
-    if (minModeBtn) minModeBtn.addEventListener('click', function() { openMinHub(); });
+    if (minModeBtn) {
+      minModeBtn.classList.add('min-pulse');
+      minModeBtn.addEventListener('click', function() {
+        openMinHub();
+      });
+    }
+
+    // Tab bar center triangle
+    var tabBarMin = $('tab-bar-minimal');
+    if (tabBarMin) {
+      tabBarMin.classList.add('min-pulse');
+      tabBarMin.addEventListener('click', function() {
+        openMinHub();
+      });
+    }
 
     // MOI Minimal item
     var moiMinimal = $('moi-minimal');
@@ -13523,9 +13949,14 @@
     // Hub items
     var minHubKhatm = $('min-hub-khatm');
     if (minHubKhatm) minHubKhatm.addEventListener('click', function() {
-      if (khatm && khatm.surahIdx !== undefined) {
+      if (khatm && khatm.active && khatm.surahIdx !== undefined) {
         state.minContext = 'khatm';
         openMinReader(khatm.surahIdx, khatm.ayahIdx || 0);
+      } else {
+        // No active khatm → open wizard to create one, then redirect to minimal
+        kwFromMinimal = true;
+        closeMinHub();
+        openKhatmWizard();
       }
     });
     var minHubLibre = $('min-hub-libre');
@@ -13535,7 +13966,7 @@
 
     // Hub prefs
     document.querySelectorAll('#min-theme-btns .min-pref-opt').forEach(function(btn) {
-      btn.addEventListener('click', function() { state.minTheme = btn.dataset.minTheme; saveState(); renderMinHubPrefs(); });
+      btn.addEventListener('click', function() { state.minTheme = btn.dataset.minTheme; saveState(); renderMinHubPrefs(); applyMinThemeToHub(); });
     });
     document.querySelectorAll('#min-lang-btns .min-pref-opt').forEach(function(btn) {
       btn.addEventListener('click', function() { state.minLang = btn.dataset.minLang; saveState(); renderMinHubPrefs(); });
@@ -13547,9 +13978,21 @@
       btn.addEventListener('click', function() { state.minSize = parseInt(btn.dataset.minSize); saveState(); renderMinHubPrefs(); });
     });
 
+    // Reset khatm from hub
+    var minResetKhatmBtn = $('min-reset-khatm-btn');
+    if (minResetKhatmBtn) {
+      minResetKhatmBtn.addEventListener('click', function() {
+        openKhatmDeleteSheet(function() { updateMinHubItems(); });
+      });
+    }
+
     // Reader back
     var minReaderBack = $('min-reader-back');
     if (minReaderBack) minReaderBack.addEventListener('click', function(e) { e.stopPropagation(); closeMinReader(); });
+
+    // Complete day button
+    var minCompleteBtn = $('min-complete-btn');
+    if (minCompleteBtn) minCompleteBtn.addEventListener('click', function(e) { e.stopPropagation(); minCompleteKhatmDay(); });
 
     // Reader touch navigation (tap + swipe)
     var readerEl = $('min-reader-overlay');
@@ -13570,7 +14013,7 @@
         var ey = e.changedTouches[0].clientY;
         var dx = ex - _tx, dy = ey - _ty;
         var adx = Math.abs(dx), ady = Math.abs(dy);
-        if (e.target.closest('#min-reader-back')) return;
+        if (e.target.closest('#min-reader-back') || e.target.closest('#min-complete-btn')) return;
         if (!_moved) {
           // Tap
           if (ex < window.innerWidth / 2) minPrevVerse(); else minNextVerse();
@@ -13582,7 +14025,7 @@
       // Desktop click
       readerEl.addEventListener('click', function(e) {
         if ('ontouchstart' in window) return;
-        if (e.target.closest('#min-reader-back')) return;
+        if (e.target.closest('#min-reader-back') || e.target.closest('#min-complete-btn')) return;
         if (e.clientX < window.innerWidth / 2) minPrevVerse(); else minNextVerse();
       });
     }

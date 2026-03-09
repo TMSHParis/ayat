@@ -46,16 +46,13 @@ struct NextPrayerProvider: TimelineProvider {
 struct NextPrayerWidgetView: View {
     var entry: NextPrayerEntry
 
+    private let gold = Color(red: 1.0, green: 0.90, blue: 0.62)
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Image(systemName: "moon.stars.fill")
-                    .font(.caption)
-                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
-                Text("Qurani")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.5))
-            }
+            Image(systemName: "moon.stars.fill")
+                .font(.caption)
+                .foregroundColor(gold)
             Spacer()
             Text(entry.prayerNameAr)
                 .font(.title2)
@@ -65,14 +62,22 @@ struct NextPrayerWidgetView: View {
             Text(entry.prayerName)
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.5))
-            HStack {
-                Image(systemName: "clock.fill")
-                    .font(.caption2)
-                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
+            HStack(spacing: 6) {
+                // Heure de prière
                 Text(entry.prayerTime)
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .foregroundColor(Color(red: 1.0, green: 0.90, blue: 0.62))
+                    .foregroundColor(gold)
+                // Countdown live
+                if let prayerDate = entry.prayerDate, prayerDate > Date() {
+                    Text("·")
+                        .foregroundColor(.white.opacity(0.3))
+                    Text(prayerDate, style: .relative)
+                        .font(.caption)
+                        .foregroundColor(gold.opacity(0.7))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
             }
         }
         .padding()

@@ -183,9 +183,9 @@ struct PrayerTimelineProvider: TimelineProvider {
         var entries: [PrayerEntry] = []
         let prayerTime = String(next.time.prefix(5))
 
-        // Alterner toutes les 10s entre countdown et heure (pendant 10 min)
-        for i in 0..<60 {
-            let entryDate = now.addingTimeInterval(Double(i) * 10.0)
+        // Mettre à jour le countdown toutes les 60s (pendant 10 min)
+        for i in 0..<10 {
+            let entryDate = now.addingTimeInterval(Double(i) * 60.0)
             if entryDate >= next.date { break }
             entries.append(PrayerEntry(
                 date: entryDate,
@@ -193,7 +193,7 @@ struct PrayerTimelineProvider: TimelineProvider {
                 prayerTime: prayerTime,
                 progress: data.progress,
                 nextPrayerDate: next.date,
-                showTimer: i % 2 == 0,
+                showTimer: true,
                 countdownText: PrayerEntry.formatCountdown(from: entryDate, to: next.date)
             ))
         }
@@ -254,21 +254,12 @@ struct CircularView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
 
-                if entry.showTimer {
-                    // Countdown numérique : "2h25" ou "45m"
-                    Text(entry.countdownText)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(gold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                } else {
-                    // Heure de la prière : "16:03"
-                    Text(entry.prayerTime)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(gold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
+                // Countdown : "2h25" ou "45m"
+                Text(entry.countdownText)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(gold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
             .padding(5)
         }
@@ -298,16 +289,10 @@ struct RectangularView: View {
                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                     .foregroundColor(textMain)
 
-                if entry.showTimer {
-                    // Countdown numérique : "2h25" ou "45m"
-                    Text(entry.countdownText)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(goldDim)
-                } else {
-                    Text(entry.prayerTime)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(goldDim)
-                }
+                // Toujours afficher le countdown (l'heure est déjà à droite)
+                Text(entry.countdownText)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(goldDim)
             }
 
             Spacer()

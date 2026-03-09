@@ -57,5 +57,16 @@
 	<string>Qurani utilise votre position pour la direction de la Qibla et les horaires de prière.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.tmshparis.qurani</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.tmshparis.qurani</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
