@@ -2904,12 +2904,7 @@
     var locEl = $("prayer-bottom-location");
     var savedLoc = getSavedPrayerLocation();
     if (locEl) {
-      if (savedLoc && savedLoc.name) {
-        locEl.textContent = savedLoc.name;
-        locEl.style.display = "";
-      } else {
-        locEl.style.display = "none";
-      }
+      locEl.textContent = (savedLoc && savedLoc.name) ? savedLoc.name : "";
     }
 
     // Show loading done
@@ -2934,7 +2929,7 @@
           var loc = getSavedPrayerLocation();
           if (loc) { loc.name = city; savePrayerLocation(loc); }
           var locEl = $("prayer-bottom-location");
-          if (locEl) { locEl.textContent = city; locEl.style.display = ""; }
+          if (locEl) { locEl.textContent = city; }
         }
       })
       .catch(function() {});
@@ -3337,6 +3332,18 @@
         invocCard.classList.remove("hidden");
         suratCard.classList.add("hidden");
         if (suratFill) suratFill.style.display = "none";
+      }
+    }
+
+    // 10 dernières nuits de Ramadan : mois 9 (Ramadan), jours 20-29
+    var ramadanBlock = $("dash-ramadan");
+    if (ramadanBlock) {
+      var hijriNow = _getHijriDate(new Date());
+      var isLast10 = hijriNow.month === 9 && hijriNow.day >= 20;
+      if (isLast10) {
+        ramadanBlock.classList.remove("hidden");
+      } else {
+        ramadanBlock.classList.add("hidden");
       }
     }
   }
@@ -6468,6 +6475,13 @@
     var scroll = overlay.querySelector(".emotion-overlay-scroll");
     if (scroll) scroll.scrollTop = 0;
     overlay.classList.remove("hidden");
+    var hint = $("emotion-scroll-hint");
+    if (hint) {
+      hint.classList.remove("hidden");
+      hint.style.animation = "none";
+      hint.offsetHeight;
+      hint.style.animation = "";
+    }
   }
 
   function closeEmotionDetail() {
@@ -7363,6 +7377,52 @@
   function closeDuaDetail() {
     stopDuaAudio();
     _closeBack("dua-overlay");
+  }
+
+  // ---- RAMADAN — COMPTE À REBOURS ----
+  var _ramadanCountdownInterval = null;
+
+  function updateRamadanCountdown() {
+    var el = $("dash-ramadan-countdown");
+    if (!el) return;
+    var hijri = _getHijriDate(new Date());
+    if (hijri.month !== 9 || hijri.day < 20) { el.textContent = ""; return; }
+    // 30 jours = durée max de Ramadan. Jours restants après aujourd'hui.
+    var daysLeft = 30 - hijri.day;
+    var now = new Date();
+    var end = new Date(now);
+    end.setDate(end.getDate() + daysLeft + 1);
+    end.setHours(0, 0, 0, 0);
+    var diff = end - now;
+    if (diff <= 0) { el.textContent = ""; return; }
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var parts = [];
+    if (d > 0) parts.push(d + "j");
+    if (h > 0 || d > 0) parts.push(h + "h");
+    parts.push(m + "min");
+    el.textContent = "\u2248 " + parts.join(" ");
+  }
+
+  // ---- RAMADAN — 10 DERNIÈRES NUITS OVERLAY ----
+  function openRamadanOverlay() {
+    var overlay = $("ramadan-overlay");
+    if (!overlay) return;
+    var scroll = overlay.querySelector(".ramadan-overlay-scroll");
+    if (scroll) scroll.scrollTop = 0;
+    overlay.classList.remove("hidden");
+    var hint = $("ramadan-scroll-hint");
+    if (hint) {
+      hint.classList.remove("hidden");
+      hint.style.animation = "none";
+      hint.offsetHeight;
+      hint.style.animation = "";
+    }
+  }
+
+  function closeRamadanOverlay() {
+    _closeBack("ramadan-overlay");
   }
 
   // ---- DUA CONTACT OVERLAY ----
@@ -10230,6 +10290,14 @@
         if (idx >= 0) openDuaDetail(idx);
       });
     }
+    // Ramadan 10 dernières nuits card click + countdown
+    var ramadanBtn = $("dash-ramadan-btn");
+    if (ramadanBtn) {
+      ramadanBtn.addEventListener("click", openRamadanOverlay);
+    }
+    updateRamadanCountdown();
+    if (_ramadanCountdownInterval) clearInterval(_ramadanCountdownInterval);
+    _ramadanCountdownInterval = setInterval(updateRamadanCountdown, 60000);
     // Surat du jour click — lecture libre
     var suratBtn = $("dash-surat-btn");
     if (suratBtn) {
@@ -11125,15 +11193,28 @@
     $("dash-emotion-plus").addEventListener("click", openEmotionDetail);
     $("emotion-close").addEventListener("click", closeEmotionDetail);
 
-    // Floating back button — emotion overlay
+    // Floating back button + scroll hint — emotion overlay
     (function() {
       var fab = $("emotion-float-back");
+      var hint = $("emotion-scroll-hint");
       var scroll = document.querySelector("#emotion-overlay .emotion-overlay-scroll");
       if (fab && scroll) {
         fab.addEventListener("click", closeEmotionDetail);
         scroll.addEventListener("scroll", function() {
           if (scroll.scrollTop > 220) fab.classList.add("visible");
           else fab.classList.remove("visible");
+          if (hint && scroll.scrollTop > 40) hint.classList.add("hidden");
+        });
+      }
+      if (hint && scroll) {
+        hint.addEventListener("click", function() {
+          var article = document.querySelector("#emotion-overlay .emotion-article");
+          if (article) {
+            scroll.scrollTo({ top: article.offsetTop, behavior: "smooth" });
+          } else {
+            scroll.scrollBy({ top: Math.round(scroll.clientHeight * 0.65), behavior: "smooth" });
+          }
+          hint.classList.add("hidden");
         });
       }
     })();
@@ -11181,6 +11262,34 @@
         });
       }
     })();
+    // Floating back button + scroll hint — ramadan overlay
+    (function() {
+      var ramClose = $("ramadan-close");
+      var ramFab   = $("ramadan-float-back");
+      var ramHint  = $("ramadan-scroll-hint");
+      var ramScroll = document.querySelector("#ramadan-overlay .ramadan-overlay-scroll");
+      if (ramClose) ramClose.addEventListener("click", closeRamadanOverlay);
+      if (ramFab && ramScroll) {
+        ramFab.addEventListener("click", closeRamadanOverlay);
+        ramScroll.addEventListener("scroll", function() {
+          if (ramScroll.scrollTop > 220) ramFab.classList.add("visible");
+          else ramFab.classList.remove("visible");
+          if (ramHint && ramScroll.scrollTop > 40) ramHint.classList.add("hidden");
+        });
+      }
+      if (ramHint && ramScroll) {
+        ramHint.addEventListener("click", function() {
+          var article = document.querySelector("#ramadan-overlay .emotion-article");
+          if (article) {
+            ramScroll.scrollTo({ top: article.offsetTop, behavior: "smooth" });
+          } else {
+            ramScroll.scrollBy({ top: Math.round(ramScroll.clientHeight * 0.65), behavior: "smooth" });
+          }
+          ramHint.classList.add("hidden");
+        });
+      }
+    })();
+
     $("dua-share").addEventListener("click", function() {
       var title = $("dua-title").textContent;
       var text = title + "\n\nQurani App";
@@ -12953,7 +13062,7 @@
     try {
       firebase.initializeApp({
         apiKey: "AIzaSyDk8bHjmkjqhOUf0SvHl_jRq5sDlb3OMpw",
-        authDomain: "ayat-theta.vercel.app",
+        authDomain: "qurani-28307.firebaseapp.com",
         projectId: "qurani-28307",
         storageBucket: "qurani-28307.firebasestorage.app",
         messagingSenderId: "76374898417",
@@ -13170,7 +13279,7 @@
     showToast("Ouverture de la connexion...");
 
     Browser.open({
-      url: "https://ayat-theta.vercel.app/auth-native.html?provider=" + providerName,
+      url: "https://qurani.fr/auth-native.html?provider=" + providerName,
       presentationStyle: "popover"
     });
 
@@ -13224,6 +13333,18 @@
     });
   }
 
+  function _nameFromEmail(email) {
+    if (!email) return "";
+    if (email.indexOf("privaterelay.appleid.com") >= 0) return "";
+    var prefix = email.split("@")[0];
+    return prefix.replace(/[._\-+]+/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); })
+      .join(" ")
+      .slice(0, 24);
+  }
+
   function updateAuthUI() {
     var loggedOut = $("auth-logged-out");
     var loggedIn = $("auth-logged-in");
@@ -13236,10 +13357,17 @@
       var avatarEl = $("auth-avatar");
       var initialsEl = $("auth-initials");
       var badgeEl = $("auth-provider-badge");
-      var displayName = currentUser.displayName || localStorage.getItem("qurani-apple-name") || "Utilisateur";
+      var displayName = localStorage.getItem("qurani-display-name")
+        || currentUser.displayName
+        || localStorage.getItem("qurani-apple-name")
+        || _nameFromEmail(currentUser.email)
+        || "Moi";
       if (nameEl) nameEl.textContent = displayName;
-      if (emailEl) emailEl.textContent = currentUser.email || "";
-      // Avatar ou initiales
+      if (emailEl) {
+        var emailVal = currentUser.email || "";
+        emailEl.textContent = emailVal.indexOf("privaterelay.appleid.com") >= 0 ? "Apple ID privé" : emailVal;
+      }
+      // Avatar ou initiales colorées
       if (currentUser.photoURL) {
         if (avatarEl) { avatarEl.src = currentUser.photoURL; avatarEl.style.display = ""; }
         if (initialsEl) initialsEl.style.display = "none";
@@ -13250,8 +13378,47 @@
           initialsEl.textContent = parts.length >= 2
             ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
             : displayName.slice(0, 2).toUpperCase();
+          // Couleur dérivée du UID
+          var palette = ["#7C6AF5","#E0916D","#6DB4E0","#6DE09A","#D4A843","#E06D9A"];
+          var uidSum = (currentUser.uid || "").split("").reduce(function(a, c) { return a + c.charCodeAt(0); }, 0);
+          var col = palette[uidSum % palette.length];
+          initialsEl.style.background = col + "22";
+          initialsEl.style.color = col;
+          initialsEl.style.borderColor = col + "55";
           initialsEl.style.display = "";
         }
+      }
+      // Bouton édition nom
+      var editBtn = $("auth-name-edit-btn");
+      if (editBtn && !editBtn._hasListener) {
+        editBtn._hasListener = true;
+        editBtn.addEventListener("click", function() {
+          var el = $("auth-name");
+          if (!el) return;
+          var cur = localStorage.getItem("qurani-display-name") || el.textContent;
+          var inp = document.createElement("input");
+          inp.type = "text";
+          inp.value = (cur === "Moi") ? "" : cur;
+          inp.placeholder = "Votre prénom";
+          inp.className = "auth-name-input";
+          el.textContent = "";
+          el.appendChild(inp);
+          inp.focus();
+          inp.select();
+          function saveEditName() {
+            var val = inp.value.trim();
+            if (val) {
+              localStorage.setItem("qurani-display-name", val);
+              if (currentUser) currentUser.updateProfile({ displayName: val }).catch(function(){});
+            }
+            updateAuthUI();
+          }
+          inp.addEventListener("blur", saveEditName);
+          inp.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") inp.blur();
+            if (e.key === "Escape") updateAuthUI();
+          });
+        });
       }
       // Badge provider
       if (badgeEl) {
@@ -13332,7 +13499,6 @@
       clearTimeout(timeout);
       syncInProgress = false;
       updateSyncStatus("TERMINÉ ✓");
-      showToast("Données synchronisées");
     }).catch(function(err) {
       clearTimeout(timeout);
       syncInProgress = false;

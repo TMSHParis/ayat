@@ -3,177 +3,251 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qurani — Connexion</title>
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Qurani</title>
   <style>
-    body { margin:0; background:#1a1a2e; color:#fff; font-family:-apple-system,system-ui,sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; }
-    .loader { text-align:center; }
-    .loader p { font-size:18px; margin-top:20px; opacity:0.7; }
-    .spinner { width:40px; height:40px; border:3px solid rgba(255,255,255,0.2); border-top-color:#FFE69E; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .error { color:#ff6b6b; text-align:center; padding:20px; display:none; }
-    .error a { color:#FFE69E; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #1a1a2e; }
+    body {
+      background: #1a1a2e;
+      color: #fff;
+      font-family: -apple-system, system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wrap { text-align: center; padding: 40px 24px; width: 240px; }
+    .brand {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      margin-bottom: 56px;
+      font-weight: 500;
+    }
+    .progress-track {
+      width: 100%;
+      height: 2px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 1px;
+      margin: 0 auto 14px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: rgba(255,230,158,0.55);
+      border-radius: 1px;
+      width: 0%;
+    }
+    .progress-pct {
+      font-size: 11px;
+      font-family: "Space Mono", monospace;
+      color: rgba(255,255,255,0.22);
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.28);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      min-height: 16px;
+    }
+    .error-wrap { display: none; }
+    .error-msg {
+      color: rgba(255,90,90,0.8);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .error-close {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,230,158,0.6);
+      text-decoration: none;
+      border: 1px solid rgba(255,230,158,0.2);
+      padding: 8px 20px;
+      border-radius: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="loader" id="loader">
-    <div class="spinner"></div>
-    <p id="status">Connexion en cours...</p>
+  <div class="wrap">
+    <div class="brand">Qurani</div>
+    <div id="loader">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="progress-pct" id="progress-pct">0%</p>
+      <p class="status" id="status">Connexion en cours</p>
+    </div>
+    <div class="error-wrap" id="error">
+      <p class="error-msg" id="error-msg"></p>
+      <a class="error-close" href="javascript:window.close()">Fermer</a>
+    </div>
   </div>
-  <div class="error" id="error"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
   <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyDk8bHjmkjqhOUf0SvHl_jRq5sDlb3OMpw",
-      authDomain: "ayat-theta.vercel.app",
-      projectId: "qurani-28307",
-      storageBucket: "qurani-28307.firebasestorage.app",
-      messagingSenderId: "76374898417",
-      appId: "1:76374898417:web:5cbc49ca65d5bae1e71b50"
-    });
+    // ── Progress bar ────────────────────────────────────────────────────────
+    var _fill   = document.getElementById("progress-fill");
+    var _pctEl  = document.getElementById("progress-pct");
+    var _statEl = document.getElementById("status");
+    var _raf    = null;
+    var _cur    = 0;
 
-    var auth = firebase.auth();
-    var urlParams = new URLSearchParams(window.location.search);
-    var provider = urlParams.get("provider");
+    function progressTo(target, ms, label, cb) {
+      cancelAnimationFrame(_raf);
+      if (label) _statEl.textContent = label;
+      var from = _cur;
+      var t0   = Date.now();
+      (function tick() {
+        var p    = Math.min((Date.now() - t0) / ms, 1);
+        var ease = 1 - Math.pow(1 - p, 3);
+        _cur = from + (target - from) * ease;
+        _fill.style.width      = _cur + "%";
+        _pctEl.textContent     = Math.round(_cur) + "%";
+        if (p < 1) { _raf = requestAnimationFrame(tick); }
+        else if (cb) cb();
+      })();
+    }
 
-    // localStorage key — tracks pending redirect (more reliable than sessionStorage)
-    var REDIR_KEY = "qr_auth_redir_" + (provider || "");
-
-    // ── Send tokens back to native app ───────────────────────────────────
-    function sendTokensToApp(result) {
-      var data = {
-        provider: result.credential.providerId,
-        idToken: result.credential.idToken || "",
-        accessToken: result.credential.accessToken || "",
-        uid: result.user.uid,
-        displayName: result.user.displayName || "",
-        email: result.user.email || "",
-        photoURL: result.user.photoURL || ""
-      };
-      var qs = Object.keys(data).map(function(k) {
-        return encodeURIComponent(k) + "=" + encodeURIComponent(data[k]);
-      }).join("&");
-
-      localStorage.removeItem(REDIR_KEY);
-
-      document.getElementById("status").textContent = "Connexion réussie !";
-
-      // Custom URL scheme — ouvre l'app directement sans bannière ni 404
-      window.location.href = "com.tmshparis.qurani://auth-callback?" + qs;
-
-      // Fallback: Universal Link si le custom scheme ne répond pas
-      setTimeout(function() {
-        window.location.href = "https://ayat-theta.vercel.app/auth-callback?" + qs;
-      }, 800);
-
-      setTimeout(function() {
-        document.getElementById("status").textContent = "Fermez cette page pour revenir à Qurani.";
-      }, 1500);
+    function progressCrawl(ceiling, totalMs) {
+      progressTo(ceiling, totalMs);
     }
 
     function showError(msg) {
+      cancelAnimationFrame(_raf);
       document.getElementById("loader").style.display = "none";
-      var errEl = document.getElementById("error");
-      errEl.style.display = "block";
-      errEl.innerHTML = msg + '<br><br><a href="javascript:window.close()">Fermer</a>';
+      var wrap = document.getElementById("error");
+      if (wrap) wrap.style.display = "block";
+      var el = document.getElementById("error-msg");
+      if (el) el.textContent = msg;
     }
 
-    // ── Helpers iOS ITP : backup/restore sessionStorage ──────────────────
-    var SESSION_BACKUP_KEY = "__qurani_session_backup__";
-
-    function backupSessionStorage() {
-      try {
-        var data = {};
-        for (var i = 0; i < sessionStorage.length; i++) {
-          var k = sessionStorage.key(i);
-          data[k] = sessionStorage.getItem(k);
-        }
-        if (Object.keys(data).length) {
-          localStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(data));
-        }
-      } catch(e) {}
+    function sendToApp(qs) {
+      progressTo(100, 350, "Connecté", function() {
+        window.location.href = "com.tmshparis.qurani://auth-callback?" + qs;
+        setTimeout(function() { _statEl.textContent = "Revenez sur Qurani"; }, 800);
+      });
     }
+  </script>
 
-    function restoreSessionStorage() {
-      try {
-        var raw = localStorage.getItem(SESSION_BACKUP_KEY);
-        if (!raw) return;
-        var data = JSON.parse(raw);
-        Object.keys(data).forEach(function(k) { sessionStorage.setItem(k, data[k]); });
-        localStorage.removeItem(SESSION_BACKUP_KEY);
-      } catch(e) {}
-    }
+  <script>
+    var GOOGLE_CLIENT_ID = "76374898417-06r2mcgso84nddoo5436cqhhln3qqm0e.apps.googleusercontent.com";
+    var GOOGLE_REDIRECT  = "https://qurani.fr/auth-native.html";
 
-    // ── Google Sign-In (redirect uniquement — popup non supporté dans SFSafariVC) ──
-    function handleGoogle() {
-      var googleProvider = new firebase.auth.GoogleAuthProvider();
-      googleProvider.addScope("email");
-      googleProvider.addScope("profile");
+    var qsParams = new URLSearchParams(window.location.search);
+    var provider = qsParams.get("provider");
 
-      // Restaurer sessionStorage si on revient d'un redirect (iOS ITP workaround)
-      restoreSessionStorage();
+    // ── 1. Check if returning from Google OAuth (id_token in hash) ────────
+    var hashStr = window.location.hash.substring(1);
+    if (hashStr && hashStr.indexOf("id_token") >= 0) {
+      var hp = {};
+      hashStr.split("&").forEach(function(p) {
+        var kv = p.split("=");
+        if (kv.length === 2) hp[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
+      });
 
-      if (localStorage.getItem(REDIR_KEY)) {
-        localStorage.removeItem(REDIR_KEY);
-        document.getElementById("status").textContent = "Finalisation...";
-        auth.getRedirectResult().then(function(result) {
-          if (result && result.user && result.credential) {
-            sendTokensToApp(result);
-          } else {
-            doGoogleRedirect(googleProvider);
-          }
-        }).catch(function() {
-          doGoogleRedirect(googleProvider);
+      if (hp.error) {
+        showError("Erreur Google : " + decodeURIComponent(hp.error_description || hp.error));
+      } else if (hp.id_token) {
+        // Got Google ID token — send directly to the app
+        progressTo(85, 400, "Finalisation", function() {
+          var qs = "provider=" + encodeURIComponent("google.com")
+                 + "&idToken=" + encodeURIComponent(hp.id_token)
+                 + "&accessToken=" + encodeURIComponent(hp.access_token || "");
+          sendToApp(qs);
         });
-      } else {
-        doGoogleRedirect(googleProvider);
       }
     }
 
-    function doGoogleRedirect(googleProvider) {
-      localStorage.setItem(REDIR_KEY, "1");
-      // Sauvegarder sessionStorage juste avant que la page se décharge (iOS ITP)
-      window.addEventListener("pagehide", backupSessionStorage);
-      auth.signInWithRedirect(googleProvider);
+    // ── 2. Google: direct OAuth (no signInWithRedirect) ───────────────────
+    else if (provider === "google") {
+      var nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      var url = "https://accounts.google.com/o/oauth2/v2/auth"
+        + "?client_id=" + encodeURIComponent(GOOGLE_CLIENT_ID)
+        + "&redirect_uri=" + encodeURIComponent(GOOGLE_REDIRECT)
+        + "&response_type=" + encodeURIComponent("id_token token")
+        + "&scope=" + encodeURIComponent("openid email profile")
+        + "&nonce=" + encodeURIComponent(nonce)
+        + "&prompt=select_account";
+      progressCrawl(88, 12000);
+      window.location.href = url;
     }
 
-    // ── Apple Sign-In (redirect only — popup fails in SFSafariViewController) ──
-    function handleApple() {
-      if (localStorage.getItem(REDIR_KEY)) {
-        // Returning from Apple redirect
-        document.getElementById("status").textContent = "Finalisation de la connexion...";
-        auth.getRedirectResult().then(function(result) {
-          if (result && result.user && result.credential) {
-            sendTokensToApp(result);
-          } else {
-            // No result — start fresh
-            localStorage.removeItem(REDIR_KEY);
-            doAppleRedirect();
-          }
-        }).catch(function(err) {
+    // ── 3. Apple: still uses Firebase signInWithRedirect (web only) ───────
+    else if (provider === "apple") {
+      (function() {
+        var s1 = document.createElement("script");
+        s1.src = "https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js";
+        s1.onload = function() {
+          var s2 = document.createElement("script");
+          s2.src = "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js";
+          s2.onload = function() { initAppleAuth(); };
+          document.head.appendChild(s2);
+        };
+        document.head.appendChild(s1);
+      })();
+
+      function initAppleAuth() {
+        firebase.initializeApp({
+          apiKey: "AIzaSyDk8bHjmkjqhOUf0SvHl_jRq5sDlb3OMpw",
+          authDomain: "ayat-theta.vercel.app",
+          projectId: "qurani-28307",
+          storageBucket: "qurani-28307.firebasestorage.app",
+          messagingSenderId: "76374898417",
+          appId: "1:76374898417:web:5cbc49ca65d5bae1e71b50"
+        });
+        var auth = firebase.auth();
+        var REDIR_KEY = "qr_auth_redir_apple";
+
+        function sendAppleTokens(result) {
+          var data = {
+            provider:    result.credential.providerId,
+            idToken:     result.credential.idToken     || "",
+            accessToken: result.credential.accessToken || "",
+            uid:         result.user.uid,
+            displayName: result.user.displayName || "",
+            email:       result.user.email       || "",
+            photoURL:    result.user.photoURL    || ""
+          };
+          var qs = Object.keys(data).map(function(k) {
+            return encodeURIComponent(k) + "=" + encodeURIComponent(data[k]);
+          }).join("&");
           localStorage.removeItem(REDIR_KEY);
-          showError("Erreur Apple : " + (err.code || err.message || "inconnue"));
-        });
-      } else {
-        doAppleRedirect();
+          sendToApp(qs);
+        }
+
+        if (localStorage.getItem(REDIR_KEY)) {
+          localStorage.removeItem(REDIR_KEY);
+          progressTo(88, 500, "Finalisation", function() {
+            progressCrawl(96, 8000);
+            auth.getRedirectResult().then(function(r) {
+              if (r && r.user && r.credential) { sendAppleTokens(r); }
+              else { doAppleRedirect(auth); }
+            }).catch(function(err) {
+              showError("Erreur : " + (err.code || err.message || "inconnue"));
+            });
+          });
+        } else {
+          doAppleRedirect(auth);
+        }
+      }
+
+      function doAppleRedirect(auth) {
+        localStorage.setItem("qr_auth_redir_apple", "1");
+        var ap = new firebase.auth.OAuthProvider("apple.com");
+        ap.addScope("email"); ap.addScope("name");
+        progressCrawl(88, 12000);
+        auth.signInWithRedirect(ap);
       }
     }
 
-    function doAppleRedirect() {
-      localStorage.setItem(REDIR_KEY, "1");
-      var appleProvider = new firebase.auth.OAuthProvider("apple.com");
-      appleProvider.addScope("email");
-      appleProvider.addScope("name");
-      auth.signInWithRedirect(appleProvider);
-    }
-
-    // ── Entry point ───────────────────────────────────────────────────────
-    if (provider === "google") {
-      handleGoogle();
-    } else if (provider === "apple") {
-      handleApple();
-    } else {
+    // ── 4. Unknown provider ──────────────────────────────────────────────
+    else if (!hashStr || hashStr.indexOf("id_token") < 0) {
       showError("Fournisseur non spécifié.");
     }
   </script>
