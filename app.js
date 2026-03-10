@@ -1227,13 +1227,11 @@
     if (dashHassProgress) dashHassProgress.classList.toggle("hidden", !showH || !showDS);
     if (dashHassBlock) dashHassBlock.classList.toggle("hidden", !showH);
     if (dashHassDivider) dashHassDivider.classList.toggle("hidden", !showH);
-    // Sync stats-overlay prefs buttons
-    document.querySelectorAll("#stats-hassanates-btns .stats-pref-opt").forEach(function (btn) {
-      btn.classList.toggle("active", (btn.dataset.hassanates === "true") === (state.showHassanates !== false));
-    });
-    document.querySelectorAll("#stats-dashstats-btns .stats-pref-opt").forEach(function (btn) {
-      btn.classList.toggle("active", (btn.dataset.dashstats === "true") === (state.showDashStats !== false));
-    });
+    // Sync stats-overlay toggles iOS
+    var hassToggle = $("stats-hassanates-toggle");
+    if (hassToggle) hassToggle.setAttribute("aria-checked", String(state.showHassanates !== false));
+    var dashToggle = $("stats-dashstats-toggle");
+    if (dashToggle) dashToggle.setAttribute("aria-checked", String(state.showDashStats !== false));
     var modeHint = $("mode-hint");
     if (modeHint) {
       if (state.readingMode === "tajwid") {
@@ -2408,6 +2406,8 @@
   var PRAYER_METHOD_KEY   = "qurani-prayer-method";
   var PRAYER_LOCATION_KEY = "qurani-prayer-location";
   var MAWAQIT_MOSQUE_KEY  = "qurani-mawaqit-mosque";
+  var PRAYER_NOTIF_KEY    = "qurani-prayer-notif";
+  var PRAYER_NOTIF_PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
   var prayerTimesCache = null;
   var prayerDayOffset = 0; // 0 = today, -1 = yesterday, +1 = tomorrow
   var prayerCountdownInterval = null;
@@ -2433,6 +2433,144 @@
   }
   function saveMawaqitMosque(m) { localStorage.setItem(MAWAQIT_MOSQUE_KEY, JSON.stringify(m)); }
   function clearMawaqitMosque() { localStorage.removeItem(MAWAQIT_MOSQUE_KEY); }
+
+  // ---- Prayer Notifications (Local) ----
+  function getPrayerNotifEnabled() { return localStorage.getItem(PRAYER_NOTIF_KEY) === "true"; }
+  function setPrayerNotifEnabled(v) { localStorage.setItem(PRAYER_NOTIF_KEY, v ? "true" : "false"); }
+
+  function _getLocalNotifPlugin() {
+    return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) || null;
+  }
+
+  function updatePrayerNotifUI() {
+    var section = $("prayer-notif-section");
+    var toggle  = $("prayer-notif-toggle");
+    var plugin  = _getLocalNotifPlugin();
+    if (section) section.style.display = plugin ? "" : "none";
+    if (toggle) {
+      if (getPrayerNotifEnabled()) toggle.classList.add("active");
+      else toggle.classList.remove("active");
+    }
+  }
+
+  function togglePrayerNotifications() {
+    var plugin = _getLocalNotifPlugin();
+    if (!plugin) return;
+    if (getPrayerNotifEnabled()) {
+      // Disable
+      cancelPrayerNotifications();
+      setPrayerNotifEnabled(false);
+      updatePrayerNotifUI();
+    } else {
+      // Enable: check permissions first
+      plugin.checkPermissions().then(function(res) {
+        if (res.display === "granted") {
+          setPrayerNotifEnabled(true);
+          updatePrayerNotifUI();
+          schedulePrayerNotifications();
+        } else {
+          return plugin.requestPermissions().then(function(res2) {
+            if (res2.display === "granted") {
+              setPrayerNotifEnabled(true);
+              updatePrayerNotifUI();
+              schedulePrayerNotifications();
+            }
+          });
+        }
+      }).catch(function(e) { console.warn("[prayer-notif] permission error", e); });
+    }
+  }
+
+  // Textes personnalisés par prière
+  var PRAYER_NOTIF_TEXTS = {
+    "Fajr": {
+      atTitle:     "Le Fajr est là.",
+      atBody:      "C'est l'heure du Fajr.",
+      beforeTitle: "Il reste 15 min pour la prière du Fajr.",
+      beforeBody:  "La Prière est meilleure que le sommeil."
+    },
+    "Dhuhr": {
+      atTitle:     "Le Dhuhr est là.",
+      atBody:      "C'est l'heure du Dhuhr.",
+      beforeTitle: "Il reste 15 min pour la prière du Dhuhr.",
+      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+    },
+    "Asr": {
+      atTitle:     "L'Asr est là.",
+      atBody:      "C'est l'heure de l'Asr.",
+      beforeTitle: "Il reste 15 min pour la prière de l'Asr.",
+      beforeBody:  "Trouve la Paix auprès d'Allah au milieu de l'agitation."
+    },
+    "Maghrib": {
+      atTitle:     "Le Maghrib est là.",
+      atBody:      "C'est l'heure du Maghrib.",
+      beforeTitle: "Il reste 15 min pour la prière du Maghrib.",
+      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+    },
+    "Isha": {
+      atTitle:     "L'Isha est là.",
+      atBody:      "C'est l'heure de l'Isha.",
+      beforeTitle: "Il reste 15 min pour la prière de l'Isha.",
+      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+    }
+  };
+
+  function schedulePrayerNotifications() {
+    var plugin = _getLocalNotifPlugin();
+    if (!plugin || !getPrayerNotifEnabled() || !prayerTimesCache) return;
+
+    cancelPrayerNotifications().then(function() {
+      var now = new Date();
+      var notifs = [];
+
+      PRAYER_NOTIF_PRAYERS.forEach(function(key, i) {
+        var timeStr = prayerTimesCache[key];
+        if (!timeStr) return;
+        var parts = timeStr.split(":");
+        var h = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var texts = PRAYER_NOTIF_TEXTS[key] || {};
+
+        // ── À l'heure exacte (IDs 106-110) ──
+        var exact = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+        if (exact > now) {
+          notifs.push({
+            id: 106 + i,
+            title: texts.atTitle || key,
+            body: texts.atBody || ("C\u2019est l\u2019heure du " + key),
+            schedule: { at: exact },
+            sound: "default"
+          });
+        }
+
+        // ── 15 min avant (IDs 101-105) ──
+        var before = new Date(exact.getTime() - 15 * 60 * 1000);
+        if (before > now) {
+          notifs.push({
+            id: 101 + i,
+            title: texts.beforeTitle || key,
+            body: (texts.beforeBody || (key + " dans 15 min")) + " \u00B7 " + timeStr,
+            schedule: { at: before },
+            sound: "default"
+          });
+        }
+      });
+
+      if (notifs.length > 0) {
+        plugin.schedule({ notifications: notifs }).catch(function(e) {
+          console.warn("[prayer-notif] schedule error", e);
+        });
+      }
+    });
+  }
+
+  function cancelPrayerNotifications() {
+    var plugin = _getLocalNotifPlugin();
+    if (!plugin) return Promise.resolve();
+    var ids = [];
+    for (var i = 0; i < 5; i++) { ids.push({ id: 101 + i }); ids.push({ id: 106 + i }); }
+    return plugin.cancel({ notifications: ids }).catch(function() {});
+  }
 
   // Prayer background images
   var PRAYER_BG_IMAGES = [
@@ -2780,6 +2918,8 @@
         method: getPrayerMethod(), city: (getSavedPrayerLocation() || {}).name || ""
       });
     }
+    // Schedule prayer notifications if enabled
+    if (prayerDayOffset === 0) schedulePrayerNotifications();
   }
 
   function renderPrayerTimes() {
@@ -6680,7 +6820,7 @@
       var url = getDuaAudioUrl(catId, idx, entry.ref);
       if (url) {
         var a = new Audio();
-        a.preload = "auto";
+        a.preload = "none"; // "auto" activait la session audio iOS même sans play() → coupait la musique de fond
         a.src = url;
         duaPreloadCache[catId + ":" + idx] = a;
       }
@@ -7398,11 +7538,8 @@
     var d = Math.floor(diff / 86400000);
     var h = Math.floor((diff % 86400000) / 3600000);
     var m = Math.floor((diff % 3600000) / 60000);
-    var parts = [];
-    if (d > 0) parts.push(d + "j");
-    if (h > 0 || d > 0) parts.push(h + "h");
-    parts.push(m + "min");
-    el.textContent = "\u2248 " + parts.join(" ");
+    var timeStr = d + "j " + h + "h " + m + "min";
+    el.textContent = "\u00b7 " + timeStr;
   }
 
   // ---- RAMADAN — 10 DERNIÈRES NUITS OVERLAY ----
@@ -7530,7 +7667,16 @@
     khatm = null;
   }
   function saveKhatm() {
-    if (khatm) localStorage.setItem(KHATM_KEY, JSON.stringify(khatm));
+    if (khatm) {
+      localStorage.setItem(KHATM_KEY, JSON.stringify(khatm));
+      // Sync khatm progress to Watch complication via App Group
+      try {
+        var p = getKhatmProgress();
+        if (p && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedData) {
+          window.Capacitor.Plugins.SharedData.saveKhatm({ percent: p.pct, surahNum: p.surahNum, ayahNum: p.ayahNum });
+        }
+      } catch(e) {}
+    }
     if (typeof debouncedSync === "function") debouncedSync();
   }
 
@@ -10476,6 +10622,11 @@
         openQiblaOverlay();
       });
     }
+    // Prayer notification toggle
+    if ($("prayer-notif-toggle")) {
+      $("prayer-notif-toggle").addEventListener("click", togglePrayerNotifications);
+    }
+    updatePrayerNotifUI();
 
     // ---- HIFZ v2 (verse-by-verse) ----
     $("hifz-close").addEventListener("click", closeHifzOverlay);
@@ -10682,20 +10833,22 @@
       });
     });
 
-    document.querySelectorAll("#stats-hassanates-btns .stats-pref-opt").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        state.showHassanates = btn.dataset.hassanates === "true";
+    var hassToggleBtn = $("stats-hassanates-toggle");
+    if (hassToggleBtn) {
+      hassToggleBtn.addEventListener("click", function () {
+        state.showHassanates = !(state.showHassanates !== false);
         saveState();
         render();
       });
-    });
-    document.querySelectorAll("#stats-dashstats-btns .stats-pref-opt").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        state.showDashStats = btn.dataset.dashstats === "true";
+    }
+    var dashToggleBtn = $("stats-dashstats-toggle");
+    if (dashToggleBtn) {
+      dashToggleBtn.addEventListener("click", function () {
+        state.showDashStats = !(state.showDashStats !== false);
         saveState();
         render();
       });
-    });
+    }
 
     // Stats reset button
     var statsResetBtn = $("stats-reset-btn");
@@ -11199,8 +11352,12 @@
       var hint = $("emotion-scroll-hint");
       var scroll = document.querySelector("#emotion-overlay .emotion-overlay-scroll");
       if (fab && scroll) {
-        fab.addEventListener("click", closeEmotionDetail);
+        // Flèche < → remonte en haut (hero + texte) au lieu de fermer l'overlay
+        fab.addEventListener("click", function() {
+          scroll.scrollTo({ top: 0, behavior: "smooth" });
+        });
         scroll.addEventListener("scroll", function() {
+          // Affiche la flèche < dès qu'on est dans les versets/hadiths
           if (scroll.scrollTop > 220) fab.classList.add("visible");
           else fab.classList.remove("visible");
           if (hint && scroll.scrollTop > 40) hint.classList.add("hidden");
@@ -11240,7 +11397,10 @@
       var hint = $("dua-scroll-hint");
       var scroll = document.querySelector("#dua-overlay .dua-overlay-scroll");
       if (fab && scroll) {
-        fab.addEventListener("click", closeDuaDetail);
+        // Flèche < → remonte en haut (titre + citation) au lieu de fermer
+        fab.addEventListener("click", function() {
+          scroll.scrollTo({ top: 0, behavior: "smooth" });
+        });
         scroll.addEventListener("scroll", function() {
           // Back FAB
           if (scroll.scrollTop > 220) fab.classList.add("visible");
@@ -12242,6 +12402,80 @@
     results.forEach(function(r) { if (!r.blocked) tot = addF(tot, r.share); });
     html += '<div class="heritage-result-total"><span>Total</span><span>' + (tot.n / tot.d * 100).toFixed(1) + '%</span></div>';
     container.innerHTML = html;
+
+    // Wire share button
+    var shareBtn = $("heritage-share-btn");
+    if (shareBtn) {
+      shareBtn.onclick = exportHeritagePDF;
+      shareBtn.style.display = "";
+    }
+  }
+
+  function exportHeritagePDF() {
+    var results = calcHeritageShares(_heirCounts, _heritageGender);
+    var amountVal = parseFloat($("heritage-amount") ? $("heritage-amount").value : 0) || 0;
+    var genderLabel = _heritageGender === "m" ? "Homme" : "Femme";
+    var today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+    // Fill subtitle
+    var sub = $("hpd-subtitle");
+    if (sub) {
+      var subText = "Défunt : " + genderLabel;
+      if (amountVal > 0) subText += " — Succession : " + amountVal.toLocaleString("fr-FR") + " €";
+      sub.textContent = subText;
+    }
+    var dateEl = $("hpd-date");
+    if (dateEl) dateEl.textContent = today;
+
+    // Build table
+    var body = '<table class="hpd-table"><thead><tr><th>Héritier</th><th>Part</th><th>%</th>' +
+      (amountVal > 0 ? '<th>Montant</th>' : '') + '</tr></thead><tbody>';
+    results.forEach(function(r) {
+      if (r.blocked) {
+        body += '<tr class="hpd-blocked"><td colspan="' + (amountVal > 0 ? 4 : 3) + '">' + r.label + ' — ' + r.reason + '</td></tr>';
+      } else {
+        var pctNum = (r.share.n / r.share.d * 100).toFixed(1);
+        var fstr = fracStr(r.share);
+        var typeLabel = r.isAsaba ? "عصبة" : "فرض";
+        body += '<tr><td>' + r.label + ' <span class="hpd-type">(' + typeLabel + ')</span></td><td>' + fstr + '</td><td>' + pctNum + '%</td>';
+        if (amountVal > 0) body += '<td>' + Math.round(amountVal * r.share.n / r.share.d).toLocaleString("fr-FR") + ' €</td>';
+        body += '</tr>';
+      }
+    });
+    // Total
+    var tot = { n: 0, d: 1 };
+    results.forEach(function(r) { if (!r.blocked) tot = addF(tot, r.share); });
+    body += '<tr class="hpd-total"><td>Total</td><td></td><td>' + (tot.n / tot.d * 100).toFixed(1) + '%</td>';
+    if (amountVal > 0) body += '<td>' + Math.round(amountVal * tot.n / tot.d).toLocaleString("fr-FR") + ' €</td>';
+    body += '</tr></tbody></table>';
+
+    var bodyEl = $("hpd-body");
+    if (bodyEl) bodyEl.innerHTML = body;
+
+    // Show in doc viewer (reuse testament viewer)
+    var printDoc = $("heritage-print-doc");
+    var tdvDoc = $("tdv-doc");
+    if (tdvDoc && printDoc) tdvDoc.innerHTML = printDoc.innerHTML;
+    var viewer = $("testament-doc-viewer");
+    if (viewer) {
+      viewer.classList.remove("hidden");
+      var scroll = viewer.querySelector(".tdv-scroll");
+      if (scroll) scroll.scrollTop = 0;
+    }
+
+    // PDF share button
+    var printBtn = $("tdv-print-btn");
+    if (printBtn) {
+      printBtn.textContent = "PARTAGER →";
+      printBtn.onclick = function() { _htmlDocPDFAndShare("heritage-islamique.pdf", "Répartition de l'héritage"); };
+      var closeBtn = $("tdv-close-btn");
+      if (closeBtn) {
+        closeBtn.onclick = function() {
+          viewer.classList.add("hidden");
+          printBtn.textContent = "PARTAGER →";
+        };
+      }
+    }
   }
 
   // ============================================================
@@ -12367,7 +12601,8 @@
   // ============================================================
 
   var _zakatNisabMode = "or"; // "or" ou "argent"
-  var ZAKAT_DATA_KEY = "qurani_zakat_data";
+  var ZAKAT_DATA_KEY    = "qurani_zakat_data";
+  var ZAKAT_HISTORY_KEY = "qurani_zakat_history";
   var ZAKAT_NISAB_OR_GRAMS = 85;
   var ZAKAT_NISAB_ARGENT_GRAMS = 595;
   var ZAKAT_DEFAULT_PRIX_OR = 85; // €/g fallback
@@ -12462,6 +12697,13 @@
         if (this.value) localStorage.setItem("qurani_zakat_hawl", this.value);
       });
     }
+
+    // Save button
+    var saveBtn = $("zakat-save-btn");
+    if (saveBtn) saveBtn.onclick = saveZakatFiche;
+
+    // Render history
+    renderZakatHistory();
 
     calcZakat();
   }
@@ -12616,6 +12858,303 @@
       });
       if (saved.nisabMode) _zakatNisabMode = saved.nisabMode;
     } catch(e) {}
+  }
+
+  // ---- Zakat History (multiple named fiches) ----
+  function loadZakatHistory() {
+    try { return JSON.parse(localStorage.getItem(ZAKAT_HISTORY_KEY)) || []; } catch(e) { return []; }
+  }
+  function saveZakatHistory(arr) {
+    localStorage.setItem(ZAKAT_HISTORY_KEY, JSON.stringify(arr));
+  }
+
+  function saveZakatFiche() {
+    // Read current input values
+    function v(id) { var el = $(id); return el ? parseFloat(el.value) || 0 : 0; }
+    var epargne  = v("zakat-epargne");
+    var or       = v("zakat-or");
+    var argent   = v("zakat-argent-metal");
+    var invest   = v("zakat-invest");
+    var commerce = v("zakat-commerce");
+    var crypto   = v("zakat-crypto");
+    var autres   = v("zakat-autres");
+    var dettes   = v("zakat-dettes");
+    var prix     = v("zakat-prix-gramme");
+    var hawlEl   = $("zakat-hawl-date");
+    var hawlDate = hawlEl ? hawlEl.value : "";
+
+    var total    = epargne + or + argent + invest + commerce + crypto + autres;
+    var net      = Math.max(0, total - dettes);
+    var nisabGrams = _zakatNisabMode === "argent" ? ZAKAT_NISAB_ARGENT_GRAMS : ZAKAT_NISAB_OR_GRAMS;
+    var nisab    = prix * nisabGrams;
+    var aboveNisab = net >= nisab;
+    var zakatDue = aboveNisab ? Math.round(net * ZAKAT_RATE * 100) / 100 : 0;
+
+    // Hawl end = start + 354.37 days
+    var hawlEnd = "";
+    if (hawlDate) {
+      var d = new Date(hawlDate);
+      d.setTime(d.getTime() + 354.37 * 24 * 3600 * 1000);
+      hawlEnd = d.toISOString().split("T")[0];
+    }
+
+    var today = new Date().toISOString().split("T")[0];
+    var hijriObj = gregorianToHijri(new Date());
+    var yearHijri = (hijriObj && hijriObj.year) ? hijriObj.year : new Date().getFullYear();
+    var defaultTitle = "Zakat " + yearHijri;
+    var title = (prompt("Nom de cette fiche :", defaultTitle) || "").trim() || defaultTitle;
+
+    var fiche = {
+      id: Date.now().toString(36),
+      title: title,
+      savedAt: today,
+      hawlDate: hawlDate,
+      hawlEnd: hawlEnd,
+      nisabMode: _zakatNisabMode,
+      prixGramme: prix,
+      epargne: epargne, or: or, argent: argent,
+      invest: invest, commerce: commerce, crypto: crypto, autres: autres,
+      dettes: dettes,
+      netWealth: net,
+      zakatDue: zakatDue,
+      aboveNisab: aboveNisab
+    };
+
+    var arr = loadZakatHistory();
+    arr.unshift(fiche); // newest first
+    saveZakatHistory(arr);
+    renderZakatHistory();
+    if (hawlEnd) scheduleZakatHawlNotif(fiche);
+  }
+
+  function deleteZakatFiche(id) {
+    var arr = loadZakatHistory().filter(function(f) { return f.id !== id; });
+    saveZakatHistory(arr);
+    cancelZakatHawlNotif(id);
+    renderZakatHistory();
+  }
+
+  function renderZakatHistory() {
+    var section = $("zakat-history-section");
+    var list    = $("zakat-history-list");
+    if (!section || !list) return;
+    var arr = loadZakatHistory();
+    if (arr.length === 0) { section.classList.add("hidden"); return; }
+    section.classList.remove("hidden");
+
+    var html = "";
+    arr.forEach(function(f) {
+      var hawlLabel = f.hawlEnd
+        ? "Versement : " + new Date(f.hawlEnd).toLocaleDateString("fr-FR", { day:"2-digit", month:"long", year:"numeric" })
+        : "";
+      var amtLabel = f.zakatDue > 0
+        ? f.zakatDue.toLocaleString("fr-FR") + " €"
+        : f.aboveNisab ? "À calculer" : "En dessous du Nisab";
+
+      html += '<div class="zakat-fiche">' +
+        '<div class="zakat-fiche-header">' +
+        '<div>' +
+        '<div class="zakat-fiche-title">' + f.title + '</div>' +
+        '<div class="zakat-fiche-meta">Sauvegardé le ' + new Date(f.savedAt).toLocaleDateString("fr-FR") +
+        (hawlLabel ? ' · ' + hawlLabel : '') + '</div>' +
+        '</div>' +
+        '<div class="zakat-fiche-amount">' + amtLabel + '</div>' +
+        '</div>' +
+        '<div class="zakat-fiche-actions">' +
+        '<button class="zakat-fiche-pdf-btn" data-id="' + f.id + '">PDF / PARTAGER</button>' +
+        '<button class="zakat-fiche-del-btn" data-id="' + f.id + '" aria-label="Supprimer">×</button>' +
+        '</div>' +
+        '</div>';
+    });
+    list.innerHTML = html;
+
+    list.querySelectorAll(".zakat-fiche-pdf-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var id = this.getAttribute("data-id");
+        var fiche = loadZakatHistory().find(function(f) { return f.id === id; });
+        if (fiche) exportZakatPDF(fiche);
+      });
+    });
+    list.querySelectorAll(".zakat-fiche-del-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        if (confirm("Supprimer cette fiche ?")) deleteZakatFiche(this.getAttribute("data-id"));
+      });
+    });
+  }
+
+  // ─── PDF helpers : html2canvas + jsPDF (lazy-loaded) ────────────────────
+  function _loadJsPDF(cb) {
+    if (window.jspdf) { cb(window.jspdf); return; }
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload = function() { cb(window.jspdf); };
+    s.onerror = function() { showToast("Erreur chargement PDF"); cb(null); };
+    document.head.appendChild(s);
+  }
+
+  function _loadHtml2Canvas(cb) {
+    if (window.html2canvas) { cb(window.html2canvas); return; }
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    s.onload = function() { cb(window.html2canvas); };
+    s.onerror = function() { showToast("Erreur chargement PDF"); cb(null); };
+    document.head.appendChild(s);
+  }
+
+  // Capture le rendu HTML de #tdv-doc (aperçu déjà affiché) → PDF → share
+  function _htmlDocPDFAndShare(filename, shareTitle) {
+    var el = document.getElementById("tdv-doc");
+    if (!el) return;
+    showToast("Génération du PDF…");
+
+    _loadHtml2Canvas(function(h2c) {
+      if (!h2c) return;
+      var w = el.scrollWidth || el.offsetWidth || 375;
+      var h = el.scrollHeight || el.offsetHeight || 600;
+      h2c(el, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        width: w,
+        height: h,
+        windowWidth: w,
+        windowHeight: h
+      }).then(function(canvas) {
+        _loadJsPDF(function(jspdfLib) {
+          if (!jspdfLib) { showToast("Erreur PDF"); return; }
+          var imgData = canvas.toDataURL("image/jpeg", 0.95);
+          var pdf = new jspdfLib.jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+          var margin = 8;
+          var pdfW = 210 - margin * 2;
+          var pdfH = (canvas.height / canvas.width) * pdfW;
+          var pageH = 297 - margin * 2;
+
+          if (pdfH <= pageH) {
+            pdf.addImage(imgData, "JPEG", margin, margin, pdfW, pdfH);
+          } else {
+            // Contenu multi-pages : découpe l'image en tranches
+            var pages = Math.ceil(pdfH / pageH);
+            for (var i = 0; i < pages; i++) {
+              if (i > 0) pdf.addPage();
+              pdf.addImage(imgData, "JPEG", margin, margin - i * pageH, pdfW, pdfH);
+            }
+          }
+
+          var blob = pdf.output("blob");
+          var file = new File([blob], filename, { type: "application/pdf" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: shareTitle }).catch(function(e) {
+              if (e.name !== "AbortError") _pdfDownload(blob, filename);
+            });
+          } else {
+            _pdfDownload(blob, filename);
+          }
+        });
+      }).catch(function() { showToast("Erreur PDF"); });
+    });
+  }
+
+  function _pdfDownload(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function exportZakatPDF(fiche) {
+    var today = new Date(fiche.savedAt).toLocaleDateString("fr-FR", { day:"2-digit", month:"long", year:"numeric" });
+    var sub = $("zpd-subtitle");
+    if (sub) sub.textContent = fiche.title + " — " + today;
+    var dateEl = $("zpd-date");
+    if (dateEl) dateEl.textContent = today;
+
+    var rows = [
+      ["Épargne & liquidités", fiche.epargne],
+      ["Or", fiche.or],
+      ["Argent métal", fiche.argent],
+      ["Investissements", fiche.invest],
+      ["Commerce", fiche.commerce],
+      ["Crypto-monnaies", fiche.crypto],
+      ["Autres biens", fiche.autres]
+    ].filter(function(r) { return r[1] > 0; });
+
+    var body = '<table class="hpd-table"><thead><tr><th>Catégorie</th><th>Montant</th></tr></thead><tbody>';
+    rows.forEach(function(r) {
+      body += '<tr><td>' + r[0] + '</td><td style="text-align:right">' + r[1].toLocaleString("fr-FR") + ' €</td></tr>';
+    });
+    if (fiche.dettes > 0) {
+      body += '<tr><td style="color:#e88">Dettes déductibles</td><td style="text-align:right;color:#e88">− ' + fiche.dettes.toLocaleString("fr-FR") + ' €</td></tr>';
+    }
+    body += '<tr class="hpd-total"><td>Patrimoine net zakatable</td><td style="text-align:right">' + fiche.netWealth.toLocaleString("fr-FR") + ' €</td></tr>';
+    body += '</tbody></table>';
+
+    var nisabLabel = fiche.nisabMode === "argent" ? "Argent (595g)" : "Or (85g)";
+    body += '<div class="zpd-summary">';
+    body += '<div class="zpd-summary-row"><span>Référence Nisab</span><span>' + nisabLabel + ' — ' + (fiche.prixGramme || "--") + ' €/g</span></div>';
+    body += '<div class="zpd-summary-row"><span>Statut</span><span class="zpd-badge ' + (fiche.aboveNisab ? "zpd-badge-ok" : "zpd-badge-no") + '">' + (fiche.aboveNisab ? "Au-dessus du Nisab" : "En dessous du Nisab") + '</span></div>';
+    if (fiche.hawlDate) {
+      body += '<div class="zpd-summary-row"><span>Début du Hawl</span><span>' + new Date(fiche.hawlDate).toLocaleDateString("fr-FR") + '</span></div>';
+    }
+    if (fiche.hawlEnd) {
+      body += '<div class="zpd-summary-row"><span>Date de versement</span><span>' + new Date(fiche.hawlEnd).toLocaleDateString("fr-FR") + '</span></div>';
+    }
+    if (fiche.zakatDue > 0) {
+      body += '<div class="zpd-summary-row zpd-zakat-due"><span>ZAKAT DUE (2,5%)</span><span>' + fiche.zakatDue.toLocaleString("fr-FR") + ' €</span></div>';
+    }
+    body += '</div>';
+
+    var bodyEl = $("zpd-body");
+    if (bodyEl) bodyEl.innerHTML = body;
+
+    var printDoc = $("zakat-print-doc");
+    var tdvDoc   = $("tdv-doc");
+    if (tdvDoc && printDoc) tdvDoc.innerHTML = printDoc.innerHTML;
+
+    var viewer = $("testament-doc-viewer");
+    if (viewer) {
+      viewer.classList.remove("hidden");
+      var printBtn = $("tdv-print-btn");
+      if (printBtn) {
+        printBtn.textContent = "PARTAGER →";
+        var _fname = "zakat-" + (fiche.title || "calcul").replace(/[^a-zA-Z0-9]/g, "-") + ".pdf";
+        var _ftitle = "Zakat — " + (fiche.title || "calcul");
+        printBtn.onclick = function() { _htmlDocPDFAndShare(_fname, _ftitle); };
+      }
+      var closeBtn = $("tdv-close-btn");
+      if (closeBtn) closeBtn.onclick = function() { viewer.classList.add("hidden"); if (printBtn) printBtn.textContent = "PARTAGER →"; };
+      var scroll = viewer.querySelector(".tdv-scroll");
+      if (scroll) scroll.scrollTop = 0;
+    }
+  }
+
+  // Hawl notification (ID 300 + hash)
+  function _zakatNotifId(ficheId) {
+    // Simple hash: sum of char codes mod 900 + 300 → range 300-1199
+    var h = 0;
+    for (var i = 0; i < ficheId.length; i++) h = (h * 31 + ficheId.charCodeAt(i)) & 0xffff;
+    return 300 + (h % 900);
+  }
+
+  function scheduleZakatHawlNotif(fiche) {
+    var plugin = _getLocalNotifPlugin();
+    if (!plugin || !fiche.hawlEnd) return;
+    var at = new Date(fiche.hawlEnd + "T09:00:00");
+    if (at <= new Date()) return; // already past
+    plugin.schedule({ notifications: [{
+      id: _zakatNotifId(fiche.id),
+      title: "Qurani — Zakat",
+      body: "Votre Hawl est complet · " + fiche.title + " · Pensez à verser votre Zakat.",
+      schedule: { at: at },
+      sound: "default"
+    }]}).catch(function(e) { console.warn("[zakat-notif]", e); });
+  }
+
+  function cancelZakatHawlNotif(ficheId) {
+    var plugin = _getLocalNotifPlugin();
+    if (!plugin) return;
+    plugin.cancel({ notifications: [{ id: _zakatNotifId(ficheId) }] }).catch(function() {});
   }
 
   function refreshMoiCounts() {

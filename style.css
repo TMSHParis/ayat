@@ -1177,79 +1177,97 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
   font-family: inherit;
 }
 
-/* ---- STATS ---- */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 8px 0;
+/* ---- STATS — iOS list style ---- */
+.stats-rows-group {
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
 }
-.stat-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 18px;
-  padding: 28px 12px 22px;
-  text-align: center;
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
 }
-.stat-value {
-  font-size: 32px;
-  font-weight: 200;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  letter-spacing: -1px;
-  line-height: 1;
+.stats-row:last-child {
+  border-bottom: none;
 }
-.stat-label {
-  font-size: 11px;
-  color: var(--text-faint);
-  letter-spacing: 0.2px;
+.stats-row-label {
+  font-size: 15px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 400;
 }
-/* Hassanates card */
+.stats-row-value {
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.4px;
+}
+/* ---- Stats prefs — iOS Settings style ---- */
 .stats-prefs {
-  margin-top: 32px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  padding-top: 20px;
+  margin-top: 28px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
+}
+.stats-prefs-group {
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
 }
 .stats-pref-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+}
+.stats-pref-row:last-child {
+  border-bottom: none;
 }
 .stats-pref-label {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: rgba(255,255,255,0.35);
-  text-transform: uppercase;
+  font-size: 15px;
+  color: rgba(255,255,255,0.88);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
-.stats-pref-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.stats-pref-danger {
+  color: rgba(255,100,80,0.85);
 }
-.stats-pref-opt {
-  background: none;
+/* ---- iOS Toggle ---- */
+.ios-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.15);
   border: none;
-  padding: 0;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.2);
   cursor: pointer;
-  font-family: inherit;
-  transition: color 0.15s;
+  transition: background 0.25s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  padding: 0;
 }
-.stats-pref-opt.active {
-  color: rgba(255,255,255,0.85);
+.ios-toggle[aria-checked="true"] {
+  background: #34C759;
 }
-.stats-pref-sep {
-  color: rgba(255,255,255,0.15);
-  font-size: 11px;
+.ios-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
   pointer-events: none;
+}
+.ios-toggle[aria-checked="true"] .ios-toggle-thumb {
+  transform: translateX(20px);
 }
 .stat-hassanates-card {
   margin-top: 24px;
@@ -2372,8 +2390,8 @@ body[data-theme="sepia"] .audio-glow {
 /* Bottom action bar — Behold style */
 .prayer-bottom-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 24px; position: relative; z-index: 2;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 16px 24px 12px; position: relative; z-index: 2;
+  /* safe-area géré par prayer-bottom-location juste en dessous */
 }
 .prayer-bottom-btn {
   font-family: "Space Mono", monospace;
@@ -2400,10 +2418,13 @@ body[data-theme="sepia"] .audio-glow {
   color: #fff;
 }
 .prayer-bottom-location {
-  font-size: 14px; color: rgba(255,255,255,0.5); text-align: center;
-  flex: 1; padding: 0 12px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap; font-weight: 300;
-  letter-spacing: 0.3px;
+  font-family: "Space Mono", monospace;
+  font-size: 10px; color: rgba(255,255,255,0.6); text-align: center;
+  flex-shrink: 0; padding: 0 20px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  min-height: max(14px, env(safe-area-inset-bottom, 14px));
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
 }
 
 /* Settings sub-panel (slide-up) — dark theme to match prayer overlay */
@@ -2465,6 +2486,44 @@ body[data-theme="sepia"] .audio-glow {
 .prayer-mosque-row { font-family: "Space Mono", monospace; color: rgba(255,255,255,0.6); font-size: 11px; }
 .prayer-mosque-name { color: rgba(255,255,255,0.85); }
 .prayer-mosque-change { font-family: "Space Mono", monospace; color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.2); font-size: 10px; }
+
+/* ---- PRAYER NOTIFICATIONS TOGGLE ---- */
+.prayer-notif-section {
+  margin-top: 20px; padding: 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+}
+.prayer-notif-section .prayer-setting-label {
+  font-family: "Space Mono", monospace;
+  font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.35);
+  margin-bottom: 12px;
+}
+.prayer-notif-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.prayer-notif-text {
+  font-family: "Space Mono", monospace;
+  font-size: 11px; color: rgba(255,255,255,0.75); letter-spacing: 0.3px;
+}
+.prayer-notif-toggle {
+  position: relative; width: 44px; height: 26px; border-radius: 13px;
+  background: rgba(255,255,255,0.15); border: none; cursor: pointer;
+  transition: background 0.25s; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.prayer-notif-toggle.active { background: #10b981; }
+.prayer-notif-toggle-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.prayer-notif-toggle.active .prayer-notif-toggle-knob { transform: translateX(18px); }
+.prayer-notif-hint {
+  font-family: "Space Mono", monospace;
+  font-size: 10px; color: rgba(255,255,255,0.3);
+  margin-top: 8px; letter-spacing: 0.2px;
+}
 
 /* ---- PRAYER CITY SEARCH ---- */
 .prayer-location-bar { margin-bottom: 16px; position: relative; z-index: 20; }
@@ -3461,7 +3520,7 @@ body[data-theme="sepia"] .audio-glow {
   color: #fff;
   border: 1px solid rgba(255,255,255,0.25);
   background: none;
-  padding: 14px 30px;
+  padding: 8px 16px;
   border-radius: 50px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
@@ -3473,6 +3532,60 @@ body[data-theme="sepia"] .audio-glow {
 .dash-btn-arrow {
   font-size: 16px;
   margin-left: 2px;
+}
+
+/* ---- 10 Dernières Nuits de Ramadan — card accent ---- */
+.dash-ramadan-label {
+  color: #C8962D !important;
+}
+.dash-ramadan-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.dash-ramadan-countdown {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #C8962D;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+/* ---- Ramadan overlay background ---- */
+#ramadan-overlay {
+  background: linear-gradient(165deg, #100c1a 0%, #0c0914 30%, #090711 60%, #07050e 100%);
+}
+.ramadan-hero {
+  background: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(200,150,45,0.08) 0%, transparent 70%);
+}
+#ramadan-overlay .emotion-entry-badge {
+  color: rgba(212, 160, 48, 0.9);
+  background: rgba(212, 160, 48, 0.1);
+}
+.ramadan-scholar-note {
+  margin: 2px 0 0;
+  padding: 24px 20px 32px;
+  background: rgba(200, 150, 45, 0.06);
+  border-top: 1px solid rgba(200, 150, 45, 0.15);
+}
+.ramadan-scholar-label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(200, 150, 45, 0.7);
+  margin-bottom: 12px;
+}
+.ramadan-scholar-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(255,255,255,0.72);
+  margin: 0;
+}
+.ramadan-scholar-text strong {
+  color: rgba(212, 160, 48, 0.9);
+  font-weight: 600;
 }
 
 /* ---- Sourate du jour: button row + remaining count ---- */
@@ -4666,13 +4779,18 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   padding: calc(54px + env(safe-area-inset-top, 0px)) 28px 40px;
 }
 .dua-contact-title {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.95);
-  margin: 16px 0 10px;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
+  display: none;
+}
+/* Nav title in top bar for Contact & Services */
+.dua-contact-topbar {
+  justify-content: space-between;
+}
+.dua-contact-nav-title {
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.2px;
 }
 .dua-contact-subtitle {
   font-family: "Space Mono", monospace;
@@ -6783,8 +6901,8 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .auth-user-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 0 0 18px;
+  gap: 20px;
+  padding: 20px 0;
 }
 .auth-avatar-wrap {
   flex-shrink: 0;
@@ -6816,7 +6934,7 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
 }
 .auth-name {
   font-weight: 600;
@@ -6838,6 +6956,31 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   color: var(--text-faint);
   border: 1px solid rgba(255,255,255,0.08);
 }
+.auth-name-edit-btn {
+  background: none;
+  border: none;
+  padding: 3px 4px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.28);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s;
+}
+.auth-name-edit-btn:active { color: rgba(255,255,255,0.75); }
+.auth-name-input {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.9);
+  font-size: 0.93rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  width: 130px;
+  outline: none;
+}
 .auth-email {
   font-size: 0.77rem;
   color: var(--text-faint);
@@ -6845,32 +6988,27 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.auth-sync-row {
+.auth-meta-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 11px 0;
-  font-size: 0.83rem;
+  gap: 5px;
+}
+.auth-meta-sep {
+  font-size: 0.63rem;
   color: var(--text-faint);
-  border-top: 1px solid var(--glass-border);
-  margin-bottom: 10px;
+  opacity: 0.35;
 }
 .auth-sync-time {
-  margin-left: 6px;
-  font-size: 0.72rem;
-  opacity: 0.6;
+  font-size: 0.68rem;
   font-family: "Space Mono", monospace;
-}
-.auth-sync-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--text-faint);
+  opacity: 0.6;
 }
 .auth-sync-status {
   font-family: "Space Mono", monospace;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   transition: color 0.3s;
 }
 .auth-sync-status--ok { color: #4ade80; }
@@ -6895,20 +7033,19 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   100% { transform: translateX(250%); }
 }
 .auth-logout-btn {
-  width: 100%;
-  padding: 11px 0;
-  background: transparent;
-  border: 1px solid rgba(239,68,68,0.2);
-  border-radius: 10px;
-  color: #ef4444;
-  font-size: 0.82rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(239,68,68,0.5);
+  font-size: 0.63rem;
   font-family: "Space Mono", monospace;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
-.auth-logout-btn:active { background: rgba(239,68,68,0.06); }
+.auth-logout-btn:active { opacity: 0.4; }
 
 .moi-item {
   display: flex;
@@ -7014,43 +7151,52 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   padding: calc(16px + env(safe-area-inset-top)) 24px 120px;
 }
 .moi-cat-topbar {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 28px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
 }
 .moi-cat-back {
-  background: rgba(255,255,255,0.08);
+  background: none;
   border: none;
-  color: rgba(255,255,255,0.6);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  color: rgba(255,255,255,0.65);
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.2s, color 0.2s;
+  margin-left: -6px;
+  transition: color 0.15s;
 }
 .moi-cat-back:active {
-  background: rgba(255,255,255,0.14);
   color: #fff;
+  opacity: 0.7;
+}
+.moi-cat-topbar-title {
+  flex: 1;
+  text-align: right;
+  font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
 }
 .moi-cat-title {
-  font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 26px;
-  font-weight: 300;
-  color: #fff;
-  margin: 0 0 32px;
-  line-height: 1.15;
-  letter-spacing: -0.3px;
+  display: none;
 }
 /* ---- MOI overlays iPad override (must come after base) ---- */
 @media (min-width: 768px) {
   .moi-cat-scroll { padding-left: 48px; padding-right: 48px; }
-  .moi-cat-title { font-size: 30px; }
+  .moi-cat-topbar-title { font-size: 18px; }
 }
 @media (min-width: 1024px) {
   .moi-cat-scroll { padding-left: 60px; padding-right: 60px; }
-  .moi-cat-title { font-size: 34px; }
 }
 
 /* Per-overlay gradient backgrounds */
@@ -7598,16 +7744,43 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 }
 
 /* ============================================================
-   TESTAMENT PRINT DOCUMENT
+   HERITAGE SHARE BUTTON
    ============================================================ */
-#testament-print-doc {
+.heritage-share-btn {
+  display: block;
+  width: 100%;
+  margin: 18px 0 0;
+  padding: 14px 0;
+  background: rgba(255,230,158,0.12);
+  border: 1px solid rgba(255,230,158,0.25);
+  color: rgba(255,230,158,0.85);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.heritage-share-btn:active {
+  background: rgba(255,230,158,0.2);
+}
+
+/* ============================================================
+   HERITAGE + TESTAMENT PRINT DOCUMENTS
+   ============================================================ */
+#heritage-print-doc,
+#testament-print-doc,
+#zakat-print-doc {
   display: none;
 }
 @media print {
   body * { visibility: hidden !important; }
-  #testament-print-doc, #testament-print-doc * {
+  #testament-print-doc, #testament-print-doc *,
+  #heritage-print-doc, #heritage-print-doc * {
     visibility: visible !important;
   }
+  #heritage-print-doc,
   #testament-print-doc {
     display: block !important;
     position: fixed; inset: 0;
@@ -7664,6 +7837,33 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   }
   .tpd-sig-lieu { margin: 0 0 18pt; font-size: 10.5pt; }
   .tpd-sig-line { font-size: 10.5pt; margin-top: 20pt; color: #333; }
+  /* Heritage table print styles */
+  .hpd-table {
+    width: 100%; border-collapse: collapse;
+    margin: 16pt 0; font-size: 10.5pt;
+  }
+  .hpd-table th {
+    text-align: left; font-size: 8.5pt; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 1.5px; color: #333;
+    border-bottom: 1pt solid #222; padding: 4pt 8pt 4pt 0;
+  }
+  .hpd-table td {
+    padding: 5pt 8pt 5pt 0;
+    border-bottom: 0.5pt solid #ddd;
+    vertical-align: top;
+  }
+  .hpd-table th:last-child, .hpd-table td:last-child { text-align: right; padding-right: 0; }
+  .hpd-table th:nth-child(2), .hpd-table td:nth-child(2),
+  .hpd-table th:nth-child(3), .hpd-table td:nth-child(3) { text-align: center; }
+  .hpd-blocked td { color: #999; font-style: italic; text-decoration: line-through; }
+  .hpd-total td { border-top: 1pt solid #222; border-bottom: none; font-weight: bold; }
+  .hpd-type { font-size: 9pt; color: #777; }
+  .hpd-footer {
+    margin-top: 24pt; border-top: 0.5pt solid #bbb;
+    padding-top: 8pt; font-size: 9pt; color: #777;
+    text-align: center;
+  }
+  .hpd-footer p { margin: 2pt 0; }
 }
 
 /* ============================================================
@@ -7756,6 +7956,36 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 }
 #testament-doc-viewer .tpd-sig-lieu { margin: 0 0 16pt; }
 #testament-doc-viewer .tpd-sig-line { margin-top: 18pt; color: #444; }
+/* Heritage doc viewer screen styles */
+#testament-doc-viewer .hpd-table {
+  width: 100%; border-collapse: collapse;
+  margin: 14pt 0; font-size: 10pt;
+}
+#testament-doc-viewer .hpd-table th {
+  text-align: left; font-size: 8pt; font-weight: bold;
+  text-transform: uppercase; letter-spacing: 1.5px; color: #444;
+  border-bottom: 1pt solid #333; padding: 3pt 6pt 3pt 0;
+}
+#testament-doc-viewer .hpd-table td {
+  padding: 4pt 6pt 4pt 0;
+  border-bottom: 0.5pt solid #ddd;
+  vertical-align: top;
+}
+#testament-doc-viewer .hpd-table th:last-child,
+#testament-doc-viewer .hpd-table td:last-child { text-align: right; padding-right: 0; }
+#testament-doc-viewer .hpd-table th:nth-child(2),
+#testament-doc-viewer .hpd-table td:nth-child(2),
+#testament-doc-viewer .hpd-table th:nth-child(3),
+#testament-doc-viewer .hpd-table td:nth-child(3) { text-align: center; }
+#testament-doc-viewer .hpd-blocked td { color: #aaa; font-style: italic; text-decoration: line-through; }
+#testament-doc-viewer .hpd-total td { border-top: 1pt solid #333; border-bottom: none; font-weight: bold; }
+#testament-doc-viewer .hpd-type { font-size: 8.5pt; color: #888; }
+#testament-doc-viewer .hpd-footer {
+  margin-top: 20pt; border-top: 0.5pt solid #ccc;
+  padding-top: 8pt; font-size: 8.5pt; color: #888;
+  text-align: center;
+}
+#testament-doc-viewer .hpd-footer p { margin: 2pt 0; }
 .tdv-tip {
   margin: 24px auto 0; max-width: 560px;
   font-size: 11px; color: #999;
@@ -7780,6 +8010,96 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   font-size: 10px; letter-spacing: 2.5px; color: rgba(255,255,255,0.35);
   margin: 0 0 16px; padding-bottom: 8px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+/* ---- Zakat Save Button ---- */
+.zakat-save-btn {
+  display: block; width: 100%; margin: 18px 0 0;
+  padding: 14px 0;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.25);
+  color: rgba(16,185,129,0.85);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  border-radius: 12px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.zakat-save-btn:active { background: rgba(16,185,129,0.2); }
+/* ---- Zakat History ---- */
+.zakat-history-section { margin-top: 28px; }
+.zakat-fiche {
+  background: rgba(16,185,129,0.07);
+  border: 1px solid rgba(16,185,129,0.15);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+}
+.zakat-fiche-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.zakat-fiche-title {
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9);
+  margin-bottom: 4px;
+}
+.zakat-fiche-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+.zakat-fiche-amount {
+  font-size: 17px; font-weight: 700; color: #10b981;
+  white-space: nowrap; margin-left: 12px;
+}
+.zakat-fiche-actions { display: flex; gap: 8px; }
+.zakat-fiche-pdf-btn {
+  flex: 1; padding: 8px 0;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6); border-radius: 8px; cursor: pointer;
+  font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  -webkit-tap-highlight-color: transparent;
+}
+.zakat-fiche-pdf-btn:active { background: rgba(255,255,255,0.12); }
+.zakat-fiche-del-btn {
+  width: 36px; height: 36px;
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+  color: rgba(239,68,68,0.7); border-radius: 8px; cursor: pointer;
+  font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.zakat-fiche-del-btn:active { background: rgba(239,68,68,0.2); }
+/* ---- Zakat Print Doc viewer styles ---- */
+#testament-doc-viewer .zpd-summary {
+  margin-top: 14pt; border-top: 0.5pt solid #ddd; padding-top: 10pt;
+}
+#testament-doc-viewer .zpd-summary-row {
+  display: flex; justify-content: space-between;
+  padding: 4pt 0; font-size: 10pt; color: #333;
+  border-bottom: 0.5pt solid #eee;
+}
+#testament-doc-viewer .zpd-badge {
+  font-size: 9pt; font-weight: bold; padding: 1pt 6pt; border-radius: 3pt;
+}
+#testament-doc-viewer .zpd-badge-ok { background: #d1fae5; color: #059669; }
+#testament-doc-viewer .zpd-badge-no { background: #fee2e2; color: #dc2626; }
+#testament-doc-viewer .zpd-zakat-due {
+  font-weight: bold; color: #111; border-bottom: none; padding-top: 8pt;
+}
+/* Zakat print styles */
+@media print {
+  #zakat-print-doc, #zakat-print-doc * { visibility: visible !important; }
+  #zakat-print-doc {
+    display: block !important; position: fixed; inset: 0;
+    padding: 2.2cm 2.8cm;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #111; background: #fff; font-size: 11pt; line-height: 1.75;
+    box-sizing: border-box;
+  }
+  .zpd-summary { margin-top: 14pt; border-top: 0.5pt solid #ccc; padding-top: 10pt; }
+  .zpd-summary-row {
+    display: flex; justify-content: space-between;
+    padding: 4pt 0; font-size: 10pt; color: #333;
+    border-bottom: 0.5pt solid #eee;
+  }
+  .zpd-badge { font-size: 9pt; font-weight: bold; }
+  .zpd-zakat-due { font-weight: bold; color: #111; padding-top: 8pt; }
 }
 .zakat-hint {
   font-size: 12px; color: rgba(255,255,255,0.3); line-height: 1.5;
@@ -8209,19 +8529,10 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   color: rgba(255,255,255,0.35);
 }
 
-/* Stat cards within gradient overlay */
+/* Stat cards within gradient overlay — already clean, no override needed */
 .moi-cat-body .stat-card {
   background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-color: rgba(255,255,255,0.12);
-}
-.moi-cat-body .stat-value {
-  color: #fff;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.3);
-}
-.moi-cat-body .stat-label {
-  color: rgba(255,255,255,0.55);
 }
 
 /* Reciter select within gradient overlay */

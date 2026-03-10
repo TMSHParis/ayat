@@ -9,10 +9,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Enable background audio playback for Quran recitation
+        // Configure audio session:
+        // - .playback → permet la lecture en arrière-plan (Coran) et coupe la musique SEULEMENT quand l'user lance un audio
+        // - .mixWithOthers → ne coupe PAS la musique au lancement de l'app (session non activée avant le premier play())
         let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(.playback, mode: .default)
-        try? audioSession.setActive(true)
+        try? audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowBluetooth])
+        // Ne pas appeler setActive(true) ici → la session s'active uniquement quand l'audio commence à jouer
         return true
     }
 

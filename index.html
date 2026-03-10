@@ -86,6 +86,23 @@
         <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
       </div>
 
+      <div class="dash-thin-line"></div>
+
+      <!-- 10 Dernières Nuits de Ramadan -->
+      <div class="dash-card dash-ramadan hidden" id="dash-ramadan">
+        <div class="dash-card-label-row">
+          <span class="dash-card-label dash-ramadan-label">DIX DERNI&Egrave;RES NUITS</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C8962D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+          </svg>
+        </div>
+        <div class="dash-card-prompt" style="font-size:20px;font-weight:600;margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Laylat al-Qadr vaut mieux que mille mois.</div>
+        <div class="dash-ramadan-btn-row">
+          <button class="dash-card-btn" id="dash-ramadan-btn">D&Eacute;COUVRIR<span class="dash-btn-arrow">&rarr;</span></button>
+          <span class="dash-ramadan-countdown" id="dash-ramadan-countdown"></span>
+        </div>
+      </div>
+
       <!-- Sourate du jour -->
       <div class="dash-card dash-surat-card" id="dash-surat-card">
         <div class="dash-card-label-row">
@@ -370,8 +387,8 @@
           <div class="moi-item" id="auth-toggle-btn">
             <span class="moi-item-dot" style="background:#A0C8A8"></span>
             <div class="moi-item-text">
-              <span class="moi-item-label">Connexion <span style="font-size:9px;background:#A0C8A8;color:#1a1a2e;border-radius:3px;padding:1px 5px;vertical-align:middle;letter-spacing:0.5px;font-weight:700">BÊTA</span></span>
-              <span class="moi-item-count">FONCTIONNALIT&Eacute; EN COURS DE D&Eacute;PLOIEMENT</span>
+              <span class="moi-item-label">Connexion</span>
+              <span class="moi-item-count">SYNCHRONISER MES APPAREILS</span>
             </div>
             <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </div>
@@ -380,29 +397,29 @@
       <!-- Auth overlay moved to end of body -->
         <!-- État connecté -->
         <div id="auth-logged-in" class="hidden">
+          <div class="moi-sep"></div>
           <div class="auth-user-row">
-            <div class="auth-avatar-wrap">
-              <img id="auth-avatar" class="auth-avatar" src="" alt="">
-              <div id="auth-initials" class="auth-initials" style="display:none"></div>
-            </div>
-            <div class="auth-user-info">
+            <span class="moi-item-dot" style="background:#A0C8A8"></span>
+            <div class="moi-item-text">
               <div class="auth-name-row">
                 <div id="auth-name" class="auth-name"></div>
+                <button id="auth-name-edit-btn" class="auth-name-edit-btn" aria-label="Modifier le pr&eacute;nom">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
                 <span id="auth-provider-badge" class="auth-provider-badge"></span>
               </div>
-              <div id="auth-email" class="auth-email"></div>
-            </div>
-          </div>
-          <div class="auth-sync-row">
-            <span>Synchronisation<span id="auth-sync-time" class="auth-sync-time"></span></span>
-            <div class="auth-sync-right">
-              <div id="auth-sync-bar" class="auth-sync-bar auth-sync-bar--hidden">
-                <div class="auth-sync-bar-fill"></div>
+              <div class="auth-meta-row">
+                <div id="auth-sync-bar" class="auth-sync-bar auth-sync-bar--hidden">
+                  <div class="auth-sync-bar-fill"></div>
+                </div>
+                <span id="auth-sync-status" class="auth-sync-status">EN ATTENTE</span>
+                <span id="auth-sync-time" class="auth-sync-time"></span>
+                <span class="auth-meta-sep">·</span>
+                <button id="auth-logout-btn" class="auth-logout-btn">D&eacute;connecter</button>
               </div>
-              <span id="auth-sync-status" class="auth-sync-status">EN ATTENTE</span>
+              <div id="auth-email" style="display:none"></div>
             </div>
           </div>
-          <button id="auth-logout-btn" class="auth-logout-btn">Se d&eacute;connecter</button>
         </div>
         <div class="moi-sep"></div>
       </div>
@@ -917,10 +934,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="settings-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Préférences</span>
     </div>
-    <h1 class="moi-cat-title">Pr&eacute;f&eacute;rences</h1>
     <div class="moi-cat-body">
     <div class="setting-group">
       <div class="setting-label">Lectures complètes</div>
@@ -1007,27 +1024,27 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="stats-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Statistiques</span>
     </div>
-    <h1 class="moi-cat-title">Statistiques</h1>
     <div class="moi-cat-body">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-streak">0</div>
-          <div class="stat-label">Jours cons&eacute;cutifs</div>
+      <div class="stats-rows-group">
+        <div class="stats-row">
+          <span class="stats-row-label">Jours cons&eacute;cutifs</span>
+          <span class="stats-row-value" id="stat-streak">0</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-total-verses">0</div>
-          <div class="stat-label">Versets lus</div>
+        <div class="stats-row">
+          <span class="stats-row-label">Versets lus</span>
+          <span class="stats-row-value" id="stat-total-verses">0</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-reading-time">0 min</div>
-          <div class="stat-label">Temps de lecture</div>
+        <div class="stats-row">
+          <span class="stats-row-label">Temps de lecture</span>
+          <span class="stats-row-value" id="stat-reading-time">0 min</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-khatmas">0</div>
-          <div class="stat-label">Khatms termin&eacute;s</div>
+        <div class="stats-row">
+          <span class="stats-row-label">Khatms termin&eacute;s</span>
+          <span class="stats-row-value" id="stat-khatmas">0</span>
         </div>
       </div>
       <!-- Hassanates section -->
@@ -1040,27 +1057,27 @@
           <p class="stat-hadith-source">Rapport&eacute; par At-Tirmidhi</p>
         </div>
       </div>
-      <!-- Préférences stats -->
+      <!-- Préférences stats — iOS-style toggles -->
       <div class="stats-prefs">
-        <div class="stats-pref-row" id="stats-hassanates-btns">
-          <span class="stats-pref-label">Hassanates</span>
-          <div class="stats-pref-toggle">
-            <button class="stats-pref-opt" data-hassanates="true">Afficher</button>
-            <span class="stats-pref-sep">·</span>
-            <button class="stats-pref-opt" data-hassanates="false">Masquer</button>
+        <div class="stats-prefs-group">
+          <div class="stats-pref-row" id="stats-hassanates-btns">
+            <span class="stats-pref-label">Hassanates</span>
+            <button class="ios-toggle" id="stats-hassanates-toggle" role="switch" aria-checked="true">
+              <span class="ios-toggle-thumb"></span>
+            </button>
+          </div>
+          <div class="stats-pref-row" id="stats-dashstats-btns">
+            <span class="stats-pref-label">Sur l&rsquo;accueil</span>
+            <button class="ios-toggle" id="stats-dashstats-toggle" role="switch" aria-checked="true">
+              <span class="ios-toggle-thumb"></span>
+            </button>
           </div>
         </div>
-        <div class="stats-pref-row" id="stats-dashstats-btns">
-          <span class="stats-pref-label">Sur l'accueil</span>
-          <div class="stats-pref-toggle">
-            <button class="stats-pref-opt" data-dashstats="true">Afficher</button>
-            <span class="stats-pref-sep">·</span>
-            <button class="stats-pref-opt" data-dashstats="false">Masquer</button>
+        <div class="stats-prefs-group">
+          <div class="stats-pref-row">
+            <span class="stats-pref-label stats-pref-danger">Données</span>
+            <button id="stats-reset-btn" class="stats-reset-btn">Réinitialiser</button>
           </div>
-        </div>
-        <div class="stats-pref-row">
-          <span class="stats-pref-label" style="opacity:0.45">Données</span>
-          <button id="stats-reset-btn" class="stats-reset-btn">Réinitialiser</button>
         </div>
       </div>
     </div>
@@ -1188,10 +1205,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="about-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">À propos</span>
     </div>
-    <h1 class="moi-cat-title">&Agrave; propos</h1>
     <div class="moi-cat-body">
       <p><span class="highlight">Qurani</span> est une application compl&egrave;te pour accompagner le musulman au quotidien. Sans publicit&eacute;, sans compte, sans distraction.</p>
       <hr class="divider">
@@ -1236,10 +1253,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="help-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Aide</span>
     </div>
-    <h1 class="moi-cat-title">Aide</h1>
     <div class="moi-cat-body">
     <div class="help-section">
       <div class="help-title">Onglet Accueil</div>
@@ -1286,10 +1303,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="method-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Méthode de Calcul</span>
     </div>
-    <h1 class="moi-cat-title">M&eacute;thode de Calcul</h1>
     <div class="moi-cat-body">
       <p class="sub-label">Deux sources disponibles</p>
       <p>Qurani propose deux modes pour les horaires de pri&egrave;re : <span class="highlight">IslamSounnah</span> (calcul astronomique local, fonctionne hors connexion) et <span class="highlight">Mawaqit</span> (horaires de votre mosqu&eacute;e, n&eacute;cessite une connexion internet). Vous pouvez basculer entre les deux depuis la page des horaires.</p>
@@ -1360,10 +1377,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="bookmarks-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Favoris</span>
     </div>
-    <h1 class="moi-cat-title">Favoris</h1>
     <div class="moi-cat-body" id="bookmarks-list"></div>
   </div>
 </div>
@@ -1395,10 +1412,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="notes-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Notes</span>
     </div>
-    <h1 class="moi-cat-title">Notes</h1>
     <div class="moi-cat-body" id="notes-list"></div>
   </div>
 </div>
@@ -1409,10 +1426,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="moi-khatms-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Khatms</span>
     </div>
-    <h1 class="moi-cat-title">Khatms</h1>
     <div class="moi-cat-body" id="moi-khatms-list"></div>
   </div>
 </div>
@@ -1499,10 +1516,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="islamsounnah-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">IslamSounnah</span>
     </div>
-    <h1 class="moi-cat-title">IslamSounnah</h1>
     <div class="moi-cat-body">
       <p class="is-subtitle">Télécharger le Youtube Islamique</p>
       <a href="https://apps.apple.com/fr/app/islamsounnah-vid%C3%A9o/id687454322" class="is-store-row" target="_blank" rel="noopener">
@@ -1525,10 +1542,10 @@
   <div class="moi-cat-scroll" id="heritage-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="heritage-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Héritage</span>
     </div>
-    <h1 class="moi-cat-title">Héritage</h1>
     <div class="moi-cat-body">
       <p class="heritage-intro">Calculez les parts islamiques (Faraidh) conformément au Coran et à la Sunna.</p>
       <div class="heritage-section">
@@ -1553,6 +1570,7 @@
       <div class="heritage-section hidden" id="heritage-results-section">
         <h3 class="heritage-section-title">RÉSULTATS</h3>
         <div id="heritage-results"></div>
+        <button class="heritage-share-btn" id="heritage-share-btn">PARTAGER / PDF</button>
         <p class="heritage-madhab-note">Calcul selon le consensus des quatre madhhabs sunnites. Basé sur les versets coraniques et la Sunnah. Vérifié sur 133 cas de test d'érudits. Consultez un érudit qualifié pour les cas complexes.</p>
       </div>
       <p class="moi-privacy-note">Aucune information n'est collectée ni stockée. Tout est calculé localement sur votre appareil.</p>
@@ -1565,10 +1583,10 @@
   <div class="moi-cat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="testament-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Testament</span>
     </div>
-    <h1 class="moi-cat-title">Testament</h1>
     <div class="moi-cat-body">
       <p class="testament-intro">Rédigez votre testament islamique (Wasiyya) conformément à la Sunna. Répondez aux questions ci-dessous puis générez votre document.</p>
       <div class="testament-section">
@@ -1648,10 +1666,10 @@
   <div class="moi-cat-scroll" id="zakat-scroll">
     <div class="moi-cat-topbar">
       <button class="moi-cat-back" id="zakat-close" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <span class="moi-cat-topbar-title">Zakat</span>
     </div>
-    <h1 class="moi-cat-title">Zakat</h1>
     <div class="moi-cat-body">
       <p class="zakat-intro">Calculez votre Zakat al-Mal selon les règles islamiques. Le seuil (Nisab) est basé sur 85g d'or ou 595g d'argent.</p>
 
@@ -1767,6 +1785,12 @@
       <div class="zakat-section hidden" id="zakat-results-section">
         <h3 class="zakat-section-title">RÉSULTAT</h3>
         <div id="zakat-results"></div>
+        <button class="zakat-save-btn" id="zakat-save-btn">SAUVEGARDER CETTE FICHE</button>
+      </div>
+
+      <div class="zakat-history-section hidden" id="zakat-history-section">
+        <h3 class="zakat-section-title">MES FICHES ZAKAT</h3>
+        <div id="zakat-history-list"></div>
       </div>
 
       <p class="moi-privacy-note">Aucune information n'est collectée ni stockée. Tout est calculé localement sur votre appareil.</p>
@@ -1774,7 +1798,30 @@
   </div>
 </div>
 
+<!-- ====== ZAKAT PRINT DOCUMENT ====== -->
+<div id="zakat-print-doc">
+  <div class="tpd-bismillah">بسم الله الرحمن الرحيم</div>
+  <h1 class="tpd-title">ZAKAT AL-MÂL</h1>
+  <p class="tpd-subtitle" id="zpd-subtitle"></p>
+  <div id="zpd-body"></div>
+  <div class="hpd-footer">
+    <p>Calculé selon les règles de la Zakat islamique.</p>
+    <p>Généré par Qurani - by IslamSounnah — <span id="zpd-date"></span></p>
+  </div>
+</div>
+
 <!-- ====== TESTAMENT PRINT DOCUMENT ====== -->
+<div id="heritage-print-doc">
+  <div class="tpd-bismillah">بسم الله الرحمن الرحيم</div>
+  <h1 class="tpd-title">RÉPARTITION DE L'HÉRITAGE</h1>
+  <p class="tpd-subtitle" id="hpd-subtitle"></p>
+  <div id="hpd-body"></div>
+  <div class="hpd-footer">
+    <p>Calcul selon le consensus des quatre madhhabs sunnites.</p>
+    <p>Généré par Qurani - by IslamSounnah — <span id="hpd-date"></span></p>
+  </div>
+</div>
+
 <div id="testament-print-doc">
   <div class="tpd-bismillah">بسم الله الرحمن الرحيم</div>
   <h1 class="tpd-title">TESTAMENT ISLAMIQUE</h1>
@@ -2039,7 +2086,7 @@
     </button>
     <button class="prayer-bottom-btn" id="prayer-settings-btn">RÉGLAGES</button>
   </div>
-  <div class="prayer-bottom-location" id="prayer-bottom-location" style="display:none"></div>
+  <div class="prayer-bottom-location" id="prayer-bottom-location"></div>
 
   <!-- Settings sub-panel (slides up) -->
   <div id="prayer-settings-panel" class="prayer-settings-panel hidden">
@@ -2071,6 +2118,16 @@
           <span class="prayer-night-label">Dernier tiers</span>
           <span class="prayer-night-value" id="prayer-lastthird-val">--:--</span>
         </div>
+      </div>
+      <div class="prayer-notif-section" id="prayer-notif-section" style="display:none">
+        <div class="prayer-setting-label">NOTIFICATIONS</div>
+        <div class="prayer-notif-row">
+          <span class="prayer-notif-text">Rappel avant chaque prière</span>
+          <button class="prayer-notif-toggle" id="prayer-notif-toggle">
+            <span class="prayer-notif-toggle-knob"></span>
+          </button>
+        </div>
+        <p class="prayer-notif-hint">15 min avant + à l'heure de l'adhan</p>
       </div>
     </div>
   </div>
@@ -2360,6 +2417,10 @@
   <button class="float-back-fab" id="emotion-float-back" aria-label="Retour">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
+  <button class="dua-scroll-hint" id="emotion-scroll-hint" aria-label="Faire d&eacute;filer">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-top:-10px;opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
 </div>
 
 <!-- ====== DUA DETAIL OVERLAY ====== -->
@@ -2397,19 +2458,137 @@
   </button>
 </div>
 
-<!-- ====== DUA CONTACT OVERLAY ====== -->
-<div id="dua-contact-overlay" class="overlay hidden">
-  <div class="dua-contact-bg" id="dua-contact-bg"></div>
-  <div class="dua-contact-scroll">
-    <div class="dua-contact-hero">
+<!-- ====== RAMADAN — 10 DERNIÈRES NUITS OVERLAY ====== -->
+<div id="ramadan-overlay" class="overlay hidden emotion-overlay-bg">
+  <div class="emotion-overlay-scroll ramadan-overlay-scroll">
+    <div class="emotion-hero ramadan-hero">
       <div class="emotion-top-bar">
-        <button class="emotion-back-btn" id="dua-contact-close" aria-label="Retour">
+        <button class="emotion-back-btn" id="ramadan-close" aria-label="Retour">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
       </div>
-      <h1 class="dua-contact-title">Contact &amp; Services</h1>
+      <h1 class="emotion-title" style="letter-spacing:-1px">Dix derni&egrave;res nuits</h1>
+      <p class="emotion-quote">Une seule de ces nuits vaut plus de 83&nbsp;ans d&rsquo;adoration. Elle se cache dans les nuits impaires &mdash; cherche-la par l&rsquo;invocation, le repentir et la pri&egrave;re de nuit.</p>
+    </div>
+    <div class="emotion-article" style="background:rgba(255,255,255,0.025)">
+      <h2 class="emotion-article-title">Invocations recommand&eacute;es</h2>
+      <div class="emotion-article-entries">
+
+        <!-- Du'a 1 : Laylat al-Qadr -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">DU&rsquo;A DE LAYLAT AL-QADR</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي</p>
+          <p class="emotion-entry-ph">All&amacr;humma innaka &lsquo;afuwwun, tu&hbar;ibbu-l-&lsquo;afwa, fa-&lsquo;fu &lsquo;ann&imacr;</p>
+          <p class="emotion-entry-fr">&Ocirc; Allah, Tu es Celui qui efface les p&eacute;ch&eacute;s, Tu aimes effacer les p&eacute;ch&eacute;s, alors efface mes p&eacute;ch&eacute;s.</p>
+          <span class="emotion-entry-ref">Tirmidhi 3513 &middot; Ibn Majah 3850 &mdash; enseign&eacute;e par le Proph&egrave;te ﷺ &agrave; A&iuml;sha ر&#1590;&#1610; &#1575;&#1604;&#1604;&#1607; &#1593;&#1606;&#1607;&#1575;</span>
+        </div>
+
+        <!-- Du'a 2 : Sourate Al-Qadr -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge verset">SOURATE AL-QADR &middot; 97:1&ndash;5</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl" style="font-size:20px;line-height:2">إِنَّا أَنزَلْنَاهُ فِي لَيْلَةِ الْقَدْرِ ۞ وَمَا أَدْرَاكَ مَا لَيْلَةُ الْقَدْرِ ۞ لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ ۞ تَنَزَّلُ الْمَلَائِكَةُ وَالرُّوحُ فِيهَا بِإِذْنِ رَبِّهِم مِّن كُلِّ أَمْرٍ ۞ سَلَامٌ هِيَ حَتَّىٰ مَطْلَعِ الْفَجْرِ</p>
+          <p class="emotion-entry-ph">Inn&amacr; anzaln&amacr;hu f&imacr; laylatil-qadr. Wa m&amacr; adr&amacr;ka m&amacr; laylatil-qadr. Laylatil-qadr khayrun min alfi shahr. Tanazzalul-mal&amacr;&rsquo;ikatu war-r&umacr;&hbar;u f&imacr;h&amacr; bi-idhni rabbihim min kulli amr. Sal&amacr;mun hiya &hbar;att&amacr; matla&rsquo;il-fajr.</p>
+          <p class="emotion-entry-fr">Nous l&rsquo;avons r&eacute;v&eacute;l&eacute; au cours de la Nuit du Destin. Qui te fera savoir ce qu&rsquo;est la Nuit du Destin&nbsp;? La Nuit du Destin est meilleure que mille mois. En cette nuit descendent les Anges et l&rsquo;Esprit, par la permission de leur Seigneur, pour tout d&eacute;cret. Elle est paix, jusqu&rsquo;&agrave; l&rsquo;apparition de l&rsquo;aube.</p>
+        </div>
+
+        <!-- Du'a 3 : Istighfar -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">ISTIGHF&Acirc;R</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنتَ التَّوَّابُ الرَّحِيمُ</p>
+          <p class="emotion-entry-ph">Rabbi-ghfir l&imacr; wa tub &lsquo;alayya, innaka Anta-t-Taww&amacr;bu-r-Ra&hbar;&imacr;m</p>
+          <p class="emotion-entry-fr">&Ocirc; mon Seigneur, pardonne-moi et accepte mon repentir. Tu es Celui qui revient sans cesse vers Ses serviteurs, le Tr&egrave;s-Mis&eacute;ricordieux.</p>
+          <span class="emotion-entry-ref">Tirmidhi 3434 &mdash; le Proph&egrave;te ﷺ le r&eacute;p&eacute;tait cent fois par s&eacute;ance</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="emotion-article" style="background:rgba(255,255,255,0.015);margin-top:2px">
+      <h2 class="emotion-article-title">Hadiths sur Laylat al-Qadr</h2>
+      <div class="emotion-article-entries">
+
+        <!-- Hadith 1 — Aïcha -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">&#39;&Acirc;ISHA ر&#1590;&#1610; &#1575;&#1604;&#1604;&#1607; &#1593;&#1606;&#1607;&#1575;</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">تَحَرَّوْا لَيْلَةَ الْقَدْرِ فِي الْوِتْرِ مِنَ الْعَشْرِ الأَوَاخِرِ مِنْ رَمَضَانَ</p>
+          <p class="emotion-entry-ph">Ta&hbar;arraw laylatal-qadr f&imacr;-l-watri min al-&lsquo;ashri-l-aw&amacr;khiri min rama&dhacek;&amacr;n</p>
+          <p class="emotion-entry-fr">Cherchez la Nuit du Destin dans les nuits impaires des dix derni&egrave;res nuits de Ramadan.</p>
+          <span class="emotion-entry-ref">Bukh&amacr;r&imacr; 2017 &middot; Muslim 1169</span>
+        </div>
+
+        <!-- Hadith 2 — Ibn Umar -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">IBN &lsquo;UMAR ر&#1590;&#1610; &#1575;&#1604;&#1604;&#1607; &#1593;&#1606;&#1607;</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">تَحَرَّوْا لَيْلَةَ الْقَدْرِ فِي السَّبْعِ الأَوَاخِرِ</p>
+          <p class="emotion-entry-ph">Ta&hbar;arraw laylatal-qadr f&imacr;-s-sab&lsquo;i-l-aw&amacr;khir</p>
+          <p class="emotion-entry-fr">Cherchez la Nuit du Destin dans les sept derni&egrave;res nuits.</p>
+          <span class="emotion-entry-ref">Muslim 1165</span>
+        </div>
+
+        <!-- Hadith 3 — Ibn Unais / 23e nuit -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">IBN UNAIS ر&#1590;&#1610; &#1575;&#1604;&#1604;&#1607; &#1593;&#1606;&#1607; &mdash; LA 23<sup>e</sup> NUIT</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">تَحَرَّوْا لَيْلَةَ الْقَدْرِ لَيْلَةَ ثَلاَثٍ وَعِشْرِينَ</p>
+          <p class="emotion-entry-ph">Ta&hbar;arraw laylatal-qadr laylata thal&amacr;thin wa &lsquo;ishr&imacr;n</p>
+          <p class="emotion-entry-fr">Cherchez la Nuit du Destin la 23<sup>e</sup> nuit.</p>
+          <span class="emotion-entry-ref">Al-Tabar&amacr;n&imacr; &middot; Sahih Al-J&amacr;mi&lsquo; 2923</span>
+        </div>
+
+        <!-- Hadith 4 — Ibn Umar / 27e nuit -->
+        <div class="emotion-entry">
+          <div class="dua-entry-header">
+            <span class="emotion-entry-badge dua">IBN &lsquo;UMAR ر&#1590;&#1610; &#1575;&#1604;&#1604;&#1607; &#1593;&#1606;&#1607; &mdash; LA 27<sup>e</sup> NUIT</span>
+          </div>
+          <p class="emotion-entry-ar" dir="rtl">تَحَرَّوْا لَيْلَةَ الْقَدْرِ فَمَنْ كَانَ مُتَحَرِّيَهَا فَلْيَتَحَرَّهَا فِي لَيْلَةِ سَبْعٍ وَعِشْرِينَ</p>
+          <p class="emotion-entry-ph">Ta&hbar;arraw laylatal-qadr, faman k&amacr;na mutaḥarriyah&amacr; falyata&hbar;arrah&amacr; f&imacr; laylati sab&lsquo;in wa &lsquo;ishr&imacr;n</p>
+          <p class="emotion-entry-fr">Cherchez la Nuit du Destin &mdash; et quiconque la cherche devrait la chercher la 27<sup>e</sup> nuit.</p>
+          <span class="emotion-entry-ref">Ahmad &middot; Sahih Al-J&amacr;mi&lsquo; 2920</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="ramadan-scholar-note">
+      <span class="ramadan-scholar-label">IBN &Hscr;AJAR AL-&lsquo;ASQAL&Amacr;N&Imacr;</span>
+      <p class="ramadan-scholar-text">Dans <em>Fat&hbar; al-B&amacr;r&imacr;</em>, il rapporte que les savants ont divergé en <strong>46 avis</strong> sur la Nuit du Destin. L&rsquo;avis le plus juste, permettant de concilier tous les textes&nbsp;: elle tombe dans les <strong>nuits impaires des dix derni&egrave;res nuits</strong> de Ramadan, et <strong>change d&rsquo;une ann&eacute;e &agrave; l&rsquo;autre</strong>.</p>
+    </div>
+  </div>
+  <button class="float-back-fab" id="ramadan-float-back" aria-label="Retour">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="dua-scroll-hint" id="ramadan-scroll-hint" aria-label="Faire d&eacute;filer">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-top:-10px;opacity:0.4"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
+</div>
+
+<!-- ====== DUA CONTACT OVERLAY ====== -->
+<div id="dua-contact-overlay" class="overlay hidden">
+  <div class="dua-contact-bg" id="dua-contact-bg"></div>
+  <div class="dua-contact-scroll">
+    <div class="dua-contact-hero">
+      <div class="emotion-top-bar dua-contact-topbar">
+        <button class="emotion-back-btn" id="dua-contact-close" aria-label="Retour">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="dua-contact-nav-title">Contact &amp; Services</span>
+      </div>
       <p class="dua-contact-subtitle">Suggestions sur l&rsquo;app &bull; Cr&eacute;ation de site &bull; App mobile &bull; S&eacute;curit&eacute; informatique</p>
     </div>
     <div class="dua-contact-form-wrap">
@@ -2698,12 +2877,10 @@
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continuer avec Google
       </button>
-      <!-- Apple Sign-In — réactiver après validation v3.3.0
       <button id="auth-apple-btn" class="auth-btn auth-apple">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
         Continuer avec Apple
       </button>
-      -->
     </div>
     <p class="auth-overlay-footer">Aucun mot de passe requis</p>
   </div>
