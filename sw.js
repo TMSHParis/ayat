@@ -1,4 +1,4 @@
-const CACHE_NAME = "qurani-v462";
+const CACHE_NAME = "qurani-v465";
 
 const PRECACHE = [
   "./",
@@ -9,6 +9,7 @@ const PRECACHE = [
   "./follow-worker.js",
   "./vocab.json",
   "./quran.json",
+  "./quran-warsh.json",
   "./quran-fr.json",
   "./quran-en.json",
   "./quran-phonetic.json",

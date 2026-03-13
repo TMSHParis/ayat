@@ -3474,9 +3474,28 @@ body[data-theme="sepia"] .audio-glow {
 .dash-prayer-hint.hidden { display: none; }
 
 /* ---- Dashboard Cards ---- */
+/* ---- Dash Carousel (Sourate du jour / Invocations) ---- */
+.dash-carousel {
+  margin-top: 40px;
+  overflow: hidden;
+  position: relative;
+}
+.dash-carousel-track {
+  display: flex;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.dash-carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+.dash-carousel-dots {
+  display: none;
+}
+
 .dash-card {
   padding: 0;
-  margin-top: 40px;
+  margin-top: 32px;
 }
 
 .dash-card-label-row {
@@ -3528,6 +3547,21 @@ body[data-theme="sepia"] .audio-glow {
 .dash-card-btn:active {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.45);
+}
+.dash-surat-btn-progress {
+  position: relative;
+  overflow: hidden;
+}
+.dash-surat-btn-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: rgba(200,150,45,0.35);
+  border-radius: 50px;
+  transition: width 0.5s ease;
+  pointer-events: none;
 }
 .dash-btn-arrow {
   font-size: 16px;
@@ -3606,7 +3640,7 @@ body[data-theme="sepia"] .audio-glow {
 .dash-surat-progress-line {
   height: 1px;
   background: rgba(255,255,255,0.08);
-  margin: 40px 0;
+  margin: 28px 0 8px;
   position: relative;
   border-radius: 1px;
   overflow: hidden;
@@ -3625,8 +3659,8 @@ body[data-theme="sepia"] .audio-glow {
 /* ---- Thin Separator ---- */
 .dash-thin-line {
   height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 40px 0;
+  background: rgba(255,255,255,0.06);
+  margin: 6px 0;
 }
 .dash-khatm-progress-line {
   height: 1px;
@@ -4255,12 +4289,13 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   .dash-prayer-bar { padding-top: 36px; padding-bottom: 32px; }
   .dash-day-name { font-size: 12px; letter-spacing: 1.5px; }
   .dash-prayer-countdown { font-size: 14px; letter-spacing: 1.2px; }
-  .dash-card { margin-top: 48px; }
+  .dash-card { margin-top: 0; }
+  .dash-carousel { margin-top: 48px; }
   .dash-card-label { font-size: 12px; letter-spacing: 3px; }
   .dash-card-prompt { font-size: 34px; margin-bottom: 32px; }
   .dash-card-btn { font-size: 12px; padding: 16px 36px; letter-spacing: 2px; }
-  .dash-thin-line { margin: 48px 0; }
-  .dash-surat-progress-line { margin: 48px 0; }
+  .dash-thin-line { margin: 8px 0; }
+  .dash-surat-progress-line { margin: 16px 0 0; }
   .dash-khatm-label { font-size: 12px; letter-spacing: 2.5px; }
   .dash-khatm-thumb { width: 64px; height: 64px; border-radius: 10px; }
   .dash-verse-title { font-size: 24px; }
@@ -6028,6 +6063,20 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .kr-lang-opt:last-child { border-bottom: none; }
 .kr-lang-opt.active { color: #fff; }
 .kr-lang-opt.active::after { content: '✓'; font-size: 0.85rem; }
+.kr-riwaya-opt {
+  padding: 13px 18px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 0.92rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-tap-highlight-color: transparent;
+}
+.kr-riwaya-opt:last-child { border-bottom: none; }
+.kr-riwaya-opt.active { color: #fff; }
+.kr-riwaya-opt.active::after { content: '✓'; font-size: 0.85rem; }
 /* Scroll container */
 #kr-scroll {
   position: relative;
@@ -6579,6 +6628,22 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .spm-mode-opt:active { background: rgba(255,255,255,0.06); }
 .spm-mode-opt.spm-mode-active { color: #fff; }
 .spm-mode-opt.spm-mode-active::before {
+  content: '\2713';
+  position: absolute;
+  left: 22px;
+  color: #fff;
+}
+.spm-riwaya-opt {
+  padding: 11px 18px 11px 50px;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.88rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.spm-riwaya-opt:active { background: rgba(255,255,255,0.06); }
+.spm-riwaya-opt.spm-mode-active { color: #fff; }
+.spm-riwaya-opt.spm-mode-active::before {
   content: '\2713';
   position: absolute;
   left: 22px;

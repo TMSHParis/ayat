@@ -609,6 +609,7 @@
       minimalColors: false,
       showHassanates: true,
       showDashStats: false,
+      riwaya: "hafs",
       _sv: 2,
       minTheme: 'dark',
       minLang: 'ar',
@@ -1084,7 +1085,7 @@
         // Tajwid mode or minimal+colors: render colored segments.
         // Uses curated overlay from tajwidData when available, otherwise algorithmic detection.
         var key = ayah.surahNumber + ":" + ayah.ayahNumber;
-        var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
+        var overlays = (state.riwaya !== "warsh" && tajwidData && tajwidData[key]) ? tajwidData[key] : null;
         var segments = getSegmentsForAyah(key, ayah.text, overlays);
         var frag = document.createDocumentFragment();
         for (var s = 0; s < segments.length; s++) {
@@ -1979,11 +1980,11 @@
     { id: "Saood_ash-Shuraym_128kbps",   name: "Al-Shuraym",            nameAr: "سعود الشريم",          listenBase: "https://server7.mp3quran.net/shur" },
     { id: "Muhammad_Ayyoub_128kbps",     name: "Muhammad Ayyub",        nameAr: "محمد أيوب",            listenBase: "https://server8.mp3quran.net/ayyub" },
     { id: "Hudhaify_128kbps",            name: "Al-Hudhaifi",           nameAr: "علي الحذيفي",          listenBase: "https://server5.mp3quran.net/hthfi" },
-    { id: "mp3q_hlarraz",                name: "Hisham Al-Harraz",      nameAr: "هشام الهراز",          listenBase: "https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi" },
+    { id: "mp3q_hlarraz",                name: "Hisham Al-Harraz",      nameAr: "هشام الهراز",          listenBase: "https://server16.mp3quran.net/H-Lharraz/Rewayat-Warsh-A-n-Nafi", riwaya: "warsh" },
     { id: "mp3q_koshi",                  name: "Al-Oyoun Al-Kouchi",    nameAr: "العيون الكوشي",        listenBase: "https://server11.mp3quran.net/koshi" },
     { id: "mp3q_mukhtar",                name: "Mokhtar Al-Hajj",       nameAr: "مختار الحاج",          listenBase: "https://server16.mp3quran.net/mukhtar_haj/Rewayat-Hafs-A-n-Assem" },
     { id: "mp3q_nourin",                 name: "Nourein Muhammad",      nameAr: "نورين محمد صديق",      listenBase: "https://server16.mp3quran.net/nourin_siddig/Rewayat-Aldori-A-n-Abi-Amr" },
-    { id: "mp3q_souilass",               name: "Younes Asoliss",        nameAr: "يونس اسويلص",          listenBase: "https://server16.mp3quran.net/souilass/Rewayat-Warsh-A-n-Nafi" },
+    { id: "mp3q_souilass",               name: "Younes Asoliss",        nameAr: "يونس اسويلص",          listenBase: "https://server16.mp3quran.net/souilass/Rewayat-Warsh-A-n-Nafi", riwaya: "warsh" },
     { id: "mp3q_sds",                    name: "Abdulrahman Al-Sudais", nameAr: "عبد الرحمن السديس",    listenBase: "https://server11.mp3quran.net/sds" },
     { id: "mp3q_maher",                  name: "Maher Al-Mueaqly",     nameAr: "ماهر المعيقلي",        listenBase: "https://server12.mp3quran.net/maher" },
     { id: "mp3q_qtm",                    name: "Nasser Al-Qatami",     nameAr: "ناصر القطامي",         listenBase: "https://server6.mp3quran.net/qtm" },
@@ -2100,7 +2101,12 @@
     if (!list) return;
     list.innerHTML = "";
     var current = getReciter();
-    RECITERS.filter(function (r) { return r.id; }).forEach(function (r) {
+    var activeRiwaya = state.riwaya || "hafs";
+    RECITERS.filter(function (r) {
+      if (!r.id) return false;
+      var rr = r.riwaya || "hafs";
+      return rr === activeRiwaya || r.lang === "fr";
+    }).forEach(function (r) {
       var item = document.createElement("div");
       item.className = "reciter-item" + (r.id === current ? " active" : "");
       item.innerHTML = '<div><div class="reciter-item-name">' + r.name + '</div>' +
@@ -2484,34 +2490,34 @@
   // Textes personnalisés par prière
   var PRAYER_NOTIF_TEXTS = {
     "Fajr": {
-      atTitle:     "Le Fajr est là.",
-      atBody:      "C'est l'heure du Fajr.",
-      beforeTitle: "Il reste 15 min pour la prière du Fajr.",
+      atTitle:     "C'est l'heure du Fajr",
+      atBody:      "Et [fais] aussi la Lecture à l'aube, car la Lecture à l'aube a des témoins. 17:78",
+      beforeTitle: "Fajr dans 15 min",
       beforeBody:  "La Prière est meilleure que le sommeil."
     },
     "Dhuhr": {
-      atTitle:     "Le Dhuhr est là.",
-      atBody:      "C'est l'heure du Dhuhr.",
-      beforeTitle: "Il reste 15 min pour la prière du Dhuhr.",
-      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+      atTitle:     "C'est l'heure du Dhuhr",
+      atBody:      "Réponds à l'appel d'Allah.",
+      beforeTitle: "Dhuhr dans 15 min",
+      beforeBody:  "Invoquez-Moi, Je vous répondrai. 40:60"
     },
     "Asr": {
-      atTitle:     "L'Asr est là.",
-      atBody:      "C'est l'heure de l'Asr.",
-      beforeTitle: "Il reste 15 min pour la prière de l'Asr.",
-      beforeBody:  "Trouve la Paix auprès d'Allah au milieu de l'agitation."
+      atTitle:     "C'est l'heure de l'Asr",
+      atBody:      "Trouve la Paix auprès d'Allah au milieu de l'agitation.",
+      beforeTitle: "Asr dans 15 min",
+      beforeBody:  "Par le Temps ! L'homme est en perdition. 103:1-2"
     },
     "Maghrib": {
-      atTitle:     "Le Maghrib est là.",
-      atBody:      "C'est l'heure du Maghrib.",
-      beforeTitle: "Il reste 15 min pour la prière du Maghrib.",
-      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+      atTitle:     "C'est l'heure du Maghrib",
+      atBody:      "Le soleil s'est couché.",
+      beforeTitle: "Maghrib dans 15 min",
+      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. 17:78"
     },
     "Isha": {
-      atTitle:     "L'Isha est là.",
-      atBody:      "C'est l'heure de l'Isha.",
-      beforeTitle: "Il reste 15 min pour la prière de l'Isha.",
-      beforeBody:  "« Invoquez-Moi, Je vous répondrai. » (Q 40.60)"
+      atTitle:     "C'est l'heure de l'Isha",
+      atBody:      "Clôture ta journée par la prière.",
+      beforeTitle: "Isha dans 15 min",
+      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. 17:78"
     }
   };
 
@@ -3381,11 +3387,30 @@
     if (dashBg) dashBg.style.backgroundImage = "none";
   }
 
-  function getDailySurahIdx() {
+  function _isIslamicFriday() {
+    // En Islam, le vendredi commence au coucher du soleil du jeudi
+    // et se termine au coucher du soleil du vendredi
     var now = new Date();
-    var day = now.getDay(); // 0=Sun … 5=Fri … 6=Sat
-    if (day === 5) return 17; // Vendredi → Al-Kahf (surah 18, index 17)
-    // Aléatoire déterministe basé sur la date (change chaque jour)
+    var day = now.getDay(); // 0=Sun … 4=Thu 5=Fri 6=Sat
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    var maghribMin = 18 * 60; // fallback 18h
+    if (prayerTimesCache && prayerTimesCache.Maghrib) {
+      var parts = (prayerTimesCache.Maghrib + "").split(":");
+      var m = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
+      if (!isNaN(m)) maghribMin = m;
+    }
+    // Jeudi après Maghrib → vendredi islamique
+    if (day === 4 && nowMin >= maghribMin) return true;
+    // Vendredi avant Maghrib → vendredi islamique
+    if (day === 5 && nowMin < maghribMin) return true;
+    return false;
+  }
+
+  function getDailySurahIdx() {
+    // Vendredi islamique (jeudi Maghrib → vendredi Maghrib) → Al-Kahf
+    if (_isIslamicFriday()) return 17; // Al-Kahf (surah 18, index 17)
+    // Autres jours : aléatoire déterministe basé sur la date (change chaque jour)
+    var now = new Date();
     var seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
     var idx = seed % 114;
     if (idx === 17) idx = 16; // éviter Al-Kahf les autres jours
@@ -3396,10 +3421,14 @@
     var nameEl = $("dash-surat-name");
     if (!nameEl || !surahs || !surahs.length) return;
     var idx = getDailySurahIdx();
+    // Update label: vendredi islamique → "SOURATE DU VENDREDI", sinon "SOURATE DU JOUR"
+    var suratLabelEl = $("dash-surat-label");
+    if (suratLabelEl) suratLabelEl.textContent = _isIslamicFriday() ? "SOURATE DU VENDREDI" : "SOURATE DU JOUR";
     var surah = surahs[idx];
     if (!surah) return;
     var nameFr = SURAH_NAMES_FR[surah.surahNumber] || ("Sourate " + surah.surahNumber);
-    nameEl.textContent = surah.surahNameAr + " \u2014 " + nameFr;
+    var translit = SURAH_TRANSLIT[surah.surahNumber] || "";
+    nameEl.textContent = translit + " \u2014 " + nameFr;
 
     // Daily surah progress
     var totalVerses = surah.ayahs.length;
@@ -3426,28 +3455,74 @@
       }
     }
 
-    // Progress bar
-    var fillEl = $("dash-surat-progress-fill");
-    if (fillEl) {
-      fillEl.style.width = pct + "%";
+    // Progress on button fill
+    var btnFill = $("dash-surat-btn-fill");
+    if (btnFill) {
+      btnFill.style.width = pct + "%";
     }
   }
 
-  /** Vendredi 10h→Maghrib = sourate du jour (Al-Kahf), sinon invocations */
-  function _dashShouldShowSurat() {
-    var now = new Date();
-    if (now.getDay() !== 5) return false; // pas vendredi
-    var nowMin = now.getHours() * 60 + now.getMinutes();
-    if (nowMin < 10 * 60) return false; // avant 10h
-    // après Maghrib → invocations du soir
-    if (prayerTimesCache && prayerTimesCache.Maghrib) {
-      var parts = (prayerTimesCache.Maghrib + "").split(":");
-      var magMin = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
-      if (!isNaN(magMin) && nowMin >= magMin) return false;
-    } else {
-      if (nowMin >= 18 * 60) return false;
+  var _dashCarouselIdx = 0;
+
+  function _initDashCarousel() {
+    var track = $("dash-carousel-track");
+    var dots = document.querySelectorAll("#dash-carousel-dots .dash-carousel-dot");
+    if (!track || !dots.length) return;
+
+    function goTo(idx) {
+      _dashCarouselIdx = idx;
+      track.style.transform = "translateX(-" + (idx * 100) + "%)";
+      dots.forEach(function(d, i) { d.classList.toggle("active", i === idx); });
     }
-    return true; // vendredi entre 10h et Maghrib
+
+    // Swipe handling
+    var startX = 0, startY = 0, dx = 0, swiping = false;
+    track.addEventListener("touchstart", function(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dx = 0;
+      swiping = false;
+      track.style.transition = "none";
+    }, { passive: true });
+
+    track.addEventListener("touchmove", function(e) {
+      var mx = e.touches[0].clientX - startX;
+      var my = e.touches[0].clientY - startY;
+      if (!swiping && Math.abs(mx) > Math.abs(my) && Math.abs(mx) > 8) swiping = true;
+      if (swiping) {
+        dx = mx;
+        var offset = -_dashCarouselIdx * 100 + (dx / track.offsetWidth) * 100;
+        track.style.transform = "translateX(" + offset + "%)";
+      }
+    }, { passive: true });
+
+    track.addEventListener("touchend", function() {
+      track.style.transition = "";
+      if (swiping) {
+        var threshold = track.offsetWidth * 0.2;
+        if (dx < -threshold && _dashCarouselIdx < dots.length - 1) goTo(_dashCarouselIdx + 1);
+        else if (dx > threshold && _dashCarouselIdx > 0) goTo(_dashCarouselIdx - 1);
+        else goTo(_dashCarouselIdx);
+      }
+      swiping = false;
+    }, { passive: true });
+
+    // Dot click
+    dots.forEach(function(d, i) {
+      d.addEventListener("click", function() { goTo(i); });
+    });
+
+    // Subtle hint animation — always on app open
+    setTimeout(function() {
+      track.style.transition = "transform 0.4s ease";
+      track.style.transform = "translateX(-12%)";
+      setTimeout(function() {
+        track.style.transform = "translateX(0%)";
+        setTimeout(function() { track.style.transition = ""; }, 400);
+      }, 500);
+    }, 2000);
+
+    goTo(0);
   }
 
   function initDashboardCards() {
@@ -3459,21 +3534,8 @@
     updateDashKhatmCard();
     updateDashStats();
     updateDashSuratCard();
-    // Vendredi 10h→Maghrib : sourate du jour, sinon invocations
-    var invocCard = document.querySelector(".dash-invocation-card");
-    var suratCard = $("dash-surat-card");
-    var suratFill = $("dash-surat-progress-fill");
-    if (invocCard && suratCard) {
-      if (_dashShouldShowSurat()) {
-        invocCard.classList.add("hidden");
-        suratCard.classList.remove("hidden");
-        if (suratFill) suratFill.style.display = "";
-      } else {
-        invocCard.classList.remove("hidden");
-        suratCard.classList.add("hidden");
-        if (suratFill) suratFill.style.display = "none";
-      }
-    }
+    // Dash carousel (sourate du jour + invocations)
+    _initDashCarousel();
 
     // 10 dernières nuits de Ramadan : mois 9 (Ramadan), jours 20-29
     var ramadanBlock = $("dash-ramadan");
@@ -3623,7 +3685,7 @@
     if (!useColors) return null;
     var ayahNumber = ayahIdx + 1;
     var key = surahNum + ":" + ayahNumber;
-    var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
+    var overlays = (state.riwaya !== "warsh" && tajwidData && tajwidData[key]) ? tajwidData[key] : null;
     return getSegmentsForAyah(key, fullText, overlays);
   }
 
@@ -3741,7 +3803,7 @@
     if (!useColors) return null;
     var ayahNumber = ayahIdx + 1;
     var key = surahNum + ":" + ayahNumber;
-    var overlays = (tajwidData && tajwidData[key]) ? tajwidData[key] : null;
+    var overlays = (state.riwaya !== "warsh" && tajwidData && tajwidData[key]) ? tajwidData[key] : null;
     return getSegmentsForAyah(key, fullText, overlays);
   }
 
@@ -8127,6 +8189,7 @@
       updateKrPanel(goalDays);
       updateKrLangDisplay();
       updateKrModeDisplay();
+      updateKrRiwayaDisplay();
 
       // Render the entire daily portion (multi-surah)
       appendKrDailyPortion(krDailyPortion);
@@ -8228,6 +8291,15 @@
     });
   }
 
+  function updateKrRiwayaDisplay() {
+    var r = state.riwaya || "hafs";
+    var el = $("kr-riwaya-val");
+    if (el) el.textContent = r === "warsh" ? "WARSH" : "HAFS";
+    document.querySelectorAll(".kr-riwaya-opt").forEach(function(o) {
+      o.classList.toggle("active", o.dataset.riwaya === r);
+    });
+  }
+
   // Render verses of a surah section (fromAyahIdx to toAyahIdx exclusive)
   // toAyahIdx defaults to all ayahs if not provided
   function appendKrSurahSection(surahIdx, fromAyahIdx, toAyahIdx) {
@@ -8297,7 +8369,7 @@
         if (useColors) {
           var ayahNum = (s.surahNumber === 1 || s.surahNumber === 9) ? (i + 1) : i;
           var cacheKey = s.surahNumber + ":" + ayahNum;
-          var overlays = (tajwidData && tajwidData[cacheKey]) ? tajwidData[cacheKey] : null;
+          var overlays = (state.riwaya !== "warsh" && tajwidData && tajwidData[cacheKey]) ? tajwidData[cacheKey] : null;
           var segments = getSegmentsForAyah(cacheKey, rawText, overlays);
           segments.forEach(function(seg) {
             var segText = useTajwid ? seg.chars : stripWaqfMarks(seg.chars);
@@ -8909,6 +8981,25 @@
         rerenderKrReader();
       });
     });
+    // Riwaya (Hafs / Warsh) — KR
+    if ($("kr-riwaya-row")) {
+      $("kr-riwaya-row").addEventListener("click", function() {
+        $("kr-riwaya-picker").classList.toggle("hidden");
+        $("kr-mode-picker").classList.add("hidden");
+        $("kr-lang-picker").classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".kr-riwaya-opt").forEach(function(el) {
+      el.addEventListener("click", function() {
+        state.riwaya = el.dataset.riwaya;
+        saveState();
+        switchRiwaya(state.riwaya).then(function() {
+          updateKrRiwayaDisplay();
+          rerenderKrReader();
+        });
+        $("kr-riwaya-picker").classList.add("hidden");
+      });
+    });
     // Text size
     $("kr-size-minus").addEventListener("click", function() {
       if (!khatm) return;
@@ -9313,6 +9404,15 @@
     });
   }
 
+  function updateSpmRiwayaDisplay() {
+    var r = state.riwaya || "hafs";
+    var val = $("spm-riwaya-val");
+    if (val) val.textContent = r === "warsh" ? "WARSH" : "HAFS";
+    document.querySelectorAll(".spm-riwaya-opt").forEach(function(o) {
+      o.classList.toggle("spm-mode-active", o.dataset.riwaya === r);
+    });
+  }
+
   function updateSpmSizeDisplay() {
     var s = getSpScale();
     var el = $("spm-size-val");
@@ -9380,7 +9480,7 @@
         if (useColors) {
           var ayahNum = (num === 1 || num === 9) ? (i + 1) : i;
           var cacheKey = num + ":" + ayahNum;
-          var overlays = (tajwidData && tajwidData[cacheKey]) ? tajwidData[cacheKey] : null;
+          var overlays = (state.riwaya !== "warsh" && tajwidData && tajwidData[cacheKey]) ? tajwidData[cacheKey] : null;
           var segments = getSegmentsForAyah(cacheKey, text, overlays);
           segments.forEach(function(seg) {
             var segText = useTajwid ? seg.chars : stripWaqfMarks(seg.chars);
@@ -9821,6 +9921,7 @@
     // Update lang opts display
     spRefreshLangOpts();
     updateSpmModeDisplay();
+    updateSpmRiwayaDisplay();
     updateSpmSizeDisplay();
     // Restore saved reading position (if any)
     var savedPos = _spRestorePosition(surahIdx);
@@ -10090,6 +10191,32 @@
         spRenderReader(spCurrentSurahIdx);
       });
     });
+    // Riwaya (Hafs / Warsh) — SPM
+    var spmRiwayaRow = $("spm-riwaya-row");
+    if (spmRiwayaRow) {
+      spmRiwayaRow.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var opts = $("spm-riwaya-opts");
+        if (opts) opts.classList.toggle("hidden");
+        var chev = $("spm-riwaya-chev");
+        if (chev) chev.style.transform = opts.classList.contains("hidden") ? "" : "rotate(90deg)";
+      });
+    }
+    document.querySelectorAll(".spm-riwaya-opt").forEach(function(el) {
+      el.addEventListener("click", function(e) {
+        e.stopPropagation();
+        state.riwaya = el.dataset.riwaya;
+        saveState();
+        switchRiwaya(state.riwaya).then(function() {
+          updateSpmRiwayaDisplay();
+          spRenderReader(spCurrentSurahIdx);
+        });
+        var opts = $("spm-riwaya-opts");
+        if (opts) opts.classList.add("hidden");
+        var chev = $("spm-riwaya-chev");
+        if (chev) chev.style.transform = "";
+      });
+    });
     // Text size controls
     var spmSizeMinus = $("spm-size-minus");
     var spmSizePlus = $("spm-size-plus");
@@ -10331,6 +10458,71 @@
     return item;
   }
 
+  // ---- RIWAYA (Hafs / Warsh) ----
+  function _processRawSurahs(rawSurahs) {
+    // Extract the Basmala from surah 1 verse 1 (remove BOM if present)
+    BASMALA = rawSurahs[0].ayahs[0].replace(/^\uFEFF/, "");
+
+    // For every surah except 1 (Al-Fatiha) and 9 (At-Tawba):
+    // Split the Basmala out of verse 1 into its own separate verse.
+    surahs = rawSurahs.map(function (s) {
+      if (s.surahNumber === 1 || s.surahNumber === 9) return s;
+      var v1 = s.ayahs[0];
+      if (v1.startsWith(BASMALA)) {
+        var rest = v1.substring(BASMALA.length).trim();
+        return {
+          surahNumber: s.surahNumber,
+          surahNameAr: s.surahNameAr,
+          ayahs: [BASMALA].concat(rest ? [rest] : []).concat(s.ayahs.slice(1)),
+        };
+      }
+      return s;
+    });
+
+    totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
+  }
+
+  async function switchRiwaya(riwaya) {
+    var quranFile = riwaya === "warsh" ? "quran-warsh.json" : "quran.json";
+    var rawSurahs = await fetch(quranFile).then(function (r) { return r.json(); });
+    _processRawSurahs(rawSurahs);
+
+    // Auto-switch reciter to match riwaya
+    var currentReciter = getReciter();
+    var currentR = RECITERS.find(function (r) { return r.id === currentReciter; });
+    var currentRiwaya = (currentR && currentR.riwaya) || "hafs";
+    if (currentRiwaya !== riwaya) {
+      var defaultReciter = riwaya === "warsh" ? "mp3q_hlarraz" : "Alafasy_128kbps";
+      setReciter(defaultReciter);
+      var settingsReciterSelect = $("settings-reciter-select");
+      if (settingsReciterSelect) settingsReciterSelect.value = defaultReciter;
+    }
+
+    // Update reciter dropdown to show only matching reciters
+    _filterRecitersByRiwaya(riwaya);
+
+    render();
+  }
+
+  function _filterRecitersByRiwaya(riwaya) {
+    var settingsReciterSelect = $("settings-reciter-select");
+    if (!settingsReciterSelect) return;
+    // Clear and repopulate
+    settingsReciterSelect.innerHTML = "";
+    RECITERS.filter(function (r) {
+      if (!r.id) return false;
+      var rr = r.riwaya || "hafs";
+      // French reciters (lang: "fr") are always shown
+      return rr === riwaya || r.lang === "fr";
+    }).forEach(function (r) {
+      var opt = document.createElement("option");
+      opt.value = r.id;
+      opt.textContent = r.name + " \u2014 " + r.nameAr;
+      settingsReciterSelect.appendChild(opt);
+    });
+    settingsReciterSelect.value = getReciter();
+  }
+
   // ---- INIT ----
   async function init() {
     var splashBar = $("splash-bar");
@@ -10345,8 +10537,9 @@
     if (splashBar) splashBar.style.width = "30%";
 
     try {
+      var quranFile = state.riwaya === "warsh" ? "quran-warsh.json" : "quran.json";
       var results = await Promise.all([
-        fetch("quran.json").then(function (r) { return r.json(); }),
+        fetch(quranFile).then(function (r) { return r.json(); }),
         fetch("quran-fr.json").then(function (r) { return r.json(); }),
         fetch("quran-en.json").then(function (r) { return r.json(); })
       ]);
@@ -10357,24 +10550,8 @@
       var rawSurahsFr = results[1];
       var rawSurahsEn = results[2];
 
-      // Extract the Basmala from surah 1 verse 1 (remove BOM if present)
-      BASMALA = rawSurahs[0].ayahs[0].replace(/^\uFEFF/, "");
-
-      // For every surah except 1 (Al-Fatiha) and 9 (At-Tawba):
-      // Split the Basmala out of verse 1 into its own separate verse.
-      surahs = rawSurahs.map(function (s) {
-        if (s.surahNumber === 1 || s.surahNumber === 9) return s;
-        var v1 = s.ayahs[0];
-        if (v1.startsWith(BASMALA)) {
-          var rest = v1.substring(BASMALA.length).trim();
-          return {
-            surahNumber: s.surahNumber,
-            surahNameAr: s.surahNameAr,
-            ayahs: [BASMALA].concat(rest ? [rest] : []).concat(s.ayahs.slice(1)),
-          };
-        }
-        return s;
-      });
+      // Process Arabic surahs (Hafs or Warsh)
+      _processRawSurahs(rawSurahs);
 
       // Same structure for French: add basmala entry for surahs that have it
       surahsFr = rawSurahsFr.map(function (s) {
@@ -10388,8 +10565,6 @@
 
       // quran-en.json already has bismillah as ayahs[0] — use as-is
       surahsEn = rawSurahsEn;
-
-      totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
     } catch (err) {
       document.body.innerHTML =
         '<div style="display:flex;align-items:center;justify-content:center;height:100dvh;font-size:14px;color:#999;">Impossible de charger les donn\u00e9es du Coran</div>';
@@ -10886,15 +11061,22 @@
       });
     }
 
+    // ---- RIWAYA SELECT (SETTINGS) ----
+    var settingsRiwayaSelect = $("settings-riwaya-select");
+    if (settingsRiwayaSelect) {
+      settingsRiwayaSelect.value = state.riwaya || "hafs";
+      settingsRiwayaSelect.addEventListener("change", function () {
+        state.riwaya = this.value;
+        saveState();
+        switchRiwaya(state.riwaya);
+      });
+    }
+
     // ---- RECITER SELECT (SETTINGS) ----
     var settingsReciterSelect = $("settings-reciter-select");
     if (settingsReciterSelect) {
-      RECITERS.filter(function (r) { return r.id; }).forEach(function (r) {
-        var opt = document.createElement("option");
-        opt.value = r.id;
-        opt.textContent = r.name + " — " + r.nameAr;
-        settingsReciterSelect.appendChild(opt);
-      });
+      // Populate filtered by current riwaya
+      _filterRecitersByRiwaya(state.riwaya || "hafs");
       settingsReciterSelect.value = getReciter();
       settingsReciterSelect.addEventListener("change", function () {
         setReciter(this.value);
@@ -14417,6 +14599,9 @@
     document.querySelectorAll('#min-mode-btns .min-pref-opt').forEach(function(btn) {
       btn.classList.toggle('active', btn.dataset.minMode === (state.minMode || 'minimal'));
     });
+    document.querySelectorAll('#min-riwaya-btns .min-pref-opt').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.riwaya === (state.riwaya || 'hafs'));
+    });
     document.querySelectorAll('#min-size-btns .min-pref-opt').forEach(function(btn) {
       btn.classList.toggle('active', parseInt(btn.dataset.minSize) === (state.minSize || 100));
     });
@@ -14678,6 +14863,13 @@
     });
     document.querySelectorAll('#min-mode-btns .min-pref-opt').forEach(function(btn) {
       btn.addEventListener('click', function() { state.minMode = btn.dataset.minMode; saveState(); renderMinHubPrefs(); });
+    });
+    document.querySelectorAll('#min-riwaya-btns .min-pref-opt').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        state.riwaya = btn.dataset.riwaya;
+        saveState();
+        switchRiwaya(state.riwaya).then(function() { renderMinHubPrefs(); });
+      });
     });
     document.querySelectorAll('#min-size-btns .min-pref-opt').forEach(function(btn) {
       btn.addEventListener('click', function() { state.minSize = parseInt(btn.dataset.minSize); saveState(); renderMinHubPrefs(); });

@@ -76,17 +76,40 @@
         </div>
       </div>
 
-      <!-- Ramadan / Invocations -->
-      <div class="dash-card dash-invocation-card">
-        <div class="dash-card-label-row">
-          <span class="dash-card-label" id="dash-card-label"></span>
-          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+      <!-- Carousel: Sourate du jour / Invocations -->
+      <div class="dash-carousel" id="dash-carousel">
+        <div class="dash-carousel-track" id="dash-carousel-track">
+          <!-- Slide 1: Sourate du jour -->
+          <div class="dash-carousel-slide">
+            <div class="dash-card dash-surat-card" id="dash-surat-card">
+              <div class="dash-card-label-row">
+                <span class="dash-card-label" id="dash-surat-label">SOURATE DU JOUR</span>
+                <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+              </div>
+              <div class="dash-card-prompt" id="dash-surat-name"></div>
+              <div class="dash-surat-btn-row">
+                <button class="dash-card-btn dash-surat-btn-progress" id="dash-surat-btn"><span class="dash-surat-btn-fill" id="dash-surat-btn-fill"></span>CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+                <span class="dash-surat-remaining" id="dash-surat-remaining"></span>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 2: Invocations -->
+          <div class="dash-carousel-slide">
+            <div class="dash-card dash-invocation-card">
+              <div class="dash-card-label-row">
+                <span class="dash-card-label" id="dash-card-label"></span>
+                <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+              </div>
+              <div class="dash-card-prompt">Prot&eacute;gez-vous aujourd'hui.</div>
+              <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+            </div>
+          </div>
         </div>
-        <div class="dash-card-prompt">Avez-vous fait vos invocations de protection&nbsp;?</div>
-        <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+        <div class="dash-carousel-dots" id="dash-carousel-dots">
+          <span class="dash-carousel-dot active"></span>
+          <span class="dash-carousel-dot"></span>
+        </div>
       </div>
-
-      <div class="dash-thin-line"></div>
 
       <!-- 10 Dernières Nuits de Ramadan -->
       <div class="dash-card dash-ramadan hidden" id="dash-ramadan">
@@ -103,23 +126,7 @@
         </div>
       </div>
 
-      <!-- Sourate du jour -->
-      <div class="dash-card dash-surat-card" id="dash-surat-card">
-        <div class="dash-card-label-row">
-          <span class="dash-card-label">SOURATE DU JOUR</span>
-          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </div>
-        <div class="dash-card-prompt" id="dash-surat-name"></div>
-        <div class="dash-surat-btn-row">
-          <button class="dash-card-btn" id="dash-surat-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
-          <span class="dash-surat-remaining" id="dash-surat-remaining"></span>
-        </div>
-      </div>
-
-      <!-- Sourate du jour progress -->
-      <div class="dash-surat-progress-line">
-        <div class="dash-surat-progress-fill" id="dash-surat-progress-fill"></div>
-      </div>
+      <div class="dash-surat-progress-line"></div>
 
       <!-- Today's Verse / Khatm -->
       <div class="dash-verse-section" id="dash-reading-card">
@@ -751,6 +758,15 @@
         <div class="kr-mode-opt-text"><span class="kr-mode-label">Tajwid · couleurs</span><span class="kr-mode-desc">Couleurs tajwid + signes de waqf</span></div>
       </div>
     </div>
+    <!-- Riwaya (Hafs / Warsh) -->
+    <div class="kr-panel-row" id="kr-riwaya-row">
+      <div><span class="kr-panel-name">Lecture (Riwaya)</span><span class="kr-panel-val" id="kr-riwaya-val">HAFS</span></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div id="kr-riwaya-picker" class="hidden">
+      <div class="kr-riwaya-opt" data-riwaya="hafs">Hafs (حفص)</div>
+      <div class="kr-riwaya-opt" data-riwaya="warsh">Warsh (ورش)</div>
+    </div>
     <div class="kr-panel-row">
       <div><span class="kr-panel-name">Taille du texte</span><span class="kr-panel-val" id="kr-size-val">100% (PAR DÉFAUT)</span></div>
       <div class="kr-size-btns"><button id="kr-size-minus">−</button><button id="kr-size-plus">+</button></div>
@@ -998,6 +1014,13 @@
       <div class="setting-hint" id="mode-hint">Texte pur — voyelles conservées, signes de waqf masqués.</div>
     </div>
     <div class="setting-group">
+      <div class="setting-label">Lecture (رواية)</div>
+      <select id="settings-riwaya-select" class="recit-select">
+        <option value="hafs">Hafs (حفص)</option>
+        <option value="warsh">Warsh (ورش)</option>
+      </select>
+    </div>
+    <div class="setting-group">
       <div class="setting-label">Récitateur</div>
       <select id="settings-reciter-select" class="recit-select"></select>
     </div>
@@ -1131,6 +1154,14 @@
           <button class="min-pref-opt" data-min-mode="minimal">Minimal</button>
           <span class="min-pref-sep">·</span>
           <button class="min-pref-opt" data-min-mode="tajwid">Couleurs</button>
+        </div>
+      </div>
+      <div class="min-hub-pref-row">
+        <span class="min-pref-label">Lecture</span>
+        <div class="min-pref-toggle" id="min-riwaya-btns">
+          <button class="min-pref-opt" data-riwaya="hafs">Hafs</button>
+          <span class="min-pref-sep">·</span>
+          <button class="min-pref-opt" data-riwaya="warsh">Warsh</button>
         </div>
       </div>
       <div class="min-hub-pref-row">
@@ -2815,6 +2846,17 @@
     <div class="spm-mode-opt" data-mode="minimal-color">Minimal + couleurs</div>
     <div class="spm-mode-opt" data-mode="tajwid">Tajwid</div>
     <div class="spm-mode-opt" data-mode="tajwid-color">Tajwid + couleurs</div>
+  </div>
+  <div class="spm-sep"></div>
+  <div id="spm-riwaya-row" class="spm-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span>Lecture (Riwaya)</span>
+    <span id="spm-riwaya-val" style="margin-left:auto;font-size:0.7rem;opacity:0.5;font-family:'Space Mono',monospace;white-space:nowrap">HAFS</span>
+    <svg id="spm-riwaya-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+  <div id="spm-riwaya-opts" class="hidden">
+    <div class="spm-riwaya-opt" data-riwaya="hafs">Hafs (حفص)</div>
+    <div class="spm-riwaya-opt" data-riwaya="warsh">Warsh (ورش)</div>
   </div>
   <div class="spm-sep"></div>
   <div class="spm-btn spm-size-row">
