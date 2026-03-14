@@ -1992,6 +1992,7 @@
     { id: "mp3q_yasser",                 name: "Yasser Al-Dosari",     nameAr: "ياسر الدوسري",         listenBase: "https://server11.mp3quran.net/yasser" },
     { id: "mp3q_balilah",                name: "Bandar Baleela",       nameAr: "بندر بليلة",           listenBase: "https://server6.mp3quran.net/balilah" },
     { id: "mp3q_jleel",                  name: "Khalid Al-Jalil",      nameAr: "خالد الجليل",          listenBase: "https://server10.mp3quran.net/jleel" },
+    { id: null,                          name: "Mohamed Luhaydan",     nameAr: "محمد اللحيدان",         listenBase: "https://server8.mp3quran.net/lhdan" },
     // Récitateurs français — traduction récitée (verse-par-verse via cdn.islamic.network)
     { id: "fr.leclerc",   name: "Jean-Louis Leclerc",   nameAr: "ترجمة فرنسية", listenBase: null, lang: "fr" },
     { id: "fr.hamidullah",name: "Muhammad Hamidullah",  nameAr: "ترجمة فرنسية", listenBase: null, lang: "fr" },
@@ -2491,7 +2492,7 @@
   var PRAYER_NOTIF_TEXTS = {
     "Fajr": {
       atTitle:     "C'est l'heure du Fajr",
-      atBody:      "Et [fais] aussi la Lecture à l'aube, car la Lecture à l'aube a des témoins. 17:78",
+      atBody:      "Et [fais] aussi la Lecture à l'aube, car la Lecture à l'aube a des témoins. [17:78]",
       beforeTitle: "Fajr dans 15 min",
       beforeBody:  "La Prière est meilleure que le sommeil."
     },
@@ -2499,25 +2500,25 @@
       atTitle:     "C'est l'heure du Dhuhr",
       atBody:      "Réponds à l'appel d'Allah.",
       beforeTitle: "Dhuhr dans 15 min",
-      beforeBody:  "Invoquez-Moi, Je vous répondrai. 40:60"
+      beforeBody:  "Invoquez-Moi, Je vous répondrai. [40:60]"
     },
     "Asr": {
       atTitle:     "C'est l'heure de l'Asr",
       atBody:      "Trouve la Paix auprès d'Allah au milieu de l'agitation.",
       beforeTitle: "Asr dans 15 min",
-      beforeBody:  "Par le Temps ! L'homme est en perdition. 103:1-2"
+      beforeBody:  "Par le Temps ! L'homme est en perdition. [103:1-2]"
     },
     "Maghrib": {
       atTitle:     "C'est l'heure du Maghrib",
       atBody:      "Le soleil s'est couché.",
       beforeTitle: "Maghrib dans 15 min",
-      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. 17:78"
+      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. [17:78]"
     },
     "Isha": {
       atTitle:     "C'est l'heure de l'Isha",
       atBody:      "Clôture ta journée par la prière.",
       beforeTitle: "Isha dans 15 min",
-      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. 17:78"
+      beforeBody:  "Accomplis la Salat au déclin du soleil jusqu'à l'obscurité de la nuit. [17:78]"
     }
   };
 
@@ -10469,6 +10470,7 @@
       if (s.surahNumber === 1 || s.surahNumber === 9) return s;
       var v1 = s.ayahs[0];
       if (v1.startsWith(BASMALA)) {
+        // Hafs: basmala embedded in v1 — split it out
         var rest = v1.substring(BASMALA.length).trim();
         return {
           surahNumber: s.surahNumber,
@@ -10476,7 +10478,12 @@
           ayahs: [BASMALA].concat(rest ? [rest] : []).concat(s.ayahs.slice(1)),
         };
       }
-      return s;
+      // Warsh: verses already split, no basmala in v1 — prepend it to align indices with surahsFr
+      return {
+        surahNumber: s.surahNumber,
+        surahNameAr: s.surahNameAr,
+        ayahs: [BASMALA].concat(s.ayahs),
+      };
     });
 
     totalAyat = surahs.reduce(function (sum, s) { return sum + s.ayahs.length; }, 0);
@@ -12086,6 +12093,17 @@
 
     var moiContact = $("moi-contact");
     if (moiContact) moiContact.addEventListener("click", openDuaContact);
+
+    // IslamSounnah button → open promo site in-app
+    var islamSounnahBtn = $("moi-islamsounnah-btn");
+    if (islamSounnahBtn) islamSounnahBtn.addEventListener("click", function() {
+      var url = "https://app.islamsounnah.com/app";
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+        window.Capacitor.Plugins.Browser.open({ url: url, presentationStyle: "popover" });
+      } else {
+        window.open(url, "_blank");
+      }
+    });
 
     // Settings button → open Behold-style settings overlay
     var settingsBtn = $("moi-settings-btn");
