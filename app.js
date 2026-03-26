@@ -13583,6 +13583,13 @@
       var scroll = viewer.querySelector(".tdv-scroll");
       if (scroll) scroll.scrollTop = 0;
     }
+
+    // PDF share button
+    var printBtn = $("tdv-print-btn");
+    if (printBtn) {
+      printBtn.textContent = "PARTAGER →";
+      printBtn.onclick = function() { _htmlDocPDFAndShare("testament-islamique.pdf", "Testament islamique (Wasiyya)"); };
+    }
   }
 
   function toRoman(n) {
