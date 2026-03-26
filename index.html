@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script defer src="/_vercel/insights/script.js"></script>
   <script>
     // Apply theme instantly to prevent flash on splash screen
     (function(){
@@ -71,15 +72,39 @@
           </div>
           <div class="dash-prayer-hint" id="dash-prayer-hint">Appuyez sur la fl&egrave;che pour choisir votre ville</div>
           <button class="dash-prayer-expand" id="dash-prayer-expand" aria-label="Horaires">
+            <span class="dash-prayer-expand-label">Horaires</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
 
+      <!-- Écouter le Coran en continu -->
+      <div class="dash-card dash-listen" id="dash-listen-card">
+        <div class="dash-listen-heading">&Eacute;couter le Coran</div>
+        <div class="dash-listen-sub">Les 114 sourates, en continu, sans interruption.</div>
+        <button class="dash-card-btn" id="dash-listen-play">
+          <svg class="dash-listen-play-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          LANCER L'&Eacute;COUTE<span class="dash-btn-arrow">&rarr;</span>
+        </button>
+      </div>
+
+      <div class="dash-surat-progress-line"></div>
+
       <!-- Carousel: Sourate du jour / Invocations -->
       <div class="dash-carousel" id="dash-carousel">
         <div class="dash-carousel-track" id="dash-carousel-track">
-          <!-- Slide 1: Sourate du jour -->
+          <!-- Slide 1: Invocations -->
+          <div class="dash-carousel-slide">
+            <div class="dash-card dash-invocation-card">
+              <div class="dash-card-label-row">
+                <span class="dash-card-label" id="dash-card-label"></span>
+                <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+              </div>
+              <div class="dash-card-prompt">Prot&eacute;gez-vous aujourd'hui.</div>
+              <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
+            </div>
+          </div>
+          <!-- Slide 2: Sourate du jour -->
           <div class="dash-carousel-slide">
             <div class="dash-card dash-surat-card" id="dash-surat-card">
               <div class="dash-card-label-row">
@@ -91,17 +116,6 @@
                 <button class="dash-card-btn dash-surat-btn-progress" id="dash-surat-btn"><span class="dash-surat-btn-fill" id="dash-surat-btn-fill"></span>CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
                 <span class="dash-surat-remaining" id="dash-surat-remaining"></span>
               </div>
-            </div>
-          </div>
-          <!-- Slide 2: Invocations -->
-          <div class="dash-carousel-slide">
-            <div class="dash-card dash-invocation-card">
-              <div class="dash-card-label-row">
-                <span class="dash-card-label" id="dash-card-label"></span>
-                <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
-              </div>
-              <div class="dash-card-prompt">Prot&eacute;gez-vous aujourd'hui.</div>
-              <button class="dash-card-btn" id="dash-invocation-btn">CLIQUEZ ICI<span class="dash-btn-arrow">&rarr;</span></button>
             </div>
           </div>
         </div>
@@ -145,6 +159,8 @@
       <div class="dash-khatm-progress-line">
         <div class="dash-khatm-progress-fill" id="dash-khatm-progress-fill"></div>
       </div>
+
+      <div class="dash-surat-progress-line"></div>
 
       <!-- Dashboard Stats -->
       <div class="dash-stats-section" id="dash-stats-section">
@@ -364,9 +380,27 @@
         <div id="dua-hero-bg"></div>
         <div id="dua-hero-fade"></div>
         <div id="dua-hero-content">
-          <h2 class="dua-tab-title">Invocations</h2>
-          <p class="dua-tab-subtitle">Les du&rsquo;as authentiques du Proph&egrave;te &#xFDFA;</p>
+          <div class="dua-hero-row">
+            <div>
+              <h2 class="dua-tab-title">Invocations</h2>
+              <p class="dua-tab-subtitle">Les du&rsquo;as authentiques du Proph&egrave;te &#xFDFA;</p>
+            </div>
+            <button id="dua-search-btn" class="dua-search-btn" aria-label="Rechercher">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
         </div>
+      </div>
+      <!-- Search panel -->
+      <div id="dua-search-panel" class="dua-search-panel hidden">
+        <div class="dua-search-bar">
+          <svg class="dua-search-bar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="dua-search-input" type="text" placeholder="Rechercher une invocation..." autocomplete="off" autocorrect="off" spellcheck="false">
+          <button id="dua-search-close" class="dua-search-close" aria-label="Fermer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div id="dua-search-results" class="dua-search-results"></div>
       </div>
       <!-- Category list -->
       <div class="dua-grid" id="dua-grid"></div>
@@ -382,9 +416,14 @@
           <h1 class="moi-logo">QURANI</h1>
           <p class="moi-subtitle">BY ISLAMSOUNNAH</p>
         </div>
-        <button class="moi-settings-btn" id="moi-settings-btn" aria-label="Réglages">
-          <svg width="18" height="4" viewBox="0 0 18 4" fill="currentColor"><circle cx="2" cy="2" r="1.8"/><circle cx="9" cy="2" r="1.8"/><circle cx="16" cy="2" r="1.8"/></svg>
-        </button>
+        <div class="moi-header-actions">
+          <button class="moi-islamsounnah-btn" id="moi-islamsounnah-btn" aria-label="IslamSounnah">
+            NOUVEAUTÉ
+          </button>
+          <button class="moi-settings-btn" id="moi-settings-btn" aria-label="Réglages">
+            <svg width="18" height="4" viewBox="0 0 18 4" fill="currentColor"><circle cx="2" cy="2" r="1.8"/><circle cx="9" cy="2" r="1.8"/><circle cx="16" cy="2" r="1.8"/></svg>
+          </button>
+        </div>
       </div>
       <!-- Compte / Sync -->
       <div class="moi-section" id="auth-section">
@@ -779,16 +818,19 @@
   <!-- Action bar (long-press) -->
   <div id="kr-action-bar" class="hidden">
     <button class="kr-action-btn" id="kr-action-close" aria-label="Fermer">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="kr-action-btn" id="kr-action-copy" aria-label="Copier">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
     </button>
     <button class="kr-action-btn" id="kr-action-heart" aria-label="Favori">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     </button>
     <button class="kr-action-btn" id="kr-action-note" aria-label="Note">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     </button>
     <button class="kr-action-btn" id="kr-action-play" aria-label="Lire depuis ce verset">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </button>
   </div>
 </div>
@@ -2256,52 +2298,101 @@
 
 <!-- ===== LISTEN OVERLAY ===== -->
 <div id="listen-overlay" class="overlay hidden">
-  <div class="overlay-header">
-    <h2>Écouter le Coran</h2>
-    <button class="close-btn" id="listen-close" aria-label="Fermer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="overlay-body listen-body">
+  <div class="is-bg" id="lp-bg"></div>
+  <div class="is-bg-dim"></div>
+  <div class="overlay-body lp-body">
 
-    <!-- Reciter dropdown -->
-    <div class="listen-reciter-wrap">
-      <select id="listen-reciter-select" class="listen-reciter-select" aria-label="Récitateur"></select>
+    <!-- Top bar -->
+    <div class="lp-topbar">
+      <button class="lp-back" id="listen-close" aria-label="Retour">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="lp-topbar-center">
+        <span class="lp-topbar-label">&Eacute;COUTE CONTINUE</span>
+      </div>
+      <div style="width:22px"></div>
     </div>
 
-    <!-- Surah list (scrollable) -->
-    <div class="listen-surah-list" id="listen-surah-list"></div>
+    <!-- Artwork -->
+    <div class="lp-art-wrap">
+      <div class="lp-art" id="lp-art"></div>
+    </div>
 
-    <!-- Apple Music-style player bar -->
-    <div class="listen-player-bar" id="listen-player-bar">
-      <div class="listen-player-info">
-        <div class="listen-player-surah-ar" id="listen-player-surah-ar">--</div>
-        <div class="listen-player-surah-fr" id="listen-player-surah-fr">Choisir une sourate</div>
-        <div class="listen-player-reciter" id="listen-player-reciter"></div>
+    <!-- Title -->
+    <div class="lp-info">
+      <div class="lp-title" id="listen-player-surah-ar">Choisir une sourate</div>
+      <div class="lp-subtitle" id="listen-player-surah-fr"></div>
+      <div class="lp-reciter-name" id="listen-player-reciter"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="lp-progress-section">
+      <div class="listen-progress-bar" id="listen-progress-bar">
+        <div class="listen-progress-fill" id="listen-progress-fill"></div>
+        <div class="listen-progress-knob" id="listen-progress-knob"></div>
       </div>
-      <div class="listen-progress-wrap">
+      <div class="lp-times">
         <span class="listen-time" id="listen-time-cur">0:00</span>
-        <div class="listen-progress-bar" id="listen-progress-bar">
-          <div class="listen-progress-fill" id="listen-progress-fill"></div>
-          <div class="listen-progress-knob" id="listen-progress-knob"></div>
-        </div>
         <span class="listen-time" id="listen-time-dur">0:00</span>
       </div>
-      <div class="listen-player-controls">
-        <button class="listen-ctrl-btn" id="listen-prev-btn" aria-label="Précédente">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button class="listen-ctrl-btn listen-ctrl-play" id="listen-play-btn" aria-label="Lecture">
-          <svg id="listen-play-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-        </button>
-        <button class="listen-ctrl-btn" id="listen-next-btn" aria-label="Suivante">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-        </button>
-      </div>
+    </div>
+
+    <!-- Controls (outline style) -->
+    <div class="lp-controls">
+      <button class="lp-ctrl" id="listen-prev-btn" aria-label="Précédente">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/>
+        </svg>
+      </button>
+      <button class="lp-ctrl lp-ctrl-play" id="listen-play-btn" aria-label="Lecture">
+        <svg id="listen-play-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="9 6 18 12 9 18 9 6"/>
+        </svg>
+      </button>
+      <button class="lp-ctrl" id="listen-next-btn" aria-label="Suivante">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Reciter list (hidden select for JS compat) -->
+    <select id="listen-reciter-select" class="lp-hidden-select" aria-hidden="true"></select>
+
+    <!-- Reciter pill selector -->
+    <div class="lp-section-header">
+      <span class="lp-section-title">R&eacute;citateur</span>
+      <button class="lp-search-btn" id="lp-reciter-search-btn" aria-label="Rechercher">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+    </div>
+    <div class="lp-reciter-search hidden" id="lp-reciter-search">
+      <input type="text" class="lp-reciter-search-input" id="lp-reciter-search-input" placeholder="Rechercher un r&eacute;citateur..." autocomplete="off"/>
+    </div>
+    <div class="lp-reciter-list" id="lp-reciter-list"></div>
+
+    <!-- Track list -->
+    <div class="lp-section-header">
+      <span class="lp-section-title">Sourates</span>
+      <button class="lp-search-btn" id="lp-surah-search-btn" aria-label="Rechercher">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+    </div>
+    <div class="lp-reciter-search hidden" id="lp-surah-search">
+      <input type="text" class="lp-reciter-search-input" id="lp-surah-search-input" placeholder="Rechercher une sourate..." autocomplete="off"/>
+    </div>
+    <div class="listen-surah-list" id="listen-surah-list"></div>
+
+    <!-- Scroll to top -->
+    <div class="lp-scroll-top-wrap">
+      <button class="lp-scroll-top" id="lp-scroll-top" aria-label="Remonter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        REMONTER
+      </button>
     </div>
 
   </div>
@@ -2765,16 +2856,19 @@
   <!-- READER ACTION BAR (hidden, shows on long-press) -->
   <div id="sp-action-bar" class="hidden">
     <button class="sp-action-btn" id="sp-action-close" aria-label="Fermer">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="sp-action-btn" id="sp-action-copy" aria-label="Copier">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
     </button>
     <button class="sp-action-btn" id="sp-action-heart" aria-label="Favori">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     </button>
     <button class="sp-action-btn" id="sp-action-note" aria-label="Note">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     </button>
     <button class="sp-action-btn" id="sp-action-play" aria-label="Lire depuis ce verset">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </button>
   </div>
 
@@ -2941,6 +3035,36 @@
     <div id="follow-progress-text">0%</div>
   </div>
 </div>
+
+<!-- ===== MINI-PLAYER FLOTTANT ===== -->
+<div id="mini-player" class="mp hidden">
+  <div class="mp-progress" id="mini-player-progress"></div>
+  <div class="mp-inner">
+    <div class="mp-thumb" id="mp-thumb"></div>
+    <div class="mp-info" id="mini-player-open">
+      <div class="mp-title" id="mini-player-title">--</div>
+      <div class="mp-sub" id="mini-player-sub"></div>
+    </div>
+    <span class="mp-time" id="mp-time">0:00</span>
+    <button class="mp-btn" id="mini-player-prev" aria-label="Précédente">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+    </button>
+    <button class="mp-btn mp-btn-play" id="mini-player-play" aria-label="Lecture/Pause">
+      <svg id="mini-player-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="9 6 18 12 9 18 9 6"/>
+      </svg>
+    </button>
+    <button class="mp-btn" id="mini-player-next" aria-label="Suivante">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+    </button>
+    <button class="mp-btn" id="mini-player-close" aria-label="Arrêter">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Design mode (dev only — activé via ?design=1) -->
+<script>if(window.location.search.includes('design=1')){var _dm=document.createElement('script');_dm.src='design-mode.js';document.body.appendChild(_dm);}</script>
 
 </body>
 </html>
