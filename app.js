@@ -5388,13 +5388,25 @@
     var url = listenGetUrl(listenReciterIdx, surahs[listenSurahIdx].surahNumber);
     if (!url) { showToast("Audio non disponible pour ce récitateur"); return; }
 
+    // If same URL is already loaded and just paused, resume instead of recreating
+    if (listenAudio && listenAudio._lpUrl === url && listenAudio.paused && listenAudio.currentTime > 0) {
+      listenAudio.play().then(function () {
+        listenIsPlaying = true;
+        listenUpdatePlayIcon();
+      }).catch(function () {});
+      return;
+    }
+
     if (listenAudio) {
       listenAudio.pause();
       listenAudio.ontimeupdate = null;
       listenAudio.onended = null;
       listenAudio.onerror = null;
     }
+    var seekTo = listenResumeTime;
+    listenResumeTime = 0;
     listenAudio = new Audio(url);
+    listenAudio._lpUrl = url;
     listenAudio.ontimeupdate = function () {
       if (!listenSeeking && listenAudio.duration) {
         listenSetProgress(listenAudio.currentTime, listenAudio.duration);
@@ -5402,8 +5414,10 @@
     };
     listenAudio.onended = function () {
       listenIsPlaying = false;
+      listenResumeTime = 0;
       listenUpdatePlayIcon();
       listenSetProgress(0, 0);
+      listenSavePosition();
       // Auto-advance to next surah
       if (listenSurahIdx < surahs.length - 1) {
         setTimeout(function () { listenSelectSurah(listenSurahIdx + 1); }, 600);
@@ -5414,6 +5428,12 @@
       listenUpdatePlayIcon();
       showToast("Audio non disponible");
     };
+    // Seek to saved position once metadata is loaded
+    if (seekTo > 0) {
+      listenAudio.addEventListener("loadedmetadata", function () {
+        if (seekTo < listenAudio.duration) listenAudio.currentTime = seekTo;
+      }, { once: true });
+    }
     listenAudio.play().then(function () {
       listenIsPlaying = true;
       listenUpdatePlayIcon();
@@ -5561,6 +5581,8 @@
     } catch (e) {}
   }
 
+  var listenResumeTime = 0; // Time to seek to when play starts
+
   function listenRestorePosition() {
     try {
       var raw = localStorage.getItem(LISTEN_POS_KEY);
@@ -5572,8 +5594,30 @@
       if (typeof data.reciter === "number" && data.reciter >= 0 && data.reciter < RECITERS.length) {
         listenReciterIdx = data.reciter;
       }
+      if (typeof data.time === "number" && data.time > 0) {
+        listenResumeTime = data.time;
+      }
     } catch (e) {}
   }
+
+  // Auto-save position when app goes to background, restore when coming back
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      if (listenAudio) listenSavePosition();
+    } else {
+      // If audio was lost (iOS kills background audio), restore position for next play
+      if (!listenAudio || (listenAudio.paused && !listenIsPlaying)) {
+        listenRestorePosition();
+      }
+    }
+  });
+  window.addEventListener("beforeunload", function () {
+    if (listenAudio) listenSavePosition();
+  });
+  // Save position every 5 seconds during playback
+  setInterval(function () {
+    if (listenIsPlaying && listenAudio) listenSavePosition();
+  }, 5000);
 
   // Patch listen functions to keep mini-player in sync
   var _origListenPlay = listenPlay;
