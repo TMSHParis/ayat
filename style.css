@@ -2861,8 +2861,7 @@ body[data-theme="sepia"] .audio-glow {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px 8px;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: transparent;
 }
 .lp-back {
   background: none; border: none; color: #fff; cursor: pointer;
