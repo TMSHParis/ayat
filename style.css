@@ -1579,6 +1579,68 @@ body.dark .reminder-time-badge { background: #1e1e1e; }
 }
 .toast.show { opacity: 1; }
 
+/* ---- TAJWID LEGEND BTN ---- */
+.tajwid-legend-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px;
+  font-size: 12px; color: var(--text-muted);
+  background: none; border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.tajwid-legend-btn:active { color: var(--text); }
+
+/* ---- TAJWID LEGEND SHEET ---- */
+.tajwid-legend-sheet {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.tajwid-legend-sheet.hidden { display: none; }
+.tajwid-legend-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+.tajwid-legend-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 480px;
+  background: var(--glass-overlay);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--glass-border);
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 32px rgba(0,0,0,.15);
+}
+.tajwid-legend-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.tajwid-legend-title {
+  font-size: 18px; font-weight: 700; color: var(--text);
+}
+.tajwid-legend-close {
+  background: none; border: none; cursor: pointer; color: var(--text-faint);
+  padding: 4px;
+}
+.tajwid-legend-list {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.tajwid-legend-row {
+  display: flex; align-items: center; gap: 14px;
+}
+.tajwid-legend-dot {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  background: currentColor;
+}
+.tajwid-legend-info {
+  display: flex; flex-direction: column; gap: 1px;
+}
+.tajwid-legend-name {
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.tajwid-legend-desc {
+  font-size: 12px; color: var(--text-muted); line-height: 1.4;
+}
+
 /* ---- TAJWID COLORS ---- */
 /* Standard tajwid color conventions (light mode) */
 .tajwid-ghunnah  { color: #C62828; }   /* Red    — nasalisation */

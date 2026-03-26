@@ -1052,6 +1052,10 @@
           <button class="setting-btn" data-tajwid-colors="true">Avec couleurs</button>
           <button class="setting-btn" data-tajwid-colors="false">Sans couleurs</button>
         </div>
+        <button class="tajwid-legend-btn" id="tajwid-legend-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          L&eacute;gende des couleurs
+        </button>
       </div>
       <div class="setting-hint" id="mode-hint">Texte pur — voyelles conservées, signes de waqf masqués.</div>
     </div>
@@ -3033,6 +3037,70 @@
     <div id="follow-progress-status">Téléchargement du modèle vocal...</div>
     <div class="follow-progress-bar-wrap"><div id="follow-progress-bar"></div></div>
     <div id="follow-progress-text">0%</div>
+  </div>
+</div>
+
+<!-- ===== LÉGENDE TAJWID ===== -->
+<div id="tajwid-legend-sheet" class="tajwid-legend-sheet hidden">
+  <div class="tajwid-legend-backdrop" id="tajwid-legend-backdrop"></div>
+  <div class="tajwid-legend-card">
+    <div class="tajwid-legend-header">
+      <span class="tajwid-legend-title">L&eacute;gende Tajwid</span>
+      <button class="tajwid-legend-close" id="tajwid-legend-close" aria-label="Fermer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="tajwid-legend-list">
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-madd"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Madd &mdash; Prolongation</span>
+          <span class="tajwid-legend-desc">Allonger la prononciation de la voyelle (2 &agrave; 6 temps)</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-ghunnah"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Ghunnah &mdash; Nasalisation</span>
+          <span class="tajwid-legend-desc">Son nasal prolong&eacute; sur &laquo;&nbsp;noun&nbsp;&raquo; ou &laquo;&nbsp;mim&nbsp;&raquo; avec shadda</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-idgham"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Idgham &mdash; Assimilation</span>
+          <span class="tajwid-legend-desc">Fusionner le noon sakin/tanwin avec la lettre suivante</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-ikhfaa"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Ikhfaa &mdash; Dissimulation</span>
+          <span class="tajwid-legend-desc">Prononcer le noon sakin/tanwin de mani&egrave;re att&eacute;nu&eacute;e</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-iqlab"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Iqlab &mdash; Conversion</span>
+          <span class="tajwid-legend-desc">Transformer le noon sakin/tanwin en &laquo;&nbsp;mim&nbsp;&raquo; devant &laquo;&nbsp;ba&nbsp;&raquo;</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-qalqalah"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Qalqalah &mdash; Rebond</span>
+          <span class="tajwid-legend-desc">L&eacute;ger rebond sonore sur les lettres ق ط ب ج د avec sukun</span>
+        </div>
+      </div>
+      <div class="tajwid-legend-row">
+        <span class="tajwid-legend-dot tajwid-izhar"></span>
+        <div class="tajwid-legend-info">
+          <span class="tajwid-legend-name">Izhar &mdash; Prononciation claire</span>
+          <span class="tajwid-legend-desc">Prononcer le noon sakin/tanwin clairement sans modification</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

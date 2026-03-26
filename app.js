@@ -11803,6 +11803,20 @@
       });
     });
 
+    // ---- TAJWID LEGEND ----
+    var tjLegendBtn = $("tajwid-legend-btn");
+    if (tjLegendBtn) tjLegendBtn.addEventListener("click", function () {
+      $("tajwid-legend-sheet").classList.remove("hidden");
+    });
+    var tjLegendClose = $("tajwid-legend-close");
+    if (tjLegendClose) tjLegendClose.addEventListener("click", function () {
+      $("tajwid-legend-sheet").classList.add("hidden");
+    });
+    var tjLegendBd = $("tajwid-legend-backdrop");
+    if (tjLegendBd) tjLegendBd.addEventListener("click", function () {
+      $("tajwid-legend-sheet").classList.add("hidden");
+    });
+
     var hassToggleBtn = $("stats-hassanates-toggle");
     if (hassToggleBtn) {
       hassToggleBtn.addEventListener("click", function () {
