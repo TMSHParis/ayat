@@ -13,6 +13,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <script>window.addEventListener("unhandledrejection",function(e){console.error("Unhandled rejection:",e.reason);});</script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script>
     // Apply theme instantly to prevent flash on splash screen
@@ -3131,8 +3132,8 @@
   </div>
 </div>
 
-<!-- Design mode (dev only — activé via ?design=1) -->
-<script>if(window.location.search.includes('design=1')){var _dm=document.createElement('script');_dm.src='design-mode.js';document.body.appendChild(_dm);}</script>
+<!-- Design mode (dev only — activé via ?design=1, localhost uniquement) -->
+<script>if(window.location.hostname==='localhost'&&window.location.search.includes('design=1')){var _dm=document.createElement('script');_dm.src='design-mode.js';document.body.appendChild(_dm);}</script>
 
 </body>
 </html>

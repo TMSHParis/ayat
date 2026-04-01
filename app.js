@@ -111,6 +111,10 @@
       localStorage.removeItem(OLD_KEY);
     }
   })();
+  function _safeJson(key, fallback) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch (e) { return fallback; }
+  }
   var state = null;
   var goalDismissed = false;
 
@@ -1808,7 +1812,7 @@
             fnHtml = '<div class="tafsir-notes-header">Notes</div>'
               + notes.map(function (n) {
                   // Bold the [N] reference number
-                  var noteLine = n.replace(/^\[(\d+)\]\s*/, function(_, num) {
+                  var noteLine = _escapeHtml(n).replace(/^\[(\d+)\]\s*/, function(_, num) {
                     return '<span class="tafsir-note-num">[' + num + ']</span> ';
                   });
                   return '<p class="tafsir-note">' + noteLine + '</p>';
@@ -1824,7 +1828,7 @@
 
         // Main translation text — highlight inline [N] references
         var mainHtml = '<p class="tafsir-translation">'
-          + clean.replace(/\[(\d+)\]/g, '<sup class="tafsir-ref">[$1]</sup>')
+          + _escapeHtml(clean).replace(/\[(\d+)\]/g, '<sup class="tafsir-ref">[$1]</sup>')
           + '</p>';
 
         $("tafsir-text").innerHTML = mainHtml + fnHtml;
@@ -2279,8 +2283,8 @@
     }).forEach(function (r) {
       var item = document.createElement("div");
       item.className = "reciter-item" + (r.id === current ? " active" : "");
-      item.innerHTML = '<div><div class="reciter-item-name">' + r.name + '</div>' +
-        '<div class="reciter-item-name-ar">' + r.nameAr + '</div></div>' +
+      item.innerHTML = '<div><div class="reciter-item-name">' + _escapeHtml(r.name) + '</div>' +
+        '<div class="reciter-item-name-ar">' + _escapeHtml(r.nameAr || '') + '</div></div>' +
         '<span class="reciter-item-check">✓</span>';
       item.addEventListener("click", function () {
         setReciter(r.id);
@@ -3488,12 +3492,12 @@
   function _isDashMorning() {
     var now = new Date();
     var nowMin = now.getHours() * 60 + now.getMinutes();
-    if (prayerTimesCache && prayerTimesCache.Maghrib) {
-      var parts = (prayerTimesCache.Maghrib + "").split(":");
-      var magMin = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
-      if (!isNaN(magMin)) return nowMin < magMin;
+    if (prayerTimesCache && prayerTimesCache.Asr) {
+      var parts = (prayerTimesCache.Asr + "").split(":");
+      var asrMin = parseInt(parts[0]) * 60 + (parseInt(parts[1]) || 0);
+      if (!isNaN(asrMin)) return nowMin < asrMin;
     }
-    return nowMin < 18 * 60;
+    return nowMin < 15 * 60;
   }
 
   function updateDashKhatmCard() {
@@ -4232,7 +4236,7 @@
       if (!r.id || r.id.indexOf("mp3q_") === 0) return;
       var item = document.createElement("button");
       item.className = "hifz-reciter-item";
-      item.innerHTML = '<div><div class="name">' + r.name + '</div></div>' +
+      item.innerHTML = '<div><div class="name">' + _escapeHtml(r.name) + '</div></div>' +
         (r.id === currentReciter ? '<span class="check">✓</span>' : '');
       item.addEventListener("click", function () {
         setHifzReciter(r.id);
@@ -5234,7 +5238,7 @@
       if (!r.listenBase) return;
       var item = document.createElement("div");
       item.className = "lp-reciter-item" + (idx === listenReciterIdx ? " lp-reciter-active" : "");
-      item.innerHTML = r.name + (idx === listenReciterIdx ? ' \u2713' : '');
+      item.innerHTML = _escapeHtml(r.name) + (idx === listenReciterIdx ? ' \u2713' : '');
       item.addEventListener("click", function () {
         listenSelectReciter(idx);
         listenRenderReciterSelect();
@@ -15085,15 +15089,15 @@
 
   function collectSyncData() {
     return {
-      appState: JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"),
-      bookmarks: JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || "[]"),
-      folders: JSON.parse(localStorage.getItem(FOLDERS_KEY) || "[]"),
-      stats: JSON.parse(localStorage.getItem(STATS_KEY) || "{}"),
-      notes: JSON.parse(localStorage.getItem(NOTES_KEY) || "[]"),
-      khatm: JSON.parse(localStorage.getItem(KHATM_KEY) || "null"),
-      khatmHistory: JSON.parse(localStorage.getItem(KHATM_HISTORY_KEY) || "[]"),
-      hifz: JSON.parse(localStorage.getItem(HIFZ_KEY) || "{}"),
-      duaFavorites: JSON.parse(localStorage.getItem(DUA_FAV_KEY) || "[]"),
+      appState: _safeJson(STORAGE_KEY, {}),
+      bookmarks: _safeJson(BOOKMARKS_KEY, []),
+      folders: _safeJson(FOLDERS_KEY, []),
+      stats: _safeJson(STATS_KEY, {}),
+      notes: _safeJson(NOTES_KEY, []),
+      khatm: _safeJson(KHATM_KEY, null),
+      khatmHistory: _safeJson(KHATM_HISTORY_KEY, []),
+      hifz: _safeJson(HIFZ_KEY, {}),
+      duaFavorites: _safeJson(DUA_FAV_KEY, []),
       preferences: {
         reciter: localStorage.getItem(AUDIO_RECITER_KEY) || "Alafasy_128kbps",
         spLang: localStorage.getItem(SP_LANG_KEY) || "ar-fr",
@@ -15166,7 +15170,7 @@
   function resolveAndApplySync(cloud) {
     // appState: take the one with more reading progress
     if (cloud.appState) {
-      var localState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      var localState = _safeJson(STORAGE_KEY, {});
       if ((cloud.appState.globalIndex || 0) > (localState.globalIndex || 0)) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud.appState));
         state = loadState();
@@ -15184,7 +15188,7 @@
 
     // folders: merge by id
     if (cloud.folders) {
-      var localFolders = JSON.parse(localStorage.getItem(FOLDERS_KEY) || "[]");
+      var localFolders = _safeJson(FOLDERS_KEY, []);
       var mergedFolders = mergeArraysByKey(localFolders, cloud.folders, "id");
       saveFolders(mergedFolders);
     }
@@ -15205,7 +15209,7 @@
 
     // notes: merge by key (normalize property names from old format)
     if (cloud.notes) {
-      var localNotes = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+      var localNotes = _safeJson(NOTES_KEY, []);
       cloud.notes = cloud.notes.map(normalizeBookmarkOrNote);
       var mergedNotes = mergeArraysByKey(localNotes.map(normalizeBookmarkOrNote), cloud.notes, "key");
       saveNotes(mergedNotes);
@@ -15216,14 +15220,14 @@
       localStorage.setItem(KHATM_KEY, JSON.stringify(cloud.khatm));
     }
     if (cloud.khatmHistory) {
-      var localHist = JSON.parse(localStorage.getItem(KHATM_HISTORY_KEY) || "[]");
+      var localHist = _safeJson(KHATM_HISTORY_KEY, []);
       var mergedHist = mergeArraysByTimestamp(localHist, cloud.khatmHistory);
       localStorage.setItem(KHATM_HISTORY_KEY, JSON.stringify(mergedHist));
     }
 
     // hifz: cloud wins (object merge)
     if (cloud.hifz && typeof cloud.hifz === "object") {
-      var localHifz = JSON.parse(localStorage.getItem(HIFZ_KEY) || "{}");
+      var localHifz = _safeJson(HIFZ_KEY, {});
       var mergedHifz = Object.assign({}, localHifz, cloud.hifz);
       localStorage.setItem(HIFZ_KEY, JSON.stringify(mergedHifz));
     }

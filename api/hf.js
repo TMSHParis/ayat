@@ -13,9 +13,15 @@ export const config = {
 const HF_MODEL = "openai/whisper-large-v3";
 const HF_BASE  = "https://router.huggingface.co/hf-inference/models";
 
+const ALLOWED_ORIGINS = ["https://qurani.fr","https://www.qurani.fr","https://ayat-theta.vercel.app","capacitor://localhost","http://localhost","http://localhost:3000"];
+
 export default async function handler(req, res) {
-  // CORS — needed for Capacitor iOS app calling from a different origin
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS — restrict to known origins (Capacitor app + web)
+  const origin = (req.headers && req.headers.origin) || "";
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -23,15 +29,25 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const token = process.env.HF_TOKEN;
-  if (!token) return res.status(500).json({ error: "HF_TOKEN not configured on server" });
+  if (!token) return res.status(500).json({ error: "Server configuration error" });
 
-  // Collect raw body
+  // Collect raw body (max 25 MB)
+  const MAX_BODY = 25 * 1024 * 1024;
+  let bodySize = 0;
   const chunks = [];
-  await new Promise((resolve, reject) => {
-    req.on("data", (chunk) => chunks.push(chunk));
-    req.on("end", resolve);
-    req.on("error", reject);
-  });
+  try {
+    await new Promise((resolve, reject) => {
+      req.on("data", (chunk) => {
+        bodySize += chunk.length;
+        if (bodySize > MAX_BODY) { reject(new Error("too large")); return; }
+        chunks.push(chunk);
+      });
+      req.on("end", resolve);
+      req.on("error", reject);
+    });
+  } catch (e) {
+    return res.status(413).json({ error: "Request body too large" });
+  }
   const rawBody = Buffer.concat(chunks);
 
   if (!rawBody.length) return res.status(400).json({ error: "Empty body" });
@@ -43,7 +59,7 @@ export default async function handler(req, res) {
     if (!json.audio) return res.status(400).json({ error: "Missing audio field in JSON body" });
     audioBuffer = Buffer.from(json.audio, "base64");
   } catch (e) {
-    return res.status(400).json({ error: "Invalid JSON body: " + e.message });
+    return res.status(400).json({ error: "Invalid request body" });
   }
 
   if (!audioBuffer.length) return res.status(400).json({ error: "Empty audio after base64 decode" });
@@ -103,12 +119,14 @@ export default async function handler(req, res) {
     const contentType = hfResp.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {
       const text = await hfResp.text();
-      return res.status(hfResp.status).json({ error: "HF returned non-JSON: " + text.substring(0, 200) });
+      console.error("[hf] non-JSON response:", text.substring(0, 200));
+      return res.status(502).json({ error: "Upstream service error" });
     }
 
     const result = await hfResp.json();
     return res.status(hfResp.status).json(result);
   } catch (err) {
-    return res.status(500).json({ error: err.message || "Proxy error" });
+    console.error("[hf]", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }

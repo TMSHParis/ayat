@@ -3,32 +3,53 @@
 // Env vars requises : FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
 import crypto from 'crypto';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS = ["https://qurani.fr","https://www.qurani.fr","https://ayat-theta.vercel.app","capacitor://localhost","http://localhost","http://localhost:3000"];
+
+function buildCors(req) {
+  const origin = (req.headers && req.headers.origin) || "";
+  const headers = {
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    headers['Vary'] = 'Origin';
+  }
+  return headers;
+}
+
+let _appleKeysCache = null;
+let _appleKeysCacheTime = 0;
+const APPLE_KEYS_TTL = 3600000; // 1 hour
 
 async function getApplePublicKey(kid) {
-  const res = await fetch('https://appleid.apple.com/auth/keys');
-  const { keys } = await res.json();
-  const jwk = keys.find(k => k.kid === kid);
-  if (!jwk) throw new Error('Apple JWK introuvable kid=' + kid);
+  const now = Date.now();
+  if (!_appleKeysCache || now - _appleKeysCacheTime > APPLE_KEYS_TTL) {
+    const res = await fetch('https://appleid.apple.com/auth/keys');
+    _appleKeysCache = (await res.json()).keys;
+    _appleKeysCacheTime = now;
+  }
+  const jwk = _appleKeysCache.find(k => k.kid === kid);
+  if (!jwk) throw new Error('Apple key not found');
   return crypto.createPublicKey({ key: jwk, format: 'jwk' });
 }
 
 async function verifyAppleToken(idToken) {
+  if (typeof idToken !== 'string' || idToken.length > 8192) throw new Error('Invalid token');
   const parts = idToken.split('.');
-  if (parts.length !== 3) throw new Error('JWT invalide');
+  if (parts.length !== 3) throw new Error('Invalid JWT format');
   const header  = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
   const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-  if (payload.aud !== 'com.tmshparis.qurani') throw new Error('Audience invalide: ' + payload.aud);
-  if (payload.iss !== 'https://appleid.apple.com') throw new Error('Issuer invalide');
-  if (Date.now() / 1000 > payload.exp) throw new Error('Token expiré');
+  if (!header.kid) throw new Error('Missing kid');
+  if (payload.aud !== 'com.tmshparis.qurani') throw new Error('Invalid audience');
+  if (payload.iss !== 'https://appleid.apple.com') throw new Error('Invalid issuer');
+  const now = Date.now() / 1000;
+  if (now > payload.exp) throw new Error('Token expired');
+  if (payload.nbf && now < payload.nbf) throw new Error('Token not yet valid');
   const pubKey = await getApplePublicKey(header.kid);
   const verifier = crypto.createVerify('SHA256');
   verifier.update(parts[0] + '.' + parts[1]);
-  if (!verifier.verify(pubKey, Buffer.from(parts[2], 'base64url'))) throw new Error('Signature invalide');
+  if (!verifier.verify(pubKey, Buffer.from(parts[2], 'base64url'))) throw new Error('Invalid signature');
   return payload;
 }
 
@@ -53,18 +74,19 @@ function createFirebaseCustomToken(uid, email) {
 
 export default async function handler(req, res) {
   // CORS preflight
-  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+  const cors = buildCors(req);
+  Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
     const { idToken, displayName } = req.body || {};
-    if (!idToken) return res.status(400).json({ error: 'idToken manquant' });
+    if (!idToken || typeof idToken !== 'string') return res.status(400).json({ error: 'Missing token' });
     const payload     = await verifyAppleToken(idToken);
     const customToken = createFirebaseCustomToken(payload.sub, payload.email);
     res.status(200).json({ customToken, appleUid: payload.sub, email: payload.email || '', displayName: displayName || '' });
   } catch (err) {
     console.error('[apple-auth]', err.message);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: 'Authentication failed' });
   }
 }

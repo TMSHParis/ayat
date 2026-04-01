@@ -1,6 +1,17 @@
 export const config = { runtime: 'edge' };
 
 const MODEL_URL = 'https://github.com/yazinsai/offline-tarteel/releases/download/v0.1.0/fastconformer_ar_ctc_q8.onnx';
+const ALLOWED_ORIGINS = ["https://qurani.fr","https://www.qurani.fr","https://ayat-theta.vercel.app","capacitor://localhost","http://localhost","http://localhost:3000"];
+
+function corsHeaders(req) {
+  const origin = req.headers.get('origin') || '';
+  const h = {};
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    h['Access-Control-Allow-Origin'] = origin;
+    h['Vary'] = 'Origin';
+  }
+  return h;
+}
 
 export default async function handler(req) {
   // Handle CORS preflight
@@ -8,7 +19,7 @@ export default async function handler(req) {
     return new Response(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders(req),
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Max-Age': '86400',
@@ -22,9 +33,9 @@ export default async function handler(req) {
     });
 
     if (!response.ok) {
-      return new Response('Model fetch failed: ' + response.status, {
-        status: response.status,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+      return new Response('Service unavailable', {
+        status: 502,
+        headers: corsHeaders(req),
       });
     }
 
@@ -32,14 +43,15 @@ export default async function handler(req) {
       headers: {
         'Content-Type': 'application/octet-stream',
         'Content-Length': response.headers.get('content-length') || '131652337',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders(req),
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });
   } catch (e) {
-    return new Response('Proxy error: ' + e.message, {
+    console.error('[model]', e);
+    return new Response('Service unavailable', {
       status: 502,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: corsHeaders(req),
     });
   }
 }
