@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qurani — L'app Coran complète par IslamSounnah</title>
+  <meta name="description" content="Coran en arabe + traduction, horaires de prière, Qibla, Dhikr, Zakat, Du'a. Tout synchronisé dans le cloud. Disponible sur iPhone et Android.">
+  <meta name="theme-color" content="#000000">
+  <meta property="og:title" content="Qurani — L'app Coran complète">
+  <meta property="og:description" content="Lisez, mémorisez et vivez le Coran. Synchronisation cloud, prières en temps réel, outils islamiques complets.">
+  <meta property="og:image" content="/store/feature-graphic-android.png">
+  <meta property="og:url" content="https://qurani.fr/app">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-512.png">
+  <script defer src="/_vercel/insights/script.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --white: #f5f5f7;
+      --gray: #86868b;
+      --dark-gray: #1d1d1f;
+      --bg: #000000;
+      --section-bg: #000000;
+      --card-bg: #111111;
+      --accent: #d4a054;
+      --accent-glow: rgba(212, 160, 84, 0.15);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ══════════════════════════════════════
+       NAVIGATION
+    ══════════════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+      transition: background 0.3s;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--white);
+    }
+
+    .nav-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .nav-logo span {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 980px;
+      background: var(--white);
+      color: #000;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: #d2d2d7;
+    }
+
+    /* ══════════════════════════════════════
+       HERO
+    ══════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -40%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(212, 160, 84, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #f5c070 0%, #d4a054 50%, #c08030 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(17px, 2.4vw, 21px);
+      font-weight: 400;
+      color: var(--gray);
+      line-height: 1.5;
+      max-width: 500px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 60px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--white);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+
+    .store-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .store-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .store-btn .store-text {
+      text-align: left;
+    }
+
+    .store-btn .store-text small {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--gray);
+      line-height: 1.2;
+    }
+
+    .store-btn .store-text strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    /* Hero phone trio */
+    .hero-phones {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      height: 500px;
+      opacity: 0;
+      animation: fadeUp 1s 1s forwards;
+    }
+
+    .hero-phone {
+      position: absolute;
+      border-radius: 36px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+      border: 8px solid #2a2a2a;
+    }
+
+    .hero-phone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-phone.center {
+      width: 220px;
+      height: 460px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      border-color: #b87430;
+    }
+
+    .hero-phone.left {
+      width: 190px;
+      height: 400px;
+      left: 50%;
+      transform: translateX(-230px) rotate(-6deg);
+      z-index: 2;
+      top: 40px;
+      opacity: 0.7;
+    }
+
+    .hero-phone.right {
+      width: 190px;
+      height: 400px;
+      left: 50%;
+      transform: translateX(40px) rotate(6deg);
+      z-index: 2;
+      top: 40px;
+      opacity: 0.7;
+    }
+
+    /* ══════════════════════════════════════
+       CLOUD SYNC HIGHLIGHT
+    ══════════════════════════════════════ */
+    .cloud-section {
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+      background: linear-gradient(180deg, #000 0%, #080810 50%, #000 100%);
+    }
+
+    .cloud-section::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(26, 85, 255, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(36px, 6vw, 56px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
+      margin-bottom: 20px;
+    }
+
+    .section-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      font-weight: 400;
+      color: var(--gray);
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .cloud-visual {
+      margin-top: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .cloud-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 32px;
+      width: 260px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .cloud-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-4px);
+    }
+
+    .cloud-card .cloud-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .cloud-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .cloud-card p {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════
+       FEATURE SECTIONS (Apple style)
+    ══════════════════════════════════════ */
+    .feature {
+      padding: 100px 24px 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature.reverse {
+      flex-direction: row-reverse;
+    }
+
+    .feature-text {
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .feature-text .section-label {
+      text-align: left;
+    }
+
+    .feature-text h2 {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+
+    .feature-text p {
+      font-size: 17px;
+      color: var(--gray);
+      line-height: 1.65;
+    }
+
+    .feature-phone {
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .feature-phone .phone-shell {
+      width: 260px;
+      height: 540px;
+      border-radius: 44px;
+      overflow: hidden;
+      border: 9px solid #2a2a2a;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .feature-phone .phone-shell.gold {
+      border-color: #b87430;
+    }
+
+    .feature-phone .phone-shell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .feature-phone .phone-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Dividers */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ══════════════════════════════════════
+       FEATURES GRID
+    ══════════════════════════════════════ */
+    .grid-section {
+      padding: 100px 24px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 60px auto 0;
+    }
+
+    .grid-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 36px 28px;
+      text-align: left;
+      transition: all 0.3s;
+    }
+
+    .grid-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-3px);
+    }
+
+    .grid-item .grid-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .grid-item h3 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .grid-item p {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.55;
+    }
+
+    /* ══════════════════════════════════════
+       CTA FINAL
+    ══════════════════════════════════════ */
+    .cta-section {
+      padding: 120px 24px 80px;
+      text-align: center;
+      position: relative;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(212, 160, 84, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-size: clamp(36px, 6vw, 56px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 19px;
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ══════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════ */
+    footer {
+      padding: 40px 24px;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    footer p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.35);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--white);
+    }
+
+    /* ══════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* keep left/right phones transforms on reveal */
+    .hero-phone.left { transition: opacity 0.6s; }
+    .hero-phone.right { transition: opacity 0.6s; }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .feature {
+        flex-direction: column !important;
+        text-align: center;
+        gap: 40px;
+        padding: 80px 24px;
+      }
+
+      .feature-text .section-label {
+        text-align: center;
+      }
+
+      .feature-text {
+        max-width: 100%;
+      }
+
+      .feature-phone .phone-shell {
+        width: 220px;
+        height: 460px;
+      }
+
+      .hero-phones {
+        height: 400px;
+      }
+
+      .hero-phone.center {
+        width: 180px;
+        height: 380px;
+      }
+
+      .hero-phone.left {
+        width: 150px;
+        height: 320px;
+        transform: translateX(-190px) rotate(-6deg);
+      }
+
+      .hero-phone.right {
+        width: 150px;
+        height: 320px;
+        transform: translateX(40px) rotate(6deg);
+      }
+
+      .cloud-visual {
+        gap: 16px;
+      }
+
+      .cloud-card {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .nav-inner {
+        height: 48px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hero-phones {
+        height: 340px;
+      }
+
+      .hero-phone.center {
+        width: 160px;
+        height: 340px;
+      }
+
+      .hero-phone.left {
+        width: 130px;
+        height: 280px;
+        transform: translateX(-160px) rotate(-6deg);
+        top: 30px;
+      }
+
+      .hero-phone.right {
+        width: 130px;
+        height: 280px;
+        transform: translateX(30px) rotate(6deg);
+        top: 30px;
+      }
+
+      .store-btn {
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ NAV ════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="/icone/Qurani.png" alt="Qurani" style="background:#f0ebe4;">
+      <span>Qurani</span>
+    </a>
+    <a href="#telecharger" class="nav-cta">
+      <svg viewBox="0 0 17 17" width="14" height="14" fill="currentColor"><path d="M8.5 1.5v10m0 0l-4-4m4 4l4-4M2 13.5h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      Installer
+    </a>
+  </div>
+</nav>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero">
+  <div class="hero-eyebrow">By IslamSounnah</div>
+  <h1>Vivez le Coran.<br><span class="gradient-text">Simplement.</span></h1>
+  <p class="hero-sub">Lecture verset par verset, synchronisation cloud, prières en temps réel et outils islamiques complets. Tout en une app.</p>
+
+  <div class="hero-buttons">
+    <a href="https://apps.apple.com/fr/app/qurani-coran-by-islamsounnah/id6759248509" class="store-btn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <div class="store-text">
+        <small>Disponible sur</small>
+        <strong>App Store</strong>
+      </div>
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.tmshparis.qurani" class="store-btn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M3.18 23.49c-.35-.2-.57-.59-.57-1.02V1.53c0-.43.22-.82.57-1.02l11.3 11.49L3.18 23.49zM15.72 13.24l2.93 1.7c.75.43.75 1.51 0 1.94l-2.62 1.52-3.27-3.32 2.96-1.84zM15.72 10.76L12.76 8.92l3.27-3.32 2.62 1.52c.75.43.75 1.51 0 1.94l-2.93 1.7zM11.52 12L4.53 4.84l10.27 5.96L11.52 12zm0 0l3.28 1.12L4.53 19.16 11.52 12z"/></svg>
+      <div class="store-text">
+        <small>Disponible sur</small>
+        <strong>Google Play</strong>
+      </div>
+    </a>
+  </div>
+
+  <div class="hero-phones">
+    <div class="hero-phone left">
+      <img src="/mockups/screens/6.png" alt="Horaires de priere">
+    </div>
+    <div class="hero-phone center">
+      <img src="/mockups/screens/1.png" alt="Lecture du Coran">
+    </div>
+    <div class="hero-phone right">
+      <img src="/mockups/screens/4.png" alt="Invocations">
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ CLOUD SYNC ════════════════ -->
+<section class="cloud-section">
+  <div class="reveal">
+    <div class="section-label">Synchronisation Cloud</div>
+    <h2 class="section-title">Changez de<br>tel, gardez tout.</h2>
+    <p class="section-sub">Votre progression, vos favoris, vos notes. Tout se synchronise automatiquement. Connectez-vous et retrouvez votre lecture exactement o&ugrave; vous l'avez laiss&eacute;e.</p>
+  </div>
+
+  <div class="cloud-visual reveal">
+    <div class="cloud-card">
+      <div class="cloud-icon">&#9729;&#65039;</div>
+      <h3>Sauvegarde auto</h3>
+      <p>Votre progression se synchronise en temps r&eacute;el dans le cloud</p>
+    </div>
+    <div class="cloud-card">
+      <div class="cloud-icon">&#128260;</div>
+      <h3>Multi-appareils</h3>
+      <p>iPhone, Android — m&ecirc;me sourate, m&ecirc;me verset, partout</p>
+    </div>
+    <div class="cloud-card">
+      <div class="cloud-icon">&#128274;</div>
+      <h3>S&eacute;curis&eacute;</h3>
+      <p>Connexion Google ou Apple. Vos donn&eacute;es restent priv&eacute;es</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ FEATURE 1 — Lecture ════════════════ -->
+<section class="feature reveal">
+  <div class="feature-text">
+    <div class="section-label">Lecture immersive</div>
+    <h2>Lisez le Coran<br>sans distraction</h2>
+    <p>Verset par verset, texte pur en plein &eacute;cran. Arabe avec traduction fran&ccedil;aise et translitt&eacute;ration. Un design minimaliste con&ccedil;u pour la concentration.</p>
+  </div>
+  <div class="feature-phone">
+    <div class="phone-glow" style="background: rgba(26, 85, 255, 0.12);"></div>
+    <div class="phone-shell gold">
+      <img src="/mockups/screens/1.png" alt="Lecture immersive du Coran">
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ FEATURE 2 — Khatm ════════════════ -->
+<section class="feature reverse reveal">
+  <div class="feature-text">
+    <div class="section-label">Khatm &mdash; Lecture compl&egrave;te</div>
+    <h2>Du d&eacute;but<br>&agrave; la fin</h2>
+    <p>Suivez votre progression dans la lecture compl&egrave;te du Coran. Khatm guid&eacute; ou lecture libre &mdash; &agrave; votre rythme, sourate par sourate. Chaque page lue est sauvegard&eacute;e.</p>
+  </div>
+  <div class="feature-phone">
+    <div class="phone-glow" style="background: rgba(255, 153, 34, 0.12);"></div>
+    <div class="phone-shell gold">
+      <img src="/mockups/screens/2.png" alt="Khatm lecture complete">
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ FEATURE 3 — Audio ════════════════ -->
+<section class="feature reveal">
+  <div class="feature-text">
+    <div class="section-label">R&eacute;citation audio</div>
+    <h2>&Eacute;coutez les plus<br>grands r&eacute;citateurs</h2>
+    <p>Mishary Al-Afasy, Al-Ghamdi, Al-Husary et bien d'autres. &Eacute;coutez chaque sourate avec un lecteur audio &eacute;l&eacute;gant et fluide.</p>
+  </div>
+  <div class="feature-phone">
+    <div class="phone-glow" style="background: rgba(255, 102, 0, 0.12);"></div>
+    <div class="phone-shell gold">
+      <img src="/mockups/screens/3.png" alt="Recitation audio">
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ FEATURE 4 — Prieres ════════════════ -->
+<section class="feature reverse reveal">
+  <div class="feature-text">
+    <div class="section-label">Horaires de pri&egrave;re</div>
+    <h2>Votre prochaine<br>pri&egrave;re en un<br>coup d'&#339;il</h2>
+    <p>Fajr, Dhuhr, Asr, Maghrib, Isha &mdash; pr&eacute;cis, &eacute;l&eacute;gant, toujours disponible. Avec notifications personnalis&eacute;es et boussole Qibla.</p>
+  </div>
+  <div class="feature-phone">
+    <div class="phone-glow" style="background: rgba(0, 170, 204, 0.12);"></div>
+    <div class="phone-shell gold">
+      <img src="/mockups/screens/6.png" alt="Horaires de priere">
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ FEATURE 5 — Ayati ════════════════ -->
+<section class="feature reveal">
+  <div class="feature-text">
+    <div class="section-label">Ayati &mdash; Identification</div>
+    <h2>Identifiez un<br>verset &agrave; l'oreille</h2>
+    <p>R&eacute;citez un verset, l'app le reconna&icirc;t instantan&eacute;ment. Comme Shazam, mais pour le Coran. Technologie de reconnaissance vocale avanc&eacute;e, directement sur votre appareil.</p>
+  </div>
+  <div class="feature-phone">
+    <div class="phone-glow" style="background: rgba(255, 68, 0, 0.12);"></div>
+    <div class="phone-shell gold">
+      <img src="/mockups/screens/9.png" alt="Ayati identification vocale">
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════ MORE FEATURES GRID ════════════════ -->
+<section class="grid-section">
+  <div class="reveal">
+    <div class="section-label">Et bien plus encore</div>
+    <h2 class="section-title">Tout ce dont vous<br>avez besoin</h2>
+  </div>
+
+  <div class="grid reveal">
+    <div class="grid-item">
+      <div class="grid-icon">&#128588;</div>
+      <h3>Du'a &amp; Invocations</h3>
+      <p>Les invocations du Proph&egrave;te &#65018; pour chaque moment : matin, soir, protection, voyage.</p>
+    </div>
+    <div class="grid-item">
+      <div class="grid-icon">&#128176;</div>
+      <h3>Zakat &amp; H&eacute;ritage</h3>
+      <p>Calculez votre Zakat al-Mal et les parts d'h&eacute;ritage islamique. G&eacute;n&eacute;rez un PDF professionnel.</p>
+    </div>
+    <div class="grid-item">
+      <div class="grid-icon">&#128220;</div>
+      <h3>Testament islamique</h3>
+      <p>R&eacute;digez votre Wasiyya selon la Sounnah. Exportez en PDF, pr&ecirc;t &agrave; imprimer.</p>
+    </div>
+    <div class="grid-item">
+      <div class="grid-icon">&#128338;</div>
+      <h3>Dhikr &amp; Compteur</h3>
+      <p>Compteur de Dhikr avec Tasbih int&eacute;gr&eacute;. Gardez le fil de vos adorations quotidiennes.</p>
+    </div>
+    <div class="grid-item">
+      <div class="grid-icon">&#127902;</div>
+      <h3>Vid&eacute;os islamiques</h3>
+      <p>Conf&eacute;rences de savants traduites et sous-titr&eacute;es en fran&ccedil;ais.</p>
+    </div>
+    <div class="grid-item">
+      <div class="grid-icon">&#127763;</div>
+      <h3>Th&egrave;mes de lecture</h3>
+      <p>Blanc, s&eacute;pia ou nuit. Adaptez l'app &agrave; votre confort de lecture, jour et nuit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ CTA FINAL ════════════════ -->
+<section class="cta-section" id="telecharger">
+  <div class="reveal">
+    <div class="section-label">Gratuit &amp; sans pub</div>
+    <h2>T&eacute;l&eacute;chargez<br><span style="background: linear-gradient(135deg, #f5c070, #c08030); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Qurani</span> maintenant</h2>
+    <p>Disponible sur iPhone et Android.</p>
+  </div>
+
+  <div class="cta-buttons reveal">
+    <a href="https://apps.apple.com/fr/app/qurani-coran-by-islamsounnah/id6759248509" class="store-btn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <div class="store-text">
+        <small>Disponible sur</small>
+        <strong>App Store</strong>
+      </div>
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.tmshparis.qurani" class="store-btn" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.49c-.35-.2-.57-.59-.57-1.02V1.53c0-.43.22-.82.57-1.02l11.3 11.49L3.18 23.49zM15.72 13.24l2.93 1.7c.75.43.75 1.51 0 1.94l-2.62 1.52-3.27-3.32 2.96-1.84zM15.72 10.76L12.76 8.92l3.27-3.32 2.62 1.52c.75.43.75 1.51 0 1.94l-2.93 1.7zM11.52 12L4.53 4.84l10.27 5.96L11.52 12zm0 0l3.28 1.12L4.53 19.16 11.52 12z"/></svg>
+      <div class="store-text">
+        <small>Disponible sur</small>
+        <strong>Google Play</strong>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer>
+  <p>Qurani &mdash; by <a href="https://qurani.fr">IslamSounnah</a> &middot; TMSH Paris &middot; <a href="/privacy.html">Confidentialit&eacute;</a> &middot; <a href="/support.html">Support</a></p>
+</footer>
+
+<!-- ════════════════ SCROLL REVEAL JS ════════════════ -->
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

@@ -17,8 +17,8 @@
 		3A9A971C2F58CD5C007C5B68 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A3564B72F4C88D200BF64CA /* SwiftUI.framework */; };
 		3A9A97272F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3A9A97882F599E94007C5B68 /* SharedDataPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A97872F599E94007C5B68 /* SharedDataPlugin.swift */; };
-		3A9A978B2F5DBE00007C5B68 /* AppleSignInPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A978C2F5DBE00007C5B68 /* AppleSignInPlugin.swift */; };
 		3A9A978A2F59BD0D007C5B68 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A97892F59BD0D007C5B68 /* ViewController.swift */; };
+		3A9A978B2F5DBE00007C5B68 /* AppleSignInPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9A978C2F5DBE00007C5B68 /* AppleSignInPlugin.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
@@ -109,8 +109,8 @@
 		3A3564F22F4C8D4F00BF64CA /* QuraniWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "QuraniWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9A971A2F58CD5C007C5B68 /* QuraniWatchComplicationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = QuraniWatchComplicationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A9A97872F599E94007C5B68 /* SharedDataPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataPlugin.swift; sourceTree = "<group>"; };
-		3A9A978C2F5DBE00007C5B68 /* AppleSignInPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInPlugin.swift; sourceTree = "<group>"; };
 		3A9A97892F59BD0D007C5B68 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		3A9A978C2F5DBE00007C5B68 /* AppleSignInPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInPlugin.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -891,7 +891,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
@@ -900,7 +900,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.0;
+				MARKETING_VERSION = 3.4.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -916,7 +916,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TKGTW43774;
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
@@ -925,7 +925,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.0;
+				MARKETING_VERSION = 3.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tmshparis.qurani;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";

@@ -6,6 +6,7 @@ struct QuraniWidgetBundle: WidgetBundle {
     var body: some Widget {
         NextPrayerWidget()
         PrayerTimesWidget()
-        VerseWidget()
+        IftarWidget()
+        QiyamWidget()
     }
 }

@@ -8,11 +8,21 @@ struct NextPrayerEntry: TimelineEntry {
     let prayerTime: String
     let prayerDate: Date?
     let isPlaceholder: Bool
+    let progress: Double
+    let countdownText: String
 }
 
 struct NextPrayerProvider: TimelineProvider {
     func placeholder(in context: Context) -> NextPrayerEntry {
-        NextPrayerEntry(date: Date(), prayerName: "Dhuhr", prayerNameAr: "الظهر", prayerTime: "12:30", prayerDate: nil, isPlaceholder: true)
+        NextPrayerEntry(date: Date(), prayerName: "Dhuhr", prayerNameAr: "الظهر", prayerTime: "12:30", prayerDate: nil, isPlaceholder: true, progress: 0.45, countdownText: "dans 1h30")
+    }
+
+    private static func formatCountdown(from now: Date, to target: Date) -> String {
+        let diff = target.timeIntervalSince(now)
+        guard diff > 0 else { return "" }
+        let h = Int(diff) / 3600
+        let m = (Int(diff) % 3600) / 60
+        return h > 0 ? "dans \(h)h\(String(format: "%02d", m))" : "dans \(m) min"
     }
 
     func getSnapshot(in context: Context, completion: @escaping (NextPrayerEntry) -> Void) {
@@ -20,24 +30,73 @@ struct NextPrayerProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NextPrayerEntry>) -> Void) {
-        let entry = makeEntry()
-        // Refresh at prayer time so the widget updates to the next prayer immediately
-        let nextUpdate: Date
-        if let prayerDate = entry.prayerDate {
-            // Refresh 1 minute after the prayer time
-            nextUpdate = prayerDate.addingTimeInterval(60)
-        } else {
-            nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
+        let base = makeEntry()
+        guard let prayerDate = base.prayerDate else {
+            let refresh = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
+            completion(Timeline(entries: [base], policy: .after(refresh)))
+            return
         }
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        // Génère des entrées toutes les minutes pour mettre à jour le countdown
+        var entries: [NextPrayerEntry] = []
+        let now = Date()
+        for i in 0..<15 {
+            let entryDate = now.addingTimeInterval(Double(i) * 60.0)
+            if entryDate >= prayerDate { break }
+            entries.append(NextPrayerEntry(
+                date: entryDate,
+                prayerName: base.prayerName,
+                prayerNameAr: base.prayerNameAr,
+                prayerTime: base.prayerTime,
+                prayerDate: prayerDate,
+                isPlaceholder: false,
+                progress: base.progress,
+                countdownText: NextPrayerProvider.formatCountdown(from: entryDate, to: prayerDate)
+            ))
+        }
+        if entries.isEmpty { entries.append(base) }
+        let refresh = prayerDate.addingTimeInterval(60)
+        completion(Timeline(entries: entries, policy: .after(refresh)))
     }
 
     private func makeEntry() -> NextPrayerEntry {
         guard let data = PrayerTimesData.load(),
               let next = data.nextPrayer() else {
-            return NextPrayerEntry(date: Date(), prayerName: "--", prayerNameAr: "", prayerTime: "--:--", prayerDate: nil, isPlaceholder: false)
+            return NextPrayerEntry(date: Date(), prayerName: "--", prayerNameAr: "", prayerTime: "--:--", prayerDate: nil, isPlaceholder: false, progress: 0, countdownText: "")
         }
-        return NextPrayerEntry(date: Date(), prayerName: next.name, prayerNameAr: next.nameAr, prayerTime: String(next.time.prefix(5)), prayerDate: next.date, isPlaceholder: false)
+
+        // Calculate progress: elapsed time between previous prayer and next prayer
+        let now = Date()
+        let calendar = Calendar.current
+        let prayerTimes = [data.fajr, data.dhuhr, data.asr, data.maghrib, data.isha]
+        var prevDate: Date? = nil
+        for time in prayerTimes.reversed() {
+            let parts = time.split(separator: ":").compactMap { Int($0) }
+            guard parts.count >= 2 else { continue }
+            var comps = calendar.dateComponents([.year, .month, .day], from: now)
+            comps.hour = parts[0]
+            comps.minute = parts[1]
+            if let d = calendar.date(from: comps), d <= now {
+                prevDate = d
+                break
+            }
+        }
+        var progress: Double = 0
+        if let prev = prevDate {
+            let total = next.date.timeIntervalSince(prev)
+            let elapsed = now.timeIntervalSince(prev)
+            if total > 0 { progress = min(1.0, max(0, elapsed / total)) }
+        }
+
+        return NextPrayerEntry(
+            date: now,
+            prayerName: next.name,
+            prayerNameAr: next.nameAr,
+            prayerTime: String(next.time.prefix(5)),
+            prayerDate: next.date,
+            isPlaceholder: false,
+            progress: progress,
+            countdownText: NextPrayerProvider.formatCountdown(from: now, to: next.date)
+        )
     }
 }
 
@@ -49,34 +108,44 @@ struct NextPrayerWidgetView: View {
     private let gold = Color(red: 1.0, green: 0.90, blue: 0.62)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: "moon.stars.fill")
-                .font(.caption)
-                .foregroundColor(gold)
-            Spacer()
-            Text(entry.prayerNameAr)
+        VStack(alignment: .leading, spacing: 0) {
+            // Nom de la prière seul en titre
+            Text(entry.prayerName)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white.opacity(0.92))
                 .minimumScaleFactor(0.7)
-            Text(entry.prayerName)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.5))
-            HStack(spacing: 6) {
-                // Heure de prière
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer()
+
+            // Barre de progression
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(height: 3)
+                    Capsule()
+                        .fill(gold.opacity(0.85))
+                        .frame(width: max(6, geo.size.width * CGFloat(entry.progress)), height: 3)
+                }
+            }
+            .frame(height: 3)
+            .padding(.bottom, 6)
+
+            // Heure + countdown en bas
+            HStack(alignment: .firstTextBaseline) {
                 Text(entry.prayerTime)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(gold)
-                // Countdown live
-                if let prayerDate = entry.prayerDate, prayerDate > Date() {
-                    Text("·")
-                        .foregroundColor(.white.opacity(0.3))
-                    Text(prayerDate, style: .relative)
+                Spacer()
+                if !entry.countdownText.isEmpty {
+                    Text(entry.countdownText)
                         .font(.caption)
                         .foregroundColor(gold.opacity(0.7))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.8)
                 }
             }
         }
@@ -115,20 +184,16 @@ struct NextPrayerRectangularView: View {
     var entry: NextPrayerEntry
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Image(systemName: "moon.stars.fill")
                 .font(.title3)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.prayerName)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                Text(entry.prayerTime)
-                    .font(.system(.body, design: .monospaced))
-                    .fontWeight(.semibold)
-            }
+            Text(entry.prayerName)
+                .font(.headline)
+                .fontWeight(.bold)
             Spacer()
-            Text(entry.prayerNameAr)
-                .font(.title3)
+            Text(entry.prayerTime)
+                .font(.system(.body, design: .monospaced))
+                .fontWeight(.semibold)
         }
         .containerBackground(for: .widget) { Color.clear }
     }
@@ -156,10 +221,7 @@ struct NextPrayerWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: NextPrayerProvider()) { entry in
-            switch WidgetFamily(rawValue: entry.date.hashValue) {
-            default:
-                NextPrayerAdaptiveView(entry: entry)
-            }
+            NextPrayerAdaptiveView(entry: entry)
         }
         .configurationDisplayName("Prochaine pri\u{00e8}re")
         .description("Affiche la prochaine pri\u{00e8}re et son horaire.")
@@ -172,7 +234,7 @@ struct NextPrayerWidget: Widget {
     }
 }
 
-// MARK: - Adaptive View (dispatches by family)
+// MARK: - Adaptive View
 
 struct NextPrayerAdaptiveView: View {
     var entry: NextPrayerEntry

@@ -43,7 +43,7 @@ struct VerseWidgetView: View {
                     Image(systemName: "book.fill")
                         .font(.title3)
                         .foregroundColor(.orange)
-                    Text("Ouvrez Qurani")
+                    Text("Lancez l'app")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

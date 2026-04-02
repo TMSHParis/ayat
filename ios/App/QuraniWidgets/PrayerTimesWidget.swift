@@ -76,22 +76,18 @@ struct PrayerTimesWidgetView: View {
             .padding(.bottom, 2)
 
             if entry.prayers.isEmpty {
-                Text("Ouvrez Qurani pour charger les horaires")
+                Text("Horaires non chargés")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ForEach(Array(entry.prayers.enumerated()), id: \.offset) { index, prayer in
                     let isNext = prayer.name == entry.nextPrayerName
-                    HStack(spacing: 4) {
-                        Text(prayer.nameAr)
-                            .font(.caption2)
-                            .frame(width: 40, alignment: .trailing)
-                            .foregroundColor(isNext ? gold : .white.opacity(0.7))
+                    HStack {
                         Text(prayer.name)
-                            .font(.caption2)
-                            .foregroundColor(isNext ? gold : .white.opacity(0.42))
-                            .frame(width: 60, alignment: .leading)
+                            .font(.caption)
+                            .fontWeight(isNext ? .bold : .regular)
+                            .foregroundColor(isNext ? gold : .white.opacity(0.6))
                         Spacer()
                         Text(prayer.time)
                             .font(.caption)
@@ -122,15 +118,14 @@ struct PrayerTimesRectangularView: View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(Array(salawat.enumerated()), id: \.offset) { _, prayer in
                 let isNext = prayer.name == entry.nextPrayerName
-                HStack(spacing: 4) {
-                    Text(prayer.nameAr)
+                HStack {
+                    Text(prayer.name)
                         .font(.system(size: 10))
-                        .frame(width: 28, alignment: .trailing)
                         .fontWeight(isNext ? .bold : .regular)
+                    Spacer()
                     Text(prayer.time)
                         .font(.system(size: 10, design: .monospaced))
                         .fontWeight(isNext ? .bold : .regular)
-                    Spacer()
                 }
                 .opacity(isNext ? 1.0 : 0.6)
             }

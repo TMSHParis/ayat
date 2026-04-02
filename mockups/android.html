@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=360">
+  <title>Qurani — Play Store Mockups</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 360px;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── SLIDE ── */
+    .slide {
+      width: 360px;
+      height: 640px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── BACKGROUNDS distincts ── */
+    .s1  { background: radial-gradient(ellipse 120% 70% at 60% 100%, #0a1a3a 0%, #03040e 55%); }
+    .s2  { background: radial-gradient(ellipse 120% 70% at 40% 100%, #2a1800 0%, #0e0800 55%); }
+    .s3  { background: radial-gradient(ellipse 120% 70% at 55% 100%, #2a1200 0%, #0f0600 55%); }
+    .s4  { background: radial-gradient(ellipse 120% 70% at 45% 100%, #002a10 0%, #020e06 55%); }
+    .s5  { background: radial-gradient(ellipse 120% 70% at 60% 100%, #160828 0%, #070310 55%); }
+    .s6  { background: radial-gradient(ellipse 120% 70% at 40% 100%, #002530 0%, #020c10 55%); }
+    .s7  { background: radial-gradient(ellipse 120% 70% at 55% 100%, #1e1a00 0%, #0c0a00 55%); }
+    .s8  { background: radial-gradient(ellipse 120% 70% at 50% 100%, #080e14 0%, #040608 55%); }
+    .s9  { background: radial-gradient(ellipse 120% 70% at 45% 100%, #280a00 0%, #100300 55%); }
+    .s10 { background: radial-gradient(ellipse 120% 70% at 58% 100%, #001030 0%, #020408 55%); }
+
+    /* ── GLOW ── */
+    .glow {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .s1  .glow { background: #1a55ff; opacity: 0.30; }
+    .s2  .glow { background: #ff9922; opacity: 0.28; }
+    .s3  .glow { background: #ff6600; opacity: 0.28; }
+    .s4  .glow { background: #11cc55; opacity: 0.25; }
+    .s5  .glow { background: #8833ff; opacity: 0.30; }
+    .s6  .glow { background: #00aacc; opacity: 0.30; }
+    .s7  .glow { background: #ccaa00; opacity: 0.28; }
+    .s8  .glow { background: #4488bb; opacity: 0.22; }
+    .s9  .glow { background: #ff4400; opacity: 0.32; }
+    .s10 .glow { background: #0044ee; opacity: 0.30; }
+
+    /* ── TEXT ── */
+    .text {
+      padding: 38px 36px 16px;
+      text-align: center;
+      z-index: 2;
+      width: 100%;
+    }
+    .label {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8.5px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.32);
+      margin-bottom: 11px;
+    }
+    .title {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.12;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+    .sub {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.46);
+      line-height: 1.6;
+    }
+
+    /* ── PHONE WRAP ── */
+    .phone-wrap {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 8px;
+      z-index: 2;
+    }
+
+    /* ── PIXEL 9 — frame Obsidian ── */
+    .phone-frame {
+      padding: 8px;
+      border-radius: 40px;
+      background: linear-gradient(
+        155deg,
+        #3a3a3a 0%,
+        #1e1e1e 20%,
+        #141414 45%,
+        #1a1a1a 70%,
+        #2a2a2a 100%
+      );
+      position: relative;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.6),
+        0 24px 64px rgba(0,0,0,0.95),
+        0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    /* Boutons volume gauche */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      left: -3px;
+      top: 88px;
+      width: 3px;
+      height: 26px;
+      background: linear-gradient(270deg, #111 0%, #2a2a2a 50%, #111 100%);
+      border-radius: 3px 0 0 3px;
+      box-shadow: 0 40px 0 0 #222;
+    }
+
+    /* Bouton power droite */
+    .phone-frame::after {
+      content: '';
+      position: absolute;
+      right: -3px;
+      top: 116px;
+      width: 3px;
+      height: 52px;
+      background: linear-gradient(90deg, #111 0%, #2a2a2a 50%, #111 100%);
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* ── ÉCRAN PIXEL 9 ── */
+    .phone {
+      width: 224px;
+      height: 492px;
+      border-radius: 32px;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Punch-hole caméra */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: #000;
+      border-radius: 50%;
+      z-index: 10;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .phone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+
+    /* ── BRANDING ── */
+    .brand {
+      position: absolute;
+      bottom: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 7px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.12);
+      white-space: nowrap;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 01 -->
+<div class="slide s1">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Lecture immersive</div>
+    <div class="title">Lisez le Coran<br>sans distraction</div>
+    <div class="sub">Verset par verset, texte pur<br>en plein écran</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/1.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 02 -->
+<div class="slide s2">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Khatm — Lecture complète</div>
+    <div class="title">Lisez le Coran<br>du début à la fin</div>
+    <div class="sub">Khatm guidé ou lecture libre —<br>à votre rythme, sourate par sourate</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/2.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 03 -->
+<div class="slide s3">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Récitation audio</div>
+    <div class="title">Écoutez les plus<br>grands récitateurs</div>
+    <div class="sub">Mishary Al-Afasy, Al-Ghamdi,<br>Husary et bien d'autres</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/3.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 04 -->
+<div class="slide s4">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Du'a &amp; Invocations</div>
+    <div class="title">Les du'as du<br>Prophète ﷺ</div>
+    <div class="sub">Matin, soir, protection, voyage<br>et toutes les catégories</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/4.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 05 -->
+<div class="slide s5">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Outils islamiques</div>
+    <div class="title">Bien plus<br>qu'un lecteur</div>
+    <div class="sub">Hifz, mémorisation, statistiques<br>et outils islamiques complets</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/5.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 06 -->
+<div class="slide s6">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Horaires de prière</div>
+    <div class="title">Votre prochaine<br>prière en un coup d'œil</div>
+    <div class="sub">Fajr, Dhuhr, Asr, Maghrib, Isha —<br>précis, élégant, toujours disponible</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/6.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 07 -->
+<div class="slide s7">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Thèmes de lecture</div>
+    <div class="title">Votre thème,<br>votre lecture</div>
+    <div class="sub">Blanc, sépia ou nuit —<br>adaptez l'app à votre confort</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/7.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 08 -->
+<div class="slide s8">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Bien-être spirituel</div>
+    <div class="title">L'état de<br>votre cœur</div>
+    <div class="sub">Identifiez votre émotion du jour<br>et trouvez l'invocation adaptée</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/8.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 09 -->
+<div class="slide s9">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Ayati — Identification</div>
+    <div class="title">Identifiez un verset<br>à l'oreille</div>
+    <div class="sub">Récitez, l'app reconnaît le verset —<br>comme Shazam pour le Coran</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/9.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+<!-- 10 -->
+<div class="slide s10">
+  <div class="glow"></div>
+  <div class="text">
+    <div class="label">Vidéos islamiques</div>
+    <div class="title">Les savants<br>en français</div>
+    <div class="sub">Conférences de savants traduites<br>et sous-titrées en français</div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone"><img src="screens/10.png" alt=""></div>
+    </div>
+  </div>
+  <div class="brand">QURANI · BY ISLAMSOUNNAH</div>
+</div>
+
+</body>
+</html>

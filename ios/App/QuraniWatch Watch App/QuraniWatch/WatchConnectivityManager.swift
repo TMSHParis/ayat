@@ -36,6 +36,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {
             print("⌚ [WC-Watch] Got prayerTimes — fajr=\(prayerTimes["fajr"] ?? "?") isha=\(prayerTimes["isha"] ?? "?")")
             savePrayerTimes(prayerTimes)
         }
+        if let khatmData = applicationContext["khatmData"] as? [String: Any] {
+            print("⌚ [WC-Watch] Got khatmData — percent=\(khatmData["percent"] ?? "?")")
+            saveKhatmData(khatmData)
+        }
     }
 
     // Reçu quand l'iPhone envoie sendMessage (Watch joignable en temps réel)
@@ -44,6 +48,20 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {
         if let prayerTimes = message["prayerTimes"] as? [String: Any] {
             savePrayerTimes(prayerTimes)
         }
+        if let khatmData = message["khatmData"] as? [String: Any] {
+            saveKhatmData(khatmData)
+        }
+    }
+
+    private func saveKhatmData(_ data: [String: Any]) {
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            print("⌚ [WC-Watch] ❌ Cannot access App Group UserDefaults for khatmData!")
+            return
+        }
+        defaults.set(data, forKey: "khatmData")
+        defaults.synchronize()
+        print("⌚ [WC-Watch] ✅ Saved khatmData — percent=\(data["percent"] ?? "?")")
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func savePrayerTimes(_ data: [String: Any]) {
@@ -81,6 +99,10 @@ class WatchConnectivityManager: NSObject, WCSessionDelegate {
             savePrayerTimes(prayerTimes)
         } else {
             print("⌚ [WC-Watch] ⚠️ No prayerTimes in receivedApplicationContext")
+        }
+        if let khatmData = ctx["khatmData"] as? [String: Any] {
+            print("⌚ [WC-Watch] Found pending khatmData — percent=\(khatmData["percent"] ?? "?")")
+            saveKhatmData(khatmData)
         }
     }
 }

@@ -9,7 +9,8 @@ public class SharedDataPlugin: CAPPlugin, CAPBridgedPlugin, WCSessionDelegate {
     public let jsName = "SharedData"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "savePrayerTimes", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "saveCurrentVerse", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "saveCurrentVerse", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "saveKhatm", returnType: CAPPluginReturnPromise)
     ]
 
     private let suiteName = "group.com.tmshparis.qurani"
@@ -103,6 +104,35 @@ public class SharedDataPlugin: CAPPlugin, CAPBridgedPlugin, WCSessionDelegate {
 
         defaults.set(data, forKey: "currentVerse")
         WidgetCenter.shared.reloadAllTimelines()
+        call.resolve()
+    }
+
+    @objc func saveKhatm(_ call: CAPPluginCall) {
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            call.reject("Cannot access App Group UserDefaults"); return
+        }
+        let data: [String: Any] = [
+            "percent":  call.getDouble("percent")  ?? 0,
+            "surahNum": call.getInt("surahNum")    ?? 1,
+            "ayahNum":  call.getInt("ayahNum")     ?? 1,
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        defaults.set(data, forKey: "khatmData")
+        WidgetCenter.shared.reloadAllTimelines()
+
+        // Transfert vers Apple Watch (en fusionnant avec le contexte existant)
+        if WCSession.isSupported() {
+            let session = WCSession.default
+            var merged = session.applicationContext
+            merged["khatmData"] = data
+            do {
+                try session.updateApplicationContext(merged)
+                print("🔌 [WC-iPhone] saveKhatm — ✅ updateApplicationContext OK percent=\(data["percent"] ?? "?")")
+            } catch {
+                print("🔌 [WC-iPhone] saveKhatm — ❌ updateApplicationContext ERREUR: \(error)")
+            }
+        }
+
         call.resolve()
     }
 }

@@ -12,5 +12,9 @@ import SwiftUI
 struct QuraniWatchComplicationBundle: WidgetBundle {
     var body: some Widget {
         QuraniWatchComplication()
+        AllPrayersRowComplication()
+        IftarComplication()
+        QiyamComplication()
+        CountdownBarComplication()
     }
 }

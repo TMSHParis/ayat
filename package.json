@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Qurani — Lecture du Coran en 30 jours",
   "scripts": {
-    "build": "rm -rf www && mkdir -p www/fonts www/icons www/img www/audio/dua www/.well-known && cp index.html style.css app.js quran.json quran-fr.json quran-en.json quran-tajwid.json quran-phonetic.json manifest.json OneSignalSDKWorker.js sw.js privacy.html support.html audio-processor.js follow-worker.js vocab.json auth-native.html www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/ && cp -r img/* www/img/ && cp audio/dua/* www/audio/dua/ && cp .well-known/apple-app-site-association www/.well-known/ 2>/dev/null || true",
+    "build": "rm -rf www && mkdir -p www/fonts www/icons www/img www/audio/dua www/.well-known www/app www/mockups/screens www/store www/icone && cp index.html style.css app.js quran.json quran-warsh.json quran-fr.json quran-en.json quran-tajwid.json quran-phonetic.json manifest.json OneSignalSDKWorker.js sw.js privacy.html support.html audio-processor.js follow-worker.js vocab.json auth-native.html www/ && cp fonts/* www/fonts/ && cp icons/* www/icons/ && cp -r img/* www/img/ && cp audio/dua/* www/audio/dua/ && cp .well-known/apple-app-site-association www/.well-known/ 2>/dev/null || true && cp app/index.html www/app/ && cp mockups/screens/*.png www/mockups/screens/ && cp store/feature-graphic-android.png www/store/ && cp icone/* www/icone/",
     "cap:sync": "npm run build && npx cap sync && sed -i '' 's/swift-tools-version: 5.9/swift-tools-version: 6.0/' ios/App/CapApp-SPM/Package.swift && echo '✅ Package.swift patched (swift-tools-version 5.9 → 6.0)'"
   },
   "repository": {
@@ -14,13 +14,13 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "^8.0.1",
     "@capacitor/browser": "^8.0.1",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
+    "@capacitor/local-notifications": "^8.0.2",
     "@capgo/capacitor-speech-recognition": "^8.0.10"
   },
   "devDependencies": {
