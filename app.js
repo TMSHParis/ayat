@@ -14599,13 +14599,33 @@
       var ayahNum = isBasmalaFirst ? verseI : verseI + 1;
       var arText = s.ayahs[verseI] || "";
       var frText = (surahsFr[spCurrentSurahIdx] && surahsFr[spCurrentSurahIdx].ayahs[verseI]) || "";
-      // Open share choice (Texte / Image)
+      var ref = SURAH_TRANSLIT[num] + " — " + (SURAH_NAMES_FR[num] || "") + " · Verset " + ayahNum;
+      var text = arText + (frText ? "\n" + frText : "") + "\n\n" + ref;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() { showToast("Verset copié"); }).catch(function() { showToast("Impossible de copier"); });
+      }
+      var bar = $("sp-action-bar");
+      if (bar) bar.classList.add("hidden");
+      spSelectedVerseI = -1;
+    });
+
+    // Share button (Texte / Image choice)
+    var spShareBtn = $("sp-action-share");
+    if (spShareBtn) spShareBtn.addEventListener("click", function() {
+      if (spCurrentSurahIdx < 0) return;
+      var s = surahs[spCurrentSurahIdx];
+      if (!s) return;
+      var num = s.surahNumber;
+      var isBasmalaFirst = (num !== 1 && num !== 9);
+      var verseI = _spActionVerseI();
+      if (verseI < 0) return;
+      var ayahNum = isBasmalaFirst ? verseI : verseI + 1;
       _shareAyahCache = {
         surahNumber: num,
         surahNameFr: SURAH_NAMES_FR[num] || "",
         ayahNumber: ayahNum,
-        text: arText,
-        textFr: frText
+        text: s.ayahs[verseI] || "",
+        textFr: (surahsFr[spCurrentSurahIdx] && surahsFr[spCurrentSurahIdx].ayahs[verseI]) || ""
       };
       _openShareChoice();
       var bar = $("sp-action-bar");
