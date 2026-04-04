@@ -12235,6 +12235,7 @@
     var searchTimer = null;
     var MAX_RESULTS = 50;
 
+    var _performSearch; // exposed for thematic search
     function performSearch(query) {
       var resultsEl = $("search-results");
       var hintEl = $("search-hint");
@@ -12363,6 +12364,8 @@
         performSearch(val);
       }, 300);
     });
+
+    _performSearch = performSearch; // expose for thematic search
 
     // Keyword pill shortcuts
     document.querySelectorAll(".qs-pill[data-qs-word]").forEach(function (pill) {
@@ -16057,19 +16060,23 @@
     var idx = getDailyVerseIndex();
     var ayah = getAyahByGlobalIndex(idx);
     if (!ayah) return;
+    // Skip basmala — pick next verse instead
+    if (ayah.isBasmala) {
+      idx = (idx + 1) % totalAyat;
+      ayah = getAyahByGlobalIndex(idx);
+      if (!ayah) return;
+    }
     var arEl = $("dash-daily-verse-ar");
     var frEl = $("dash-daily-verse-fr");
     var refEl = $("dash-daily-verse-ref");
     if (arEl) {
-      var arText = ayah.text;
-      arEl.textContent = arText.length > 100 ? arText.substring(0, 100) + "\u2026" : arText;
+      arEl.textContent = ayah.text;
     }
     if (frEl) {
-      var frText = ayah.textFr || "";
-      frEl.textContent = frText.length > 150 ? frText.substring(0, 150) + "\u2026" : frText;
+      frEl.textContent = ayah.textFr || "";
     }
     if (refEl) {
-      refEl.textContent = "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+      refEl.textContent = ayah.surahNameFr + " — " + ayah.ayahNumber;
     }
     var card = $("dash-daily-verse");
     if (card && !card._dvBound) {
@@ -16282,11 +16289,11 @@
         // Toggle active
         tagsEl.querySelectorAll(".qs-theme-tag").forEach(function (t) { t.classList.remove("active"); });
         tag.classList.add("active");
-        // Set search input and trigger input event to use existing search logic
+        // Set search input and call performSearch directly
         var inp = $("search-input");
-        if (inp) {
-          inp.value = arKeyword;
-          inp.dispatchEvent(new Event("input", { bubbles: true }));
+        if (inp) inp.value = arKeyword;
+        if (typeof _performSearch === "function") {
+          _performSearch(arKeyword);
         }
       });
     });
