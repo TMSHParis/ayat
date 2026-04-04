@@ -7209,7 +7209,7 @@
     "matin:1":EVERYAYAH+"112001.mp3","matin:2":EVERYAYAH+"113001.mp3",
     "matin:3":EVERYAYAH+"114001.mp3",
     // MATIN — non-Quranic adhkar (hisnii — no archive.org alt available)
-    "matin:4":"audio/dua/Invocation-du-matin-bismillah-ladhi-la-yaduru.mp3","matin:5":"2017/02/2_2.mp3",
+    "matin:4":"audio/dua/Invocation-du-matin-bismillah-ladhi-la-yaduru.mp3","matin:5":"audio/dua/allahumma-bika-asbahna.mp3",
     "matin:6":"audio/dua/asbahna-alhamdullillah.mp3","matin:7":"audio/dua/asbahna-rabbi.mp3",
     "matin:8":"audio/dua/Allahoumma-anta-rabbi.mp3",
     "matin:9":"audio/dua/allahoumma-inni-as-alouka.mp3",
