@@ -22,6 +22,7 @@
         var s = JSON.parse(localStorage.getItem("qurani-app-state") || "{}");
         var t = s.theme || "light";
         if (t === "auto") t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "prayer") { var h = new Date().getHours(); t = (h >= 19 || h < 5) ? "dark" : "light"; }
         if (t === "dark") document.documentElement.classList.add("dark");
         else if (t === "sepia") document.documentElement.classList.add("sepia");
       } catch(e) {}
@@ -62,6 +63,22 @@
 
       <!-- Shooting stars layer -->
       <div id="dash-shooting-stars" aria-hidden="true"></div>
+
+      <!-- Nouveautés Banner -->
+      <div class="dash-whatsnew" id="dash-whatsnew">
+        <div class="dash-whatsnew-inner">
+          <span class="dash-whatsnew-badge" id="dash-whatsnew-badge">NOUVEAU</span>
+          <span class="dash-whatsnew-text" id="dash-whatsnew-text"></span>
+          <svg class="dash-whatsnew-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+      </div>
+
+      <!-- Hijri Calendar Card -->
+      <div class="dash-card dash-hijri-card" id="dash-hijri-card">
+        <div class="dash-hijri-date" id="dash-hijri-date"></div>
+        <div class="dash-hijri-event" id="dash-hijri-event"></div>
+        <div class="dash-hijri-daytype" id="dash-hijri-daytype"></div>
+      </div>
 
       <!-- Compact Prayer Bar -->
       <div class="dash-prayer-bar" id="dash-prayer-bar">
@@ -163,6 +180,23 @@
 
       <div class="dash-surat-progress-line"></div>
 
+      <!-- Daily Goal Widget -->
+      <div class="dash-card dash-goal-card" id="dash-goal-card">
+        <div class="dash-goal-ring-wrap">
+          <svg class="dash-goal-ring" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--glass-border)" stroke-width="8" opacity="0.3"/>
+            <circle id="dash-goal-ring-fill" cx="60" cy="60" r="52" fill="none" stroke="#34d399" stroke-width="8" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="dash-goal-ring-text" id="dash-goal-ring-text">0/0</div>
+        </div>
+        <div class="dash-goal-info">
+          <div class="dash-goal-title">Objectif du jour</div>
+          <div class="dash-goal-sub" id="dash-goal-sub">versets</div>
+        </div>
+      </div>
+
+      <div class="dash-surat-progress-line"></div>
+
       <!-- Dashboard Stats -->
       <div class="dash-stats-section" id="dash-stats-section">
         <div class="dash-stats-header">
@@ -186,6 +220,19 @@
       <div class="dash-khatm-progress-line" id="dash-hassanates-progress-line">
         <div class="dash-stats-progress-fill" id="dash-stats-progress-fill"></div>
       </div>
+
+      <!-- Daily Verse -->
+      <div class="dash-card dash-daily-verse" id="dash-daily-verse">
+        <div class="dash-card-label-row">
+          <span class="dash-card-label">VERSET DU JOUR</span>
+          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </div>
+        <div class="dash-daily-verse-ar" id="dash-daily-verse-ar" dir="rtl"></div>
+        <div class="dash-daily-verse-fr" id="dash-daily-verse-fr"></div>
+        <div class="dash-daily-verse-ref" id="dash-daily-verse-ref"></div>
+      </div>
+
+      <div class="dash-surat-progress-line"></div>
 
       <!-- Emotion Wheel -->
       <div class="dash-emotion" id="dash-emotion">
@@ -526,6 +573,15 @@
           <div class="moi-item-text">
             <span class="moi-item-label">Mémorisation</span>
             <span class="moi-item-count">HIFZ — APPRENTISSAGE PAR CŒUR</span>
+          </div>
+          <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="moi-sep"></div>
+        <div class="moi-item" id="moi-quiz">
+          <span class="moi-item-dot" style="background:#A0D8EF"></span>
+          <div class="moi-item-text">
+            <span class="moi-item-label">Quiz Hifz</span>
+            <span class="moi-item-count">TESTEZ VOTRE M&Eacute;MORISATION</span>
           </div>
           <svg class="moi-item-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </div>
@@ -984,6 +1040,19 @@
         <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="moi-sep"></div>
+      <div class="moi-settings-item" id="moi-set-export">
+        <span class="moi-item-dot" style="background:#8BC99A"></span>
+        <span class="moi-settings-item-label">Exporter mes donn&eacute;es</span>
+        <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="moi-sep"></div>
+      <div class="moi-settings-item" id="moi-set-import">
+        <span class="moi-item-dot" style="background:#D4A8E0"></span>
+        <span class="moi-settings-item-label">Importer mes donn&eacute;es</span>
+        <svg class="moi-item-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="moi-sep"></div>
+      <input type="file" id="import-file-input" accept=".json" style="display:none">
     </div>
   </div>
 </div>
@@ -1016,6 +1085,7 @@
         <button class="setting-btn active" data-theme="light">Jour</button>
         <button class="setting-btn" data-theme="sepia">Sépia</button>
         <button class="setting-btn" data-theme="dark">Nuit</button>
+        <button class="setting-btn" data-theme="prayer">Pri&egrave;re</button>
       </div>
     </div>
     <div class="setting-group">
@@ -1958,10 +2028,30 @@
   </div>
 
   <div class="qs-filters" id="qs-filters">
-    <button class="qs-pill" data-qs-word="prière">PRIÈRE</button>
+    <button class="qs-pill" data-qs-word="prière">PRI&Egrave;RE</button>
     <button class="qs-pill" data-qs-word="zakat">ZAKAT</button>
     <button class="qs-pill" data-qs-word="paradis">PARADIS</button>
     <button class="qs-pill" data-qs-word="patience">PATIENCE</button>
+  </div>
+  <div class="qs-themes" id="qs-themes">
+    <div class="qs-themes-title">Recherche th&eacute;matique</div>
+    <div class="qs-themes-tags" id="qs-themes-tags">
+      <button class="qs-theme-tag" data-theme-ar="صبر">Patience</button>
+      <button class="qs-theme-tag" data-theme-ar="جنة">Paradis</button>
+      <button class="qs-theme-tag" data-theme-ar="رحمة">Mis&eacute;ricorde</button>
+      <button class="qs-theme-tag" data-theme-ar="صلاة">Pri&egrave;re</button>
+      <button class="qs-theme-tag" data-theme-ar="عدل">Justice</button>
+      <button class="qs-theme-tag" data-theme-ar="أهل">Famille</button>
+      <button class="qs-theme-tag" data-theme-ar="علم">Savoir</button>
+      <button class="qs-theme-tag" data-theme-ar="شكر">Gratitude</button>
+      <button class="qs-theme-tag" data-theme-ar="توبة">Repentance</button>
+      <button class="qs-theme-tag" data-theme-ar="موت">Mort</button>
+      <button class="qs-theme-tag" data-theme-ar="ملائكة">Anges</button>
+      <button class="qs-theme-tag" data-theme-ar="رزق">Subsistance</button>
+      <button class="qs-theme-tag" data-theme-ar="نور">Lumi&egrave;re</button>
+      <button class="qs-theme-tag" data-theme-ar="سلام">Paix</button>
+      <button class="qs-theme-tag" data-theme-ar="تقوى">Pi&eacute;t&eacute;</button>
+    </div>
   </div>
 
   <div class="qs-body" id="qs-body">
@@ -2915,6 +3005,17 @@
   </div>
 </div>
 
+<!-- ====== CHANGELOG / NOUVEAUTÉS OVERLAY ====== -->
+<div id="changelog-overlay" class="overlay hidden">
+  <div class="overlay-header">
+    <span class="overlay-header-title">Nouveaut&eacute;s</span>
+    <button class="close-btn" id="changelog-close" aria-label="Fermer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="overlay-body" id="changelog-body"></div>
+</div>
+
 <!-- SURAH PLAYER MENU (position:fixed, outside overlay) -->
 <div id="surah-player-menu" class="hidden">
   <div id="spm-lang-row" class="spm-btn">
@@ -3024,6 +3125,41 @@
       </button>
     </div>
     <p class="auth-overlay-footer">Aucun mot de passe requis</p>
+  </div>
+</div>
+
+<canvas id="share-canvas" width="1080" height="1080" style="display:none"></canvas>
+
+<!-- ====== SHARE CHOICE SHEET ====== -->
+<div id="share-choice-sheet" class="share-choice-sheet hidden">
+  <div class="share-choice-backdrop" id="share-choice-backdrop"></div>
+  <div class="share-choice-card">
+    <div class="share-choice-title">Partager le verset</div>
+    <button class="share-choice-btn" id="share-as-text">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Texte
+    </button>
+    <button class="share-choice-btn" id="share-as-image">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Image
+    </button>
+  </div>
+</div>
+
+<!-- ====== HIFZ QUIZ OVERLAY ====== -->
+<div id="quiz-overlay" class="overlay hidden">
+  <div class="quiz-topbar">
+    <button class="quiz-back" id="quiz-close" aria-label="Retour">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="quiz-topbar-title">Quiz Hifz</span>
+    <span class="quiz-score" id="quiz-score">0</span>
+  </div>
+  <div class="quiz-body">
+    <div class="quiz-verse" id="quiz-verse" dir="rtl"></div>
+    <div class="quiz-ref" id="quiz-ref"></div>
+    <div class="quiz-choices" id="quiz-choices"></div>
+    <button class="quiz-next-btn" id="quiz-next">Question suivante</button>
   </div>
 </div>
 

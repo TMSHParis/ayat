@@ -265,6 +265,9 @@
     if (typeof updateDashStats === "function") {
       try { updateDashStats(); } catch(e) {}
     }
+    if (typeof updateDashGoalWidget === "function") {
+      try { updateDashGoalWidget(); } catch(e) {}
+    }
   }
   function computeStreak(dates) {
     if (!dates || dates.length === 0) return 0;
@@ -835,6 +838,11 @@
   function getEffectiveTheme() {
     if (state.theme === "auto") {
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    if (state.theme === "prayer") {
+      if (typeof _getPrayerThemeEffective === "function") return _getPrayerThemeEffective();
+      var h = new Date().getHours();
+      return (h >= 19 || h < 5) ? "dark" : "light";
     }
     return state.theme;
   }
@@ -3741,6 +3749,10 @@
     updateDashSuratCard();
     // Dash carousel (sourate du jour + invocations)
     _initDashCarousel();
+    // New features: daily verse, hijri, goal widget
+    if (typeof updateDailyVerse === "function") try { updateDailyVerse(); } catch(e) {}
+    if (typeof updateHijriCard === "function") try { updateHijriCard(); } catch(e) {}
+    if (typeof updateDashGoalWidget === "function") try { updateDashGoalWidget(); } catch(e) {}
 
     // Ramadan block — hidden (Ramadan 1447 terminé)
     var ramadanBlock = $("dash-ramadan");
@@ -11821,18 +11833,8 @@
     $("bookmark-btn").addEventListener("click", toggleBookmark);
     updateBookmarkBtn();
     $("share-btn").addEventListener("click", function () {
-      var ayah = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
-      var ref = "Sourate " + ayah.surahNameFr + " — Verset " + ayah.ayahNumber;
-      var text = ayah.text + "\n\n" + ref;
-      if (navigator.share) {
-        navigator.share({ title: "Qurani", text: text }).catch(function () {});
-      } else {
-        navigator.clipboard.writeText(text).then(function () {
-          showToast("Verset copié");
-        }).catch(function () {
-          showToast("Impossible de copier");
-        });
-      }
+      _shareAyahCache = freeReadMode ? getFreeReadAyah() : getAyahByGlobalIndex(state.globalIndex);
+      _openShareChoice();
     });
 
     // ---- DOCK AUTO-HIDE ----
@@ -15907,7 +15909,848 @@
     }
   }
 
+  // ====== FEATURE 1: Share Verse as Image (Canvas API) ======
+  var _shareAyahCache = null;
+
+  function _openShareChoice() {
+    var sheet = $("share-choice-sheet");
+    if (sheet) sheet.classList.remove("hidden");
+  }
+  function _closeShareChoice() {
+    var sheet = $("share-choice-sheet");
+    if (sheet) sheet.classList.add("hidden");
+  }
+
+  function _shareAsText(ayah) {
+    var ref = "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+    var text = ayah.text + "\n\n" + ref;
+    if (navigator.share) {
+      navigator.share({ title: "Qurani", text: text }).catch(function () {});
+    } else {
+      navigator.clipboard.writeText(text).then(function () {
+        showToast("Verset copi\u00e9");
+      }).catch(function () {
+        showToast("Impossible de copier");
+      });
+    }
+  }
+
+  function _shareAsImage(ayah) {
+    var canvas = $("share-canvas");
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    var w = 1080, h = 1080;
+    canvas.width = w;
+    canvas.height = h;
+
+    // Gradient background
+    var grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, "#0d4f4f");
+    grad.addColorStop(1, "#0a1a3a");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Decorative border
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 40, w - 80, h - 80);
+
+    // Arabic text
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "36px 'Amiri', 'Traditional Arabic', serif";
+    ctx.textAlign = "center";
+    ctx.direction = "rtl";
+    _wrapText(ctx, ayah.text, w / 2, 340, w - 160, 56);
+
+    // French translation
+    if (ayah.textFr) {
+      ctx.fillStyle = "rgba(255,255,255,0.65)";
+      ctx.font = "20px sans-serif";
+      ctx.direction = "ltr";
+      _wrapText(ctx, ayah.textFr, w / 2, 680, w - 160, 32);
+    }
+
+    // Reference
+    var ref = "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = "600 18px sans-serif";
+    ctx.direction = "ltr";
+    ctx.textAlign = "center";
+    ctx.fillText(ref, w / 2, h - 120);
+
+    // Watermark
+    ctx.fillStyle = "rgba(255,255,255,0.25)";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText("QURANI", w / 2, h - 60);
+
+    canvas.toBlob(function (blob) {
+      if (!blob) { showToast("Erreur de g\u00e9n\u00e9ration"); return; }
+      var file = new File([blob], "qurani-verset.png", { type: "image/png" });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: "Qurani" }).catch(function () {});
+      } else {
+        // Fallback: download
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "qurani-verset.png";
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        showToast("Image t\u00e9l\u00e9charg\u00e9e");
+      }
+    }, "image/png");
+  }
+
+  function _wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    var words = text.split(" ");
+    var line = "";
+    var lines = [];
+    for (var i = 0; i < words.length; i++) {
+      var test = line + words[i] + " ";
+      if (ctx.measureText(test).width > maxWidth && line !== "") {
+        lines.push(line.trim());
+        line = words[i] + " ";
+      } else {
+        line = test;
+      }
+    }
+    if (line.trim()) lines.push(line.trim());
+    // Limit to 8 lines
+    if (lines.length > 8) {
+      lines = lines.slice(0, 8);
+      lines[7] = lines[7] + "...";
+    }
+    for (var j = 0; j < lines.length; j++) {
+      ctx.fillText(lines[j], x, y + j * lineHeight);
+    }
+  }
+
+  function initShareChoice() {
+    var backdrop = $("share-choice-backdrop");
+    if (backdrop) backdrop.addEventListener("click", _closeShareChoice);
+    var textBtn = $("share-as-text");
+    if (textBtn) {
+      textBtn.addEventListener("click", function () {
+        _closeShareChoice();
+        if (_shareAyahCache) _shareAsText(_shareAyahCache);
+      });
+    }
+    var imgBtn = $("share-as-image");
+    if (imgBtn) {
+      imgBtn.addEventListener("click", function () {
+        _closeShareChoice();
+        if (_shareAyahCache) _shareAsImage(_shareAyahCache);
+      });
+    }
+  }
+
+  // ====== FEATURE 2: Daily Verse on Dashboard ======
+  function getDailyVerseIndex() {
+    var now = new Date();
+    var epoch = new Date(2000, 0, 1);
+    var daysSinceEpoch = Math.floor((now.getTime() - epoch.getTime()) / 86400000);
+    return daysSinceEpoch % totalAyat;
+  }
+
+  function updateDailyVerse() {
+    if (!surahs || surahs.length === 0 || totalAyat === 0) return;
+    var idx = getDailyVerseIndex();
+    var ayah = getAyahByGlobalIndex(idx);
+    if (!ayah) return;
+    var arEl = $("dash-daily-verse-ar");
+    var frEl = $("dash-daily-verse-fr");
+    var refEl = $("dash-daily-verse-ref");
+    if (arEl) {
+      var arText = ayah.text;
+      arEl.textContent = arText.length > 100 ? arText.substring(0, 100) + "\u2026" : arText;
+    }
+    if (frEl) {
+      var frText = ayah.textFr || "";
+      frEl.textContent = frText.length > 150 ? frText.substring(0, 150) + "\u2026" : frText;
+    }
+    if (refEl) {
+      refEl.textContent = "Sourate " + ayah.surahNameFr + " \u2014 Verset " + ayah.ayahNumber;
+    }
+    var card = $("dash-daily-verse");
+    if (card && !card._dvBound) {
+      card._dvBound = true;
+      card.addEventListener("click", function () {
+        // Navigate to verse in surah player
+        var a = getAyahByGlobalIndex(getDailyVerseIndex());
+        if (!a) return;
+        var si = surahs.findIndex(function (s) { return s.surahNumber === a.surahNumber; });
+        if (si >= 0) {
+          openSurahPlayer(si);
+          setTimeout(function () {
+            var target = document.querySelector("#sp-reader-content .sp-verse[data-i='" + (a.ayahNumber) + "']");
+            if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 200);
+        }
+      });
+    }
+  }
+
+  // ====== FEATURE 3: Hifz Quiz Mode ======
+  var quizScore = 0;
+  var quizCurrentBlanks = [];
+  var quizCurrentCorrectWord = "";
+  var quizBlanksRemaining = 0;
+
+  function openQuizOverlay() {
+    var overlay = $("quiz-overlay");
+    if (overlay) overlay.classList.remove("hidden");
+    quizScore = 0;
+    var scoreEl = $("quiz-score");
+    if (scoreEl) scoreEl.textContent = "0";
+    generateQuizQuestion();
+  }
+
+  function closeQuizOverlay() {
+    var overlay = $("quiz-overlay");
+    if (overlay) overlay.classList.add("hidden");
+  }
+
+  function generateQuizQuestion() {
+    if (!surahs || surahs.length === 0) return;
+    // Pick a random surah and verse
+    var surahIdx = Math.floor(Math.random() * surahs.length);
+    var s = surahs[surahIdx];
+    var ayahIdx = Math.floor(Math.random() * s.ayahs.length);
+    // Skip basmala
+    if (s.surahNumber !== 1 && s.surahNumber !== 9 && ayahIdx === 0) ayahIdx = 1;
+    if (ayahIdx >= s.ayahs.length) ayahIdx = s.ayahs.length - 1;
+
+    var text = s.ayahs[ayahIdx];
+    var words = text.split(/\s+/).filter(function (w) { return w.length > 0; });
+    if (words.length < 5) {
+      // Try again with a longer verse
+      generateQuizQuestion();
+      return;
+    }
+
+    // Pick 3 random word positions to blank out
+    var positions = [];
+    var available = [];
+    for (var i = 0; i < words.length; i++) available.push(i);
+    // Shuffle
+    for (var j = available.length - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var tmp = available[j]; available[j] = available[k]; available[k] = tmp;
+    }
+    var blanksCount = Math.min(3, Math.floor(words.length / 3));
+    if (blanksCount < 1) blanksCount = 1;
+    positions = available.slice(0, blanksCount).sort(function (a, b) { return a - b; });
+
+    quizCurrentBlanks = positions.map(function (p) { return { pos: p, word: words[p], answered: false }; });
+    quizBlanksRemaining = quizCurrentBlanks.length;
+
+    // Render verse with blanks
+    var verseEl = $("quiz-verse");
+    if (verseEl) {
+      var html = "";
+      for (var w = 0; w < words.length; w++) {
+        var isBlank = positions.indexOf(w) !== -1;
+        if (isBlank) {
+          html += '<span class="quiz-blank" data-pos="' + w + '">' + words[w] + '</span> ';
+        } else {
+          html += words[w] + " ";
+        }
+      }
+      verseEl.innerHTML = html;
+    }
+
+    // Reference
+    var displayNum = (s.surahNumber !== 1 && s.surahNumber !== 9) ? ayahIdx : ayahIdx + 1;
+    var refEl = $("quiz-ref");
+    if (refEl) refEl.textContent = (SURAH_NAMES_FR[s.surahNumber] || "Sourate " + s.surahNumber) + " \u2014 Verset " + displayNum;
+
+    // Show first blank's choices
+    _showQuizChoicesForBlank(0);
+
+    var nextBtn = $("quiz-next");
+    if (nextBtn) nextBtn.style.display = "none";
+  }
+
+  function _showQuizChoicesForBlank(blankIdx) {
+    if (blankIdx >= quizCurrentBlanks.length) {
+      // All blanks answered
+      var nextBtn = $("quiz-next");
+      if (nextBtn) nextBtn.style.display = "block";
+      return;
+    }
+    var blank = quizCurrentBlanks[blankIdx];
+    quizCurrentCorrectWord = blank.word;
+
+    // Generate 3 distractors from random verses
+    var distractors = [];
+    var attempts = 0;
+    while (distractors.length < 3 && attempts < 50) {
+      var rsi = Math.floor(Math.random() * surahs.length);
+      var rai = Math.floor(Math.random() * surahs[rsi].ayahs.length);
+      var rwords = surahs[rsi].ayahs[rai].split(/\s+/);
+      var rw = rwords[Math.floor(Math.random() * rwords.length)];
+      if (rw && rw !== blank.word && distractors.indexOf(rw) === -1) {
+        distractors.push(rw);
+      }
+      attempts++;
+    }
+
+    var choices = distractors.concat([blank.word]);
+    // Shuffle choices
+    for (var i = choices.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = choices[i]; choices[i] = choices[j]; choices[j] = tmp;
+    }
+
+    var choicesEl = $("quiz-choices");
+    if (choicesEl) {
+      choicesEl.innerHTML = "";
+      choices.forEach(function (c) {
+        var btn = document.createElement("button");
+        btn.className = "quiz-choice-btn";
+        btn.textContent = c;
+        btn.addEventListener("click", function () {
+          _handleQuizChoice(c, blankIdx, choicesEl);
+        });
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    // Highlight current blank
+    var blankEls = document.querySelectorAll("#quiz-verse .quiz-blank");
+    blankEls.forEach(function (el) { el.style.background = ""; });
+    var currentBlankEl = document.querySelector('#quiz-verse .quiz-blank[data-pos="' + blank.pos + '"]');
+    if (currentBlankEl) currentBlankEl.style.background = "rgba(52,211,153,0.15)";
+  }
+
+  function _handleQuizChoice(chosen, blankIdx, choicesEl) {
+    var blank = quizCurrentBlanks[blankIdx];
+    var blankEl = document.querySelector('#quiz-verse .quiz-blank[data-pos="' + blank.pos + '"]');
+    var correct = chosen === blank.word;
+
+    if (correct) {
+      quizScore++;
+      if (blankEl) { blankEl.classList.add("quiz-filled"); blankEl.style.background = ""; }
+      var scoreEl = $("quiz-score");
+      if (scoreEl) scoreEl.textContent = quizScore;
+    } else {
+      if (blankEl) { blankEl.classList.add("quiz-wrong"); blankEl.style.background = ""; }
+    }
+
+    // Disable all choice buttons + highlight
+    var btns = choicesEl.querySelectorAll(".quiz-choice-btn");
+    btns.forEach(function (b) {
+      b.classList.add("quiz-disabled");
+      if (b.textContent === blank.word) b.classList.add("quiz-correct");
+      else if (b.textContent === chosen && !correct) b.classList.add("quiz-incorrect");
+    });
+
+    quizBlanksRemaining--;
+    // Move to next blank after short delay
+    setTimeout(function () {
+      _showQuizChoicesForBlank(blankIdx + 1);
+    }, 800);
+  }
+
+  function initQuiz() {
+    var quizItem = $("moi-quiz");
+    if (quizItem) {
+      quizItem.addEventListener("click", function () {
+        openQuizOverlay();
+      });
+    }
+    var closeBtn = $("quiz-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeQuizOverlay);
+    }
+    var nextBtn = $("quiz-next");
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        generateQuizQuestion();
+      });
+    }
+  }
+
+  // ====== FEATURE 4: Thematic Search ======
+  function initThematicSearch() {
+    var tagsEl = $("qs-themes-tags");
+    if (!tagsEl) return;
+    tagsEl.querySelectorAll(".qs-theme-tag").forEach(function (tag) {
+      tag.addEventListener("click", function () {
+        var arKeyword = tag.dataset.themeAr;
+        if (!arKeyword) return;
+        // Toggle active
+        tagsEl.querySelectorAll(".qs-theme-tag").forEach(function (t) { t.classList.remove("active"); });
+        tag.classList.add("active");
+        // Set search input and trigger input event to use existing search logic
+        var inp = $("search-input");
+        if (inp) {
+          inp.value = arKeyword;
+          inp.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+    });
+  }
+
+  // ====== FEATURE 5: Hijri Calendar on Dashboard ======
+  var ISLAMIC_EVENTS = [
+    { month: 1, day: 1, name: "Nouvel An Islamique" },
+    { month: 1, day: 10, name: "Achoura" },
+    { month: 3, day: 12, name: "Mawlid an-Nabi" },
+    { month: 7, day: 27, name: "Isra et Mi\u2019raj" },
+    { month: 8, day: 15, name: "Nuit du pardon (Bara\u2019ah)" },
+    { month: 9, day: 1, name: "D\u00e9but du Ramadan" },
+    { month: 9, day: 27, name: "Nuit du Destin (Laylat al-Qadr)" },
+    { month: 10, day: 1, name: "A\u00efd al-Fitr" },
+    { month: 12, day: 8, name: "Jour de Arafat (veille)" },
+    { month: 12, day: 10, name: "A\u00efd al-Adha" }
+  ];
+
+  function updateHijriCard() {
+    var now = new Date();
+    var hijri = _getHijriDate(now);
+    var dateEl = $("dash-hijri-date");
+    var eventEl = $("dash-hijri-event");
+    var dayTypeEl = $("dash-hijri-daytype");
+
+    if (dateEl) {
+      dateEl.textContent = hijri.day + " " + hijri.monthName + " " + hijri.year + " H";
+    }
+
+    // Day type indicators
+    var dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, 4=Thu
+    var hints = [];
+    if (dayOfWeek === 1 || dayOfWeek === 4) {
+      hints.push("Je\u00fbne recommand\u00e9 (lundi/jeudi)");
+    }
+    if (hijri.day === 13 || hijri.day === 14 || hijri.day === 15) {
+      hints.push("Jours blancs \u2014 je\u00fbne recommand\u00e9");
+    }
+    if (dayTypeEl) dayTypeEl.textContent = hints.join(" \u00b7 ");
+
+    // Next Islamic event
+    if (eventEl) {
+      var nextEvent = _getNextIslamicEvent(hijri);
+      if (nextEvent) {
+        eventEl.textContent = nextEvent.name + (nextEvent.daysLeft > 0 ? " dans " + nextEvent.daysLeft + " jour" + (nextEvent.daysLeft > 1 ? "s" : "") : " \u2014 aujourd\u2019hui");
+      } else {
+        eventEl.textContent = "";
+      }
+    }
+  }
+
+  function _getNextIslamicEvent(hijri) {
+    var current = hijri.month * 100 + hijri.day;
+    var best = null;
+    var bestDist = 9999;
+    for (var i = 0; i < ISLAMIC_EVENTS.length; i++) {
+      var ev = ISLAMIC_EVENTS[i];
+      var evCode = ev.month * 100 + ev.day;
+      var dist;
+      if (evCode >= current) {
+        dist = _hijriDayDiff(hijri.month, hijri.day, ev.month, ev.day);
+      } else {
+        // Next year
+        dist = _hijriDayDiff(hijri.month, hijri.day, ev.month + 12, ev.day);
+      }
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { name: ev.name, daysLeft: dist };
+      }
+    }
+    return best;
+  }
+
+  function _hijriDayDiff(m1, d1, m2, d2) {
+    // Approximate: each Hijri month ~ 29.5 days
+    return Math.round((m2 - m1) * 29.5 + (d2 - d1));
+  }
+
+  // ====== FEATURE 6: Synced Audio Highlight (estimate-based for full surah audio) ======
+  function initAudioEstimateHighlight() {
+    var audioEl = $("sp-audio-el");
+    if (!audioEl) return;
+    audioEl.addEventListener("timeupdate", function () {
+      // Only do estimate-based highlighting when playing full surah (no per-verse playlist)
+      if (!spIsPlaying) return;
+      if (spPlaylist && spPlaylist.length > 0) return; // per-verse already handles highlighting
+      var duration = audioEl.duration;
+      var current = audioEl.currentTime;
+      if (!duration || isNaN(duration) || duration <= 0) return;
+      var si = spCurrentSurahIdx;
+      if (si < 0 || si >= surahs.length) return;
+      var verseCount = surahs[si].ayahs.length;
+      if (verseCount <= 0) return;
+      var estimatedIdx = Math.floor((current / duration) * verseCount);
+      if (estimatedIdx >= verseCount) estimatedIdx = verseCount - 1;
+      if (estimatedIdx < 0) estimatedIdx = 0;
+      if (estimatedIdx !== spCurrentVerseI) {
+        spSetActiveVerse(estimatedIdx);
+      }
+    });
+  }
+
+  // ====== FEATURE 7: Export/Import User Data ======
+  function exportUserData() {
+    var data = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (key && key.indexOf("qurani-") === 0) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "qurani-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+    showToast("Donn\u00e9es export\u00e9es");
+  }
+
+  function importUserData() {
+    var input = $("import-file-input");
+    if (!input) return;
+    input.value = "";
+    input.click();
+  }
+
+  function _handleImportFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        var count = 0;
+        for (var key in data) {
+          if (data.hasOwnProperty(key) && key.indexOf("qurani-") === 0) {
+            localStorage.setItem(key, data[key]);
+            count++;
+          }
+        }
+        showToast(count + " cl\u00e9s restaur\u00e9es. Rechargement...");
+        setTimeout(function () { location.reload(); }, 1500);
+      } catch (err) {
+        showToast("Fichier invalide");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function initExportImport() {
+    var exportBtn = $("moi-set-export");
+    if (exportBtn) exportBtn.addEventListener("click", exportUserData);
+    var importBtn = $("moi-set-import");
+    if (importBtn) importBtn.addEventListener("click", importUserData);
+    var fileInput = $("import-file-input");
+    if (fileInput) {
+      fileInput.addEventListener("change", function () {
+        if (this.files && this.files[0]) _handleImportFile(this.files[0]);
+      });
+    }
+  }
+
+  // ====== FEATURE 8: Daily Goal Widget on Dashboard ======
+  function updateDashGoalWidget() {
+    var totalToRead = totalAyat * state.khatmaGoal;
+    var dayTargets = computeDayTargets(totalToRead);
+    var dayIndex = getDayIndex(state.startDate);
+    var todayTarget = dayTargets[dayIndex - 1] || 1;
+    var todayRead = state.todayReadCount || 0;
+
+    var ringFill = $("dash-goal-ring-fill");
+    var ringText = $("dash-goal-ring-text");
+    var subEl = $("dash-goal-sub");
+
+    if (ringText) ringText.textContent = todayRead + "/" + todayTarget;
+
+    // SVG ring: circumference = 2 * PI * 52 = 326.73
+    var circumference = 326.73;
+    var pct = Math.min(todayRead / Math.max(todayTarget, 1), 1);
+    var offset = circumference * (1 - pct);
+    if (ringFill) ringFill.setAttribute("stroke-dashoffset", offset);
+
+    if (subEl) {
+      if (pct >= 1) {
+        subEl.textContent = "Objectif atteint ! Baraka Llahu fik";
+        subEl.style.color = "#34d399";
+      } else {
+        var remaining = todayTarget - todayRead;
+        subEl.textContent = remaining + " verset" + (remaining > 1 ? "s" : "") + " restant" + (remaining > 1 ? "s" : "");
+        subEl.style.color = "";
+      }
+    }
+  }
+
+  // ====== FEATURE 9: Prayer-based Auto Night Mode ======
+  function _getPrayerThemeEffective() {
+    // Check cached prayer times for Maghrib and Fajr
+    if (prayerTimesCache && prayerTimesCache.Maghrib && prayerTimesCache.Fajr) {
+      var now = new Date();
+      var nowMin = now.getHours() * 60 + now.getMinutes();
+      var maghribParts = (prayerTimesCache.Maghrib + "").split(":");
+      var fajrParts = (prayerTimesCache.Fajr + "").split(":");
+      var maghribMin = parseInt(maghribParts[0]) * 60 + (parseInt(maghribParts[1]) || 0);
+      var fajrMin = parseInt(fajrParts[0]) * 60 + (parseInt(fajrParts[1]) || 0);
+      if (!isNaN(maghribMin) && !isNaN(fajrMin)) {
+        // Between Maghrib and midnight, or between midnight and Fajr
+        if (nowMin >= maghribMin || nowMin < fajrMin) {
+          return "dark";
+        }
+        return "light";
+      }
+    }
+    // Fallback: rough estimate (19h-5h = dark)
+    var h = new Date().getHours();
+    return (h >= 19 || h < 5) ? "dark" : "light";
+  }
+
+  // ====== CHANGELOG / NOUVEAUTÉS ======
+  var CHANGELOG = [
+    {
+      version: "3.6.0",
+      date: "4 avril 2026",
+      title: "9 nouvelles fonctionnalités",
+      entries: [
+        { type: "feat", text: "Partage de versets en image — générez une belle image à partager sur vos réseaux" },
+        { type: "feat", text: "Verset du jour — un nouveau verset chaque jour sur votre tableau de bord" },
+        { type: "feat", text: "Quiz Hifz — testez votre mémorisation avec des mots manquants" },
+        { type: "feat", text: "Recherche thématique — trouvez les versets par thème (patience, paradis, prière…)" },
+        { type: "feat", text: "Calendrier Hijri — date islamique, jours de jeûne et prochains événements" },
+        { type: "feat", text: "Audio synchronisée — le verset en cours est surligné pendant l'écoute" },
+        { type: "feat", text: "Export / Import — sauvegardez et restaurez toutes vos données" },
+        { type: "feat", text: "Objectif du jour — suivez votre progression quotidienne avec un anneau visuel" },
+        { type: "feat", text: "Mode nuit Prière — bascule automatique jour/nuit selon les horaires de prière" }
+      ]
+    },
+    {
+      version: "3.5.0",
+      date: "28 mars 2026",
+      title: "Lecteur audio amélioré",
+      entries: [
+        { type: "feat", text: "6 récitateurs disponibles avec sélection rapide" },
+        { type: "feat", text: "Lecture continue sourate par sourate sans interruption" },
+        { type: "fix", text: "Correction du lecteur audio sur certains appareils Android" },
+        { type: "perf", text: "Chargement plus rapide des fichiers audio" }
+      ]
+    },
+    {
+      version: "3.4.0",
+      date: "15 mars 2026",
+      title: "Mode Minimal & Concentration",
+      entries: [
+        { type: "feat", text: "Mode Minimal — lecture verset par verset, épurée et immersive" },
+        { type: "feat", text: "Hub de lecture avec choix Khatm ou Libre" },
+        { type: "feat", text: "Personnalisation du thème, taille et mode dans le hub" },
+        { type: "fix", text: "Meilleure gestion du scroll dans le lecteur de sourate" }
+      ]
+    },
+    {
+      version: "3.3.0",
+      date: "1 mars 2026",
+      title: "Zakat, Testament & Héritage",
+      entries: [
+        { type: "feat", text: "Calculateur de Zakat al-Mal avec historique et suivi annuel" },
+        { type: "feat", text: "Générateur de testament islamique (Wasiyya)" },
+        { type: "feat", text: "Calcul des parts d'héritage selon le droit islamique" },
+        { type: "perf", text: "Optimisation du chargement initial de l'application" }
+      ]
+    },
+    {
+      version: "3.2.0",
+      date: "10 février 2026",
+      title: "Ayati — Shazam du Coran",
+      entries: [
+        { type: "feat", text: "Reconnaissance vocale du Coran — identifiez n'importe quel verset récité" },
+        { type: "feat", text: "Modèle IA embarqué fonctionnant 100% hors-ligne" },
+        { type: "feat", text: "Mode suivi de récitation en temps réel" }
+      ]
+    },
+    {
+      version: "3.1.0",
+      date: "20 janvier 2026",
+      title: "Horaires de prière & Qibla",
+      entries: [
+        { type: "feat", text: "Horaires de prière avec géolocalisation automatique" },
+        { type: "feat", text: "Support Mawaqit pour les horaires de votre mosquée" },
+        { type: "feat", text: "Boussole Qibla en temps réel" },
+        { type: "feat", text: "Notifications de rappel pour chaque prière" }
+      ]
+    },
+    {
+      version: "3.0.0",
+      date: "1 janvier 2026",
+      title: "Qurani 3 — Refonte complète",
+      entries: [
+        { type: "feat", text: "Nouveau design glassmorphique avec thèmes Jour, Nuit et Sépia" },
+        { type: "feat", text: "Système de Khatm — lisez le Coran en 30 à 240 jours" },
+        { type: "feat", text: "Mode Tajwid avec couleurs et légende des règles" },
+        { type: "feat", text: "Lecture Warsh en plus de Hafs" },
+        { type: "feat", text: "Synchronisation cloud avec Apple et Google Sign-In" },
+        { type: "feat", text: "Invocations authentiques avec 12+ catégories" },
+        { type: "feat", text: "Apple Watch — horaires de prière au poignet" },
+        { type: "perf", text: "Application progressive (PWA) 100% fonctionnelle hors-ligne" }
+      ]
+    },
+    {
+      version: "2.0.0",
+      date: "15 septembre 2025",
+      title: "Première version publique",
+      entries: [
+        { type: "feat", text: "Lecture du Coran complet en arabe avec traduction française" },
+        { type: "feat", text: "Système de favoris et signets" },
+        { type: "feat", text: "Notes personnelles sur les versets" },
+        { type: "feat", text: "Statistiques de lecture et compteur de hassanates" }
+      ]
+    }
+  ];
+
+  var CHANGELOG_SEEN_KEY = "qurani-changelog-seen";
+
+  function getLastSeenVersion() {
+    return localStorage.getItem(CHANGELOG_SEEN_KEY) || "";
+  }
+
+  function setChangelogSeen() {
+    if (CHANGELOG.length > 0) {
+      localStorage.setItem(CHANGELOG_SEEN_KEY, CHANGELOG[0].version);
+    }
+  }
+
+  function hasUnseenChangelog() {
+    return getLastSeenVersion() !== (CHANGELOG.length > 0 ? CHANGELOG[0].version : "");
+  }
+
+  function updateWhatsNewBanner() {
+    var el = $("dash-whatsnew");
+    var textEl = $("dash-whatsnew-text");
+    var badgeEl = $("dash-whatsnew-badge");
+    if (!el || !textEl) return;
+
+    if (CHANGELOG.length === 0) { el.classList.add("hidden"); return; }
+
+    var latest = CHANGELOG[0];
+    var isNew = hasUnseenChangelog();
+
+    textEl.textContent = latest.title + " — v" + latest.version;
+    if (badgeEl) {
+      badgeEl.textContent = isNew ? "NOUVEAU" : "MIS À JOUR";
+      badgeEl.classList.toggle("seen", !isNew);
+    }
+    el.classList.remove("hidden");
+  }
+
+  function renderChangelog() {
+    var body = $("changelog-body");
+    if (!body) return;
+    body.innerHTML = "";
+
+    for (var v = 0; v < CHANGELOG.length; v++) {
+      var release = CHANGELOG[v];
+      var section = document.createElement("div");
+      section.className = "changelog-version";
+
+      // Header
+      var header = document.createElement("div");
+      header.className = "changelog-version-header";
+      var tag = document.createElement("span");
+      tag.className = "changelog-version-tag";
+      tag.textContent = "v" + release.version;
+      var date = document.createElement("span");
+      date.className = "changelog-version-date";
+      date.textContent = release.date;
+      header.appendChild(tag);
+      header.appendChild(date);
+      section.appendChild(header);
+
+      // Title
+      var title = document.createElement("div");
+      title.className = "changelog-version-title";
+      title.textContent = release.title;
+      section.appendChild(title);
+
+      // Entries
+      var list = document.createElement("ul");
+      list.className = "changelog-entries";
+      for (var e = 0; e < release.entries.length; e++) {
+        var entry = release.entries[e];
+        var li = document.createElement("li");
+        li.className = "changelog-entry";
+
+        var icon = document.createElement("span");
+        icon.className = "changelog-entry-icon " + entry.type;
+        icon.textContent = entry.type === "feat" ? "+" : entry.type === "fix" ? "!" : "~";
+
+        var text = document.createElement("span");
+        text.className = "changelog-entry-text";
+        text.textContent = entry.text;
+
+        li.appendChild(icon);
+        li.appendChild(text);
+        list.appendChild(li);
+      }
+      section.appendChild(list);
+
+      body.appendChild(section);
+
+      // Separator between versions
+      if (v < CHANGELOG.length - 1) {
+        var sep = document.createElement("div");
+        sep.className = "changelog-sep";
+        body.appendChild(sep);
+      }
+    }
+  }
+
+  function openChangelogOverlay() {
+    renderChangelog();
+    setChangelogSeen();
+    updateWhatsNewBanner();
+    $("changelog-overlay").classList.remove("hidden");
+  }
+
+  function initChangelog() {
+    updateWhatsNewBanner();
+
+    var banner = $("dash-whatsnew");
+    if (banner) {
+      banner.addEventListener("click", openChangelogOverlay);
+    }
+
+    var closeBtn = $("changelog-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        $("changelog-overlay").classList.add("hidden");
+      });
+    }
+  }
+
+  // ====== INIT ALL NEW FEATURES ======
+  function initNewFeatures() {
+    initChangelog();
+    initShareChoice();
+    initQuiz();
+    initExportImport();
+    initAudioEstimateHighlight();
+    updateDailyVerse();
+    updateHijriCard();
+    updateDashGoalWidget();
+
+    // Thematic search tags
+    initThematicSearch();
+
+    // Prayer theme auto-check every minute
+    if (state.theme === "prayer") {
+      setInterval(function () {
+        if (state.theme === "prayer") applyTheme();
+      }, 60000);
+    }
+  }
+
   init();
   initFirebase();
   initMinReader();
+  initNewFeatures();
 })();
