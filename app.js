@@ -14599,13 +14599,15 @@
       var ayahNum = isBasmalaFirst ? verseI : verseI + 1;
       var arText = s.ayahs[verseI] || "";
       var frText = (surahsFr[spCurrentSurahIdx] && surahsFr[spCurrentSurahIdx].ayahs[verseI]) || "";
-      var ref = SURAH_TRANSLIT[num] + " — " + (SURAH_NAMES_FR[num] || "") + " · Verset " + ayahNum;
-      var text = arText + (frText ? "\n" + frText : "") + "\n\n" + ref;
-      if (navigator.share) {
-        navigator.share({ title: "Qurani", text: text }).catch(function(){});
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function() { showToast("Verset copié"); }).catch(function() { showToast("Impossible de copier"); });
-      }
+      // Open share choice (Texte / Image)
+      _shareAyahCache = {
+        surahNumber: num,
+        surahNameFr: SURAH_NAMES_FR[num] || "",
+        ayahNumber: ayahNum,
+        text: arText,
+        textFr: frText
+      };
+      _openShareChoice();
       var bar = $("sp-action-bar");
       if (bar) bar.classList.add("hidden");
       spSelectedVerseI = -1;
