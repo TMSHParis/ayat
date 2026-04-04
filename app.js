@@ -2146,10 +2146,9 @@
     { id: "mp3q_balilah",                name: "Bandar Baleela",       nameAr: "بندر بليلة",           listenBase: "https://server6.mp3quran.net/balilah" },
     { id: "mp3q_jleel",                  name: "Khalid Al-Jalil",      nameAr: "خالد الجليل",          listenBase: "https://server10.mp3quran.net/jleel" },
     { id: "mp3q_lhdan",                  name: "Mohamed Luhaydan",     nameAr: "محمد اللحيدان",         listenBase: "https://server8.mp3quran.net/lhdan" },
-    { id: "mp3q_budair",                 name: "Salah Al-Budair",     nameAr: "صلاح البدير",           listenBase: "https://server6.mp3quran.net/s_bud" },
-    // Récitateurs français — traduction récitée (verse-par-verse via cdn.islamic.network)
-    { id: "fr.leclerc",   name: "Jean-Louis Leclerc",   nameAr: "ترجمة فرنسية", listenBase: null, lang: "fr" },
-    { id: "fr.hamidullah",name: "Muhammad Hamidullah",  nameAr: "ترجمة فرنسية", listenBase: null, lang: "fr" },
+    { id: "mp3q_budair",                 name: "Salah Al-Budair",     nameAr: "صلاح البدير",           listenBase: "https://server6.mp3quran.net/s_bud", everyayahId: "Salah_Al_Budair_128kbps" },
+    // Récitateur français — traduction récitée (verset par verset via cdn.islamic.network)
+    { id: "fr.leclerc",   name: "Jean-Louis Leclerc",   nameAr: "ترجمة فرنسية", listenBase: null, lang: "fr", cdnEdition: "fr.leclerc" },
   ];
   var audioPlayer = null;
   var isAudioPlaying = false;
@@ -2168,15 +2167,35 @@
     return RECITERS.find(function(r) { return r.id === id; }) || RECITERS[0];
   }
 
+  // Nombre de versets par sourate (1-114) pour calculer le numéro absolu
+  var AYAH_COUNTS = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+
+  function surahAyahToAbsolute(surahNum, ayahNum) {
+    var abs = 0;
+    for (var i = 0; i < surahNum - 1; i++) abs += AYAH_COUNTS[i];
+    return abs + ayahNum;
+  }
+
   function getAudioUrl(surahNum, ayahNum) {
     var rec = getReciterObj();
+
+    // Récitateur français via cdn.islamic.network (numérotation absolue)
+    if (rec.cdnEdition) {
+      var absNum = (ayahNum === 0) ? 1 : surahAyahToAbsolute(surahNum, ayahNum);
+      return "https://cdn.islamic.network/quran/audio/128/" + rec.cdnEdition + "/" + absNum + ".mp3";
+    }
+
+    // Récitateur arabe avec everyayah.com (verset par verset)
     var evId = rec.everyayahId || rec.id;
-    // mp3q_ reciters without everyayahId → no per-verse audio available
-    if (!evId || evId.indexOf("mp3q_") === 0) return null;
-    if (ayahNum === 0) return "https://everyayah.com/data/" + evId + "/001001.mp3";
-    var s = String(surahNum).padStart(3, "0");
-    var a = String(ayahNum).padStart(3, "0");
-    return "https://everyayah.com/data/" + evId + "/" + s + a + ".mp3";
+    if (evId && evId.indexOf("mp3q_") !== 0) {
+      if (ayahNum === 0) return "https://everyayah.com/data/" + evId + "/001001.mp3";
+      var s = String(surahNum).padStart(3, "0");
+      var a = String(ayahNum).padStart(3, "0");
+      return "https://everyayah.com/data/" + evId + "/" + s + a + ".mp3";
+    }
+
+    // mp3q_ sans everyayahId → pas d'audio verset par verset, retourne null (fallback sourate dans playCurrentAyah)
+    return null;
   }
 
   function getCurrentAyahInfo() {
@@ -2283,8 +2302,12 @@
     }).forEach(function (r) {
       var item = document.createElement("div");
       item.className = "reciter-item" + (r.id === current ? " active" : "");
+      var hasPerVerse = !!(r.cdnEdition || r.everyayahId || (r.id && r.id.indexOf("mp3q_") !== 0 && r.id.indexOf("fr.") !== 0));
+      var badge = hasPerVerse
+        ? '<div class="reciter-item-badge reciter-badge-verse">verset par verset</div>'
+        : '<div class="reciter-item-badge">sourate complète</div>';
       item.innerHTML = '<div><div class="reciter-item-name">' + _escapeHtml(r.name) + '</div>' +
-        '<div class="reciter-item-name-ar">' + _escapeHtml(r.nameAr || '') + '</div></div>' +
+        '<div class="reciter-item-name-ar">' + _escapeHtml(r.nameAr || '') + '</div>' + badge + '</div>' +
         '<span class="reciter-item-check">✓</span>';
       item.addEventListener("click", function () {
         setReciter(r.id);
@@ -4155,17 +4178,38 @@
     var surah = surahs[hifzSurahIdx];
     var surahNum = surah.surahNumber;
     var ayahNum = ayahIdx;
-    if (surahNum !== 1 && surahNum !== 9 && ayahIdx === 0) {
-      return "https://everyayah.com/data/" + getHifzReciter() + "/001001.mp3";
-    }
     if (surahNum === 1 || surahNum === 9) ayahNum = ayahIdx + 1;
-    var s = String(surahNum).padStart(3, "0");
-    var a = String(ayahNum).padStart(3, "0");
-    return "https://everyayah.com/data/" + getHifzReciter() + "/" + s + a + ".mp3";
+
+    var recId = getHifzReciter();
+    var rec = RECITERS.find(function(r) { return r.id === recId; }) || RECITERS[0];
+
+    // Récitateur français via cdn.islamic.network
+    if (rec.cdnEdition) {
+      var absNum = (surahNum !== 1 && surahNum !== 9 && ayahIdx === 0) ? 1 : surahAyahToAbsolute(surahNum, ayahNum);
+      return "https://cdn.islamic.network/quran/audio/128/" + rec.cdnEdition + "/" + absNum + ".mp3";
+    }
+
+    // everyayah.com
+    var evId = rec.everyayahId || rec.id;
+    if (evId && evId.indexOf("mp3q_") !== 0) {
+      if (surahNum !== 1 && surahNum !== 9 && ayahIdx === 0) {
+        return "https://everyayah.com/data/" + evId + "/001001.mp3";
+      }
+      var s = String(surahNum).padStart(3, "0");
+      var a = String(ayahNum).padStart(3, "0");
+      return "https://everyayah.com/data/" + evId + "/" + s + a + ".mp3";
+    }
+
+    // Fallback sourate complète
+    if (rec.listenBase) {
+      return rec.listenBase + "/" + String(surahNum).padStart(3, "0") + ".mp3";
+    }
+    return null;
   }
 
   function _hifzPlayVerse(ayahIdx) {
     var url = hifzGetAudioUrl(ayahIdx);
+    if (!url) { showToast("Audio non disponible pour ce récitateur"); return; }
     if (hifzAudioEl) { hifzAudioEl.pause(); hifzAudioEl = null; }
     hifzAudioEl = new Audio(url);
     hifzAudioEl.addEventListener("ended", function () {
@@ -4233,10 +4277,17 @@
     var currentReciter = getHifzReciter();
     RECITERS.forEach(function (r) {
       if (r.lang === "fr") return;
-      if (!r.id || r.id.indexOf("mp3q_") === 0) return;
+      if (!r.id) return;
+      var rr = r.riwaya || "hafs";
+      var activeRiwaya = state.riwaya || "hafs";
+      if (rr !== activeRiwaya) return;
+      var hasPerVerse = !!(r.everyayahId || (r.id.indexOf("mp3q_") !== 0));
       var item = document.createElement("button");
       item.className = "hifz-reciter-item";
-      item.innerHTML = '<div><div class="name">' + _escapeHtml(r.name) + '</div></div>' +
+      var badge = hasPerVerse
+        ? '<span class="reciter-item-badge reciter-badge-verse" style="margin-left:6px">verset</span>'
+        : '<span class="reciter-item-badge" style="margin-left:6px">sourate</span>';
+      item.innerHTML = '<div><div class="name">' + _escapeHtml(r.name) + badge + '</div></div>' +
         (r.id === currentReciter ? '<span class="check">✓</span>' : '');
       item.addEventListener("click", function () {
         setHifzReciter(r.id);
@@ -10084,14 +10135,11 @@
   }
 
   // Build verse-by-verse playlist for verse-tracking reciters
-  // French reciters → cdn.islamic.network (global ayah numbering)
-  // Arabic reciters → everyayah.com (surah/ayah numbering, IDs match our RECITERS array)
+  // cdn.islamic.network (French) / everyayah.com (Arabic with per-verse support)
   function spBuildFrPlaylist(surahIdx) {
     var s = surahs[surahIdx];
     var num = s.surahNumber;
-    var id = getReciter();
     var rec = spGetCurrentReciter();
-    var isFr = spIsFrenchReciter(rec);
     var isBasmalaFirst = (num !== 1 && num !== 9);
     var startI = isBasmalaFirst ? 1 : 0;
     var urls = [];
@@ -10101,13 +10149,13 @@
       if (i < startI) return;
       var ayahOneBased = isBasmalaFirst ? i : (i + 1);
       var url;
-      if (isFr) {
-        // French: cdn.islamic.network with global ayah number
+      if (rec.cdnEdition) {
+        // cdn.islamic.network (French reciters) — global ayah number
         var globalN = spGetGlobalAyahNum(surahIdx, ayahOneBased);
-        url = "https://cdn.islamic.network/quran/audio/128/" + id + "/" + globalN + ".mp3";
+        url = "https://cdn.islamic.network/quran/audio/128/" + rec.cdnEdition + "/" + globalN + ".mp3";
       } else {
-        // Arabic: everyayah.com with surah/ayah numbering
-        var evId = rec.everyayahId || id;
+        // everyayah.com — surah/ayah numbering
+        var evId = rec.everyayahId || rec.id;
         var ayah3 = String(ayahOneBased).padStart(3, "0");
         url = "https://everyayah.com/data/" + evId + "/" + surah3 + ayah3 + ".mp3";
       }
@@ -10416,25 +10464,35 @@
     var recLabel = $("sp-audio-reciter");
     if (recLabel) recLabel.textContent = rec.name.toUpperCase();
 
-    var CDN_IDS = ["Alafasy_128kbps","Husary_128kbps","Abdul_Basit_Murattal_192kbps","Minshawy_Murattal_128kbps","Saood_ash-Shuraym_128kbps","Muhammad_Ayyoub_128kbps","Hudhaify_128kbps","mp3q_sds","mp3q_maher","mp3q_qtm","mp3q_ajm","mp3q_yasser"];
-    var useVerseByVerse = spIsFrenchReciter(rec) || (rec.id && !rec.listenBase) || (rec.id && CDN_IDS.indexOf(rec.id) >= 0) || !!rec.everyayahId;
-    if (useVerseByVerse) {
-      // Verse-by-verse (French + 6 Arabic reciters via cdn.islamic.network for verse tracking)
-      var siIdx = surahs.findIndex(function(s) { return s.surahNumber === surahNum; });
-      if (siIdx < 0) siIdx = spCurrentSurahIdx;
-      var plResult = spBuildFrPlaylist(siIdx);
-      spPlaylist = plResult.urls;
-      spPlaylistVerseIndices = plResult.verseIndices;
+    // Déterminer si le récitateur supporte le verset par verset
+    var hasPerVerse = !!(rec.cdnEdition || rec.everyayahId || (rec.id && rec.id.indexOf("mp3q_") !== 0 && rec.id.indexOf("fr.") !== 0));
+
+    if (rec.listenBase) {
+      // Sourate complète disponible → toujours l'utiliser comme source audio principale
+      var s3 = String(surahNum).padStart(3, "0");
+      spAudioEl.src = rec.listenBase + "/" + s3 + ".mp3";
+      spAudioEl.load();
+      // Si per-verse dispo aussi, charger la playlist pour le suivi verset (highlighting)
+      if (hasPerVerse) {
+        var siIdx = surahs.findIndex(function(s) { return s.surahNumber === surahNum; });
+        if (siIdx < 0) siIdx = spCurrentSurahIdx;
+        var plResult = spBuildFrPlaylist(siIdx);
+        spPlaylist = plResult.urls;
+        spPlaylistVerseIndices = plResult.verseIndices;
+        spPlaylistIdx = 0;
+      }
+    } else if (hasPerVerse) {
+      // Pas de listenBase (ex: Leclerc) → lecture verset par verset
+      var siIdx2 = surahs.findIndex(function(s) { return s.surahNumber === surahNum; });
+      if (siIdx2 < 0) siIdx2 = spCurrentSurahIdx;
+      var plResult2 = spBuildFrPlaylist(siIdx2);
+      spPlaylist = plResult2.urls;
+      spPlaylistVerseIndices = plResult2.verseIndices;
       spPlaylistIdx = 0;
       if (spPlaylist.length > 0) {
         spAudioEl.src = spPlaylist[0];
         spAudioEl.load();
       }
-    } else if (rec.listenBase) {
-      // Full-surah Arabic audio (no verse sync)
-      var s3 = String(surahNum).padStart(3, "0");
-      spAudioEl.src = rec.listenBase + "/" + s3 + ".mp3";
-      spAudioEl.load();
     }
   }
 
