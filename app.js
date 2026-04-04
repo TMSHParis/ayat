@@ -16637,6 +16637,7 @@
     textEl.textContent = latest.title + " — v" + latest.version;
     if (badgeEl) {
       badgeEl.textContent = isNew ? "NOUVEAU" : "MIS À JOUR";
+      badgeEl.classList.toggle("new", isNew);
       badgeEl.classList.toggle("seen", !isNew);
     }
     el.classList.remove("hidden");
@@ -16681,7 +16682,7 @@
 
         var icon = document.createElement("span");
         icon.className = "changelog-entry-icon " + entry.type;
-        icon.textContent = entry.type === "feat" ? "+" : entry.type === "fix" ? "!" : "~";
+        icon.textContent = "";
 
         var text = document.createElement("span");
         text.className = "changelog-entry-text";

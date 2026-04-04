@@ -73,8 +73,8 @@
         </div>
       </div>
 
-      <!-- Hijri Calendar Card -->
-      <div class="dash-card dash-hijri-card" id="dash-hijri-card">
+      <!-- Hijri Calendar -->
+      <div class="dash-hijri-card" id="dash-hijri-card">
         <div class="dash-hijri-date" id="dash-hijri-date"></div>
         <div class="dash-hijri-event" id="dash-hijri-event"></div>
         <div class="dash-hijri-daytype" id="dash-hijri-daytype"></div>
@@ -181,11 +181,11 @@
       <div class="dash-surat-progress-line"></div>
 
       <!-- Daily Goal Widget -->
-      <div class="dash-card dash-goal-card" id="dash-goal-card">
+      <div class="dash-goal-card" id="dash-goal-card">
         <div class="dash-goal-ring-wrap">
           <svg class="dash-goal-ring" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--glass-border)" stroke-width="8" opacity="0.3"/>
-            <circle id="dash-goal-ring-fill" cx="60" cy="60" r="52" fill="none" stroke="#34d399" stroke-width="8" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" transform="rotate(-90 60 60)"/>
+            <circle class="dash-goal-ring-track" cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+            <circle id="dash-goal-ring-fill" cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="6" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" transform="rotate(-90 60 60)"/>
           </svg>
           <div class="dash-goal-ring-text" id="dash-goal-ring-text">0/0</div>
         </div>
@@ -222,11 +222,8 @@
       </div>
 
       <!-- Daily Verse -->
-      <div class="dash-card dash-daily-verse" id="dash-daily-verse">
-        <div class="dash-card-label-row">
-          <span class="dash-card-label">VERSET DU JOUR</span>
-          <svg class="dash-card-label-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </div>
+      <div class="dash-daily-verse" id="dash-daily-verse">
+        <span class="dash-khatm-label">VERSET DU JOUR</span>
         <div class="dash-daily-verse-ar" id="dash-daily-verse-ar" dir="rtl"></div>
         <div class="dash-daily-verse-fr" id="dash-daily-verse-fr"></div>
         <div class="dash-daily-verse-ref" id="dash-daily-verse-ref"></div>
