@@ -1987,7 +1987,7 @@
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var addr = data.address || {};
-        var city = addr.city || addr.town || addr.village || addr.municipality || "";
+        var city = addr.suburb || addr.city || addr.town || addr.village || addr.municipality || "";
         var country = addr.country || "";
         var locEl = $("qibla-location");
         if (locEl && (city || country)) {
@@ -2951,7 +2951,7 @@
           var item = document.createElement("div");
           item.className = "prayer-search-item";
           var addr = r.address || {};
-          var city = addr.city || addr.town || addr.village || addr.municipality || r.display_name.split(",")[0];
+          var city = r.name || addr.city || addr.town || addr.village || addr.municipality || r.display_name.split(",")[0];
           var label = [city, addr.country].filter(Boolean).join(", ");
           item.textContent = label;
           item.addEventListener("click", function() {
@@ -3274,7 +3274,7 @@
       .then(function(result) {
         if (!result || result.error) return;
         var addr = result.address || {};
-        var city = addr.city || addr.town || addr.village || addr.municipality || "";
+        var city = addr.suburb || addr.city || addr.town || addr.village || addr.municipality || "";
         if (!city && result.display_name) city = result.display_name.split(",")[0];
         if (city) {
           var loc = getSavedPrayerLocation();
@@ -7282,6 +7282,7 @@
     "matin:13":"audio/dua/subhanallahi-wa-bihamdih.mp3",
     "matin:14":"audio/dua/allahumma-ma-asbaha.mp3",
     "matin:15":"audio/dua/la-ilaha-illallahu-yuhyi-wa-yumit.mp3",
+    "matin:17":"2017/02/3_18.mp3",
     // SOIR — Quranic entries via everyayah
     "soir:0":EVERYAYAH+"002255.mp3",
     "soir:1":EVERYAYAH+"112001.mp3","soir:2":EVERYAYAH+"113001.mp3",
@@ -7396,6 +7397,8 @@
     "soir:9":"http://www.hisnmuslim.com/audio/ar/92.mp3",
     "soir:10":"http://www.hisnmuslim.com/audio/ar/91.mp3",
     "soir:11":"https://archive.org/download/azkar-al-masa-1425/9-azkar-al-masa-1425-7.mp3",
+    "soir:14":"audio/dua/allahoumma-inni-as-alouka.mp3","soir:15":"audio/dua/ya-hayyou-ya-qayyoum.mp3",
+    "soir:16":"audio/dua/allahoumma-alima-l-ghaybi.mp3","soir:17":"audio/dua/la-ilaha-illallahu-yuhyi-wa-yumit.mp3",
     "taajjub:0":"http://www.hisnmuslim.com/audio/ar/240.mp3",
     "taajjub:1":"http://www.hisnmuslim.com/audio/ar/241.mp3",
     // SALAWAT — static.lifewithallah.com (184–192)
@@ -7587,7 +7590,13 @@
         {type:"dua",ref:"Sahîh Muslim n° 2692 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",ph:"La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa Huwa 'ala kulli shay'in Qadir.",fr:"Nulle divinité digne d'adoration excepté Allah, Seul sans associé. À Lui le royaume, à Lui la louange et Il est Omnipotent. (10 fois)"},
         {type:"dua",ref:"Sahîh Muslim n° 2691 — 100 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",ph:"SubhanAllahi wa bihamdih.",fr:"Gloire à Allah et louange à Lui. (100 fois le matin : efface les péchés même s'ils égalaient l'écume de la mer)"},
         {type:"dua",ref:"Abu Dawud 5069",ar:"اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",ph:"Allahumma ma asbaha bi min ni'matin aw bi ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr.",fr:"Ô Allah, tout bienfait qui m'atteint ce matin ou atteint l'une de Tes créatures vient de Toi Seul, sans associé. À Toi la louange et à Toi la gratitude."},
-        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3474 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ، وَحْدَهُ لاَشَرِيكَ لَهُ، لَهُ المُلْكُ وَ لَهُ الحَمْدُ، يُحْيِي وَ يُمِيتُ وَ هُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",ph:"Lâ ilâha illa-llâhu wahdahu lâ sharîka lah. Lahu-l-mulku wa lahu-l-hamd, yuhyî wa yumît, wa huwa 'alâ kulli shay'in Qadîr.",fr:"Il n'y a aucune divinité digne d'adoration en dehors d'Allah, Seul, sans associé. À Lui la royauté, à Lui la louange, Il donne la vie et la mort et Il est capable de toute chose. (10 fois)"}
+        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3474 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ، وَحْدَهُ لاَشَرِيكَ لَهُ، لَهُ المُلْكُ وَ لَهُ الحَمْدُ، يُحْيِي وَ يُمِيتُ وَ هُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",ph:"Lâ ilâha illa-llâhu wahdahu lâ sharîka lah. Lahu-l-mulku wa lahu-l-hamd, yuhyî wa yumît, wa huwa 'alâ kulli shay'in Qadîr.",fr:"Il n'y a aucune divinité digne d'adoration en dehors d'Allah, Seul, sans associé. À Lui la royauté, à Lui la louange, Il donne la vie et la mort et Il est capable de toute chose. (10 fois)"},
+        {type:"dua",ref:"Ahmad 3/406 — Sahîh Al-Jâmi' n° 4674",ar:"أَصْبَحْنَا عَلَى فِطْرَةِ الإِسْلاَمِ وَعَلَى كَلِمَةِ الإِخْلاَصِ وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",ph:"Asbahna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin ﷺ, wa 'ala millati abina Ibrahima, hanifan musliman, wa ma kana minal-mushrikin.",fr:"Nous nous retrouvons au matin sur la nature première de l'Islam, sur la parole de sincérité, sur la religion de notre Prophète Muhammad ﷺ, et sur la voie de notre père Ibrahim, monothéiste et soumis, et il n'était pas du nombre des associateurs."},
+        {type:"dua",ref:"Sahîh Muslim n° 2709 — 3 fois",ar:"أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",ph:"A'udhu bi kalimati Allahit-tammati min sharri ma khalaq.",fr:"Je me mets sous la protection des paroles parfaites d'Allah contre le mal de ce qu'Il a créé. (3 fois)"},
+        {type:"dua",ref:"Sahîh Abu Dawud n° 5072 — 3 fois",ar:"رَضِيتُ بِاللهِ رَبًّا وَبِالإِسْلاَمِ دِينًا وَبِمُحَمَّدٍ ﷺ نَبِيًّا",ph:"Raditu billahi Rabba, wa bil-Islami dina, wa bi Muhammadin ﷺ nabiyya.",fr:"J'ai agréé Allah comme Seigneur, l'Islam comme religion et Muhammad ﷺ comme Prophète. (3 fois)"},
+        {type:"dua",ref:"Sahîh Muslim n° 2726 — 3 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ",ph:"SubhanAllahi wa bihamdihi, 'adada khalqihi, wa rida nafsihi, wa zinata 'arshihi, wa midada kalimatih.",fr:"Gloire à Allah et louange à Lui, autant que le nombre de Ses créatures, autant qu'Il agrée, autant que pèse Son Trône et autant que l'encre de Ses paroles. (3 fois)"},
+        {type:"dua",ref:"Sahîh Ibn Mâjah n° 925 — après le Fajr",ar:"اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا طَيِّبًا وَعَمَلاً مُتَقَبَّلاً",ph:"Allahumma inni as'aluka 'ilman nafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbalan.",fr:"Ô Allah ! Je Te demande une science utile, une subsistance bonne et licite, et des œuvres agréées."},
+        {type:"dua",ref:"Sahîh Al-Bukhârî n° 6307 — Sahîh Muslim n° 2702 — 100 fois",ar:"أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ",ph:"Astaghfirullaha wa atubu ilayh.",fr:"Je demande pardon à Allah et je me repens à Lui. (100 fois par jour)"}
       ]
     },
     {
@@ -7610,7 +7619,15 @@
         {type:"dua",ref:"Sahîh Al-Bukhârî n° 5947 — Sayyid al-Istighfar",ar:"اللَّهُمَّ أَنْتَ رَبِّي لاَ إِلَهَ إِلاَّ أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ",ph:"Allahumma Anta Rabbi la ilaha illa Ant. Khalaqtani wa ana 'abduk, wa ana 'ala 'ahdika wa wa'dika mastata't. A'udhu bika min sharri ma sana't. Abu'u laka bi ni'matika 'alayya wa abu'u bi dhanbi, faghfir li fa innahu la yaghfirudh-dhunuba illa Ant.",fr:"Ô Allah ! Tu es mon Seigneur. Il n'y a aucune divinité digne d'adoration en dehors de Toi. Tu m'as créé et je suis Ton serviteur. Je m'en tiens à Ton pacte et à Ta promesse autant que je le peux. Je cherche Ta protection contre le mal de ce que j'ai commis. Je reconnais Tes bienfaits sur moi et je reconnais mes péchés ; pardonne-moi, car nul ne pardonne les péchés en dehors de Toi."},
         {type:"dua",ref:"Sahîh Muslim n° 2692 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",ph:"La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa Huwa 'ala kulli shay'in Qadir.",fr:"Nulle divinité digne d'adoration excepté Allah, Seul sans associé. À Lui le royaume, à Lui la louange et Il est Omnipotent. (10 fois)"},
         {type:"dua",ref:"Sahîh Muslim n° 2691 — 100 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ",ph:"SubhanAllahi wa bihamdih.",fr:"Gloire à Allah et louange à Lui. (100 fois le soir : efface les péchés même s'ils égalaient l'écume de la mer)"},
-        {type:"dua",ref:"Abu Dawud 5069",ar:"اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",ph:"Allahumma ma amsa bi min ni'matin aw bi ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr.",fr:"Ô Allah, tout bienfait qui m'atteint ce soir ou atteint l'une de Tes créatures vient de Toi Seul, sans associé. À Toi la louange et à Toi la gratitude."}
+        {type:"dua",ref:"Abu Dawud 5069",ar:"اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لاَ شَرِيكَ لَكَ فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ",ph:"Allahumma ma amsa bi min ni'matin aw bi ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr.",fr:"Ô Allah, tout bienfait qui m'atteint ce soir ou atteint l'une de Tes créatures vient de Toi Seul, sans associé. À Toi la louange et à Toi la gratitude."},
+        {type:"dua",ref:"Ahmad 3/406 — Sahîh Al-Jâmi' n° 4674",ar:"أَمْسَيْنَا عَلَى فِطْرَةِ الإِسْلاَمِ وَعَلَى كَلِمَةِ الإِخْلاَصِ وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ",ph:"Amsayna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin ﷺ, wa 'ala millati abina Ibrahima, hanifan musliman, wa ma kana minal-mushrikin.",fr:"Nous nous retrouvons au soir sur la nature première de l'Islam, sur la parole de sincérité, sur la religion de notre Prophète Muhammad ﷺ, et sur la voie de notre père Ibrahim, monothéiste et soumis, et il n'était pas du nombre des associateurs."},
+        {type:"dua",ref:"Sahîh Abu Dawud n° 5072 — 3 fois",ar:"رَضِيتُ بِاللهِ رَبًّا وَبِالإِسْلاَمِ دِينًا وَبِمُحَمَّدٍ ﷺ نَبِيًّا",ph:"Raditu billahi Rabba, wa bil-Islami dina, wa bi Muhammadin ﷺ nabiyya.",fr:"J'ai agréé Allah comme Seigneur, l'Islam comme religion et Muhammad ﷺ comme Prophète. (3 fois)"},
+        {type:"dua",ref:"Sahîh Abu Dawud n° 5074",ar:"اللَّهُمَّ إِنِّي أَسْأَلُكَ العَافِيةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ العَفْوَ وَالعَافِيةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ وَمِنْ خَلْفِي وَعَنْ يَمِينِي وَعَنْ شِمَالِي وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي",ph:"Allahumma inni as'alukal-'afiyata fid-dunya wal-akhirah. Allahumma inni as'alukal-'afwa wal-'afiyata fi dini wa dunyaya wa ahli wa mali. Allahumma-stur 'awrati wa amin raw'ati. Allahumma-hfadhni min bayni yadayya wa min khalfi wa 'an yamini wa 'an shimali wa min fawqi, wa a'udhu bi 'adhamatika an ughtala min tahti.",fr:"Ô Allah ! Je Te demande le salut dans cette vie et dans l'au-delà. Ô Allah ! Je Te demande le pardon et le salut dans ma religion, ma vie, ma famille et mes biens. Ô Allah ! Cache mes défauts et mets-moi à l'abri de toutes mes craintes. Ô Allah ! Protège-moi par devant, par derrière, sur ma droite, sur ma gauche et au-dessus de moi. Je me mets sous la protection de Ta grandeur pour ne pas être enseveli."},
+        {type:"dua",ref:"Sahîh Al-Hâkim n° 1/545",ar:"يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلاَ تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",ph:"Ya Hayyu ya Qayyum, bi rahmatika astaghith. Aslih li sha'ni kullah, wa la takilni ila nafsi tarfata 'ayn.",fr:"Ô Toi le Vivant, Celui qui n'a besoin de rien et dont toute chose dépend, j'implore secours auprès de Ta miséricorde. Améliore ma situation en tout point et ne me laisse pas à mon propre sort ne serait-ce le temps d'un clin d'œil."},
+        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3392",ar:"اللَّهُمَّ عَالِمَ الغَيْبِ وَالشَّهَادَةِ فَاطِرَ السَّمَاوَاتِ وَالأَرْضِ رَبَّ كُلِّ شَيْءٍ وَمَلِيكَهُ، أَشْهَدُ أَنْ لاَ إِلَهَ إِلاَّ أَنْتَ، أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي وَمِنْ شَرِّ الشَّيْطَانِ وَشِرْكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِي سُوءًا أَوْ أَجُرَّهُ إِلَى مُسْلِمٍ",ph:"Allahumma 'Alimal-ghaybi wash-shahadah, Fatiras-samawati wal-ard, Rabba kulli shay'in wa Malikah. Ash-hadu an la ilaha illa Ant. A'udhu bika min sharri nafsi, wa min sharrish-shaytani wa shirkih, wa an aqtarifa 'ala nafsi su'an aw ajurrahu ila muslim.",fr:"Ô Allah ! Connaisseur de l'invisible et de l'apparent, Créateur des cieux et de la Terre, Seigneur et Possesseur de toute chose, j'atteste qu'il n'y a aucune divinité digne d'adoration en dehors de Toi, je cherche refuge auprès de Toi contre le mal de mon âme, contre le mal de Satan et de son polythéisme et contre le fait de me faire du mal à moi-même ou d'en faire à un musulman."},
+        {type:"dua",ref:"Sahîh At-Tirmidhî n° 3474 — 10 fois",ar:"لاَ إِلَهَ إِلاَّ اللهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ المُلْكُ وَلَهُ الحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",ph:"La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, yuhyi wa yumit, wa Huwa 'ala kulli shay'in Qadir.",fr:"Il n'y a aucune divinité digne d'adoration en dehors d'Allah, Seul, sans associé. À Lui la royauté, à Lui la louange, Il donne la vie et la mort et Il est capable de toute chose. (10 fois)"},
+        {type:"dua",ref:"Sahîh Muslim n° 2726 — 3 fois",ar:"سُبْحَانَ اللهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ",ph:"SubhanAllahi wa bihamdihi, 'adada khalqihi, wa rida nafsihi, wa zinata 'arshihi, wa midada kalimatih.",fr:"Gloire à Allah et louange à Lui, autant que le nombre de Ses créatures, autant qu'Il agrée, autant que pèse Son Trône et autant que l'encre de Ses paroles. (3 fois)"},
+        {type:"dua",ref:"Sahîh Al-Bukhârî n° 6307 — Sahîh Muslim n° 2702 — 100 fois",ar:"أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ",ph:"Astaghfirullaha wa atubu ilayh.",fr:"Je demande pardon à Allah et je me repens à Lui. (100 fois par jour)"}
       ]
     },
     {
