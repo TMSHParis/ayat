@@ -5035,6 +5035,21 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   letter-spacing: 1.5px;
   color: rgba(255, 255, 255, 0.38);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dua-card-reward-badge {
+  display: inline-block;
+  font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: rgba(212, 175, 55, 0.95);
+  background: rgba(212, 175, 55, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 .dua-card-arrow {
   color: rgba(255, 255, 255, 0.18);

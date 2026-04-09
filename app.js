@@ -8080,11 +8080,12 @@
       var card = document.createElement("div");
       card.className = "dua-card";
       var num = String(idx + 1).padStart(2, "0");
+      var hasRewards = cat.entries.some(function(e) { return !!e.reward; });
       card.innerHTML =
         '<span class="dua-card-num">' + num + '</span>' +
         '<div class="dua-card-body">' +
           '<div class="dua-card-name">' + cat.name + '</div>' +
-          '<div class="dua-card-count">' + cat.entries.length + ' invocations</div>' +
+          '<div class="dua-card-count">' + cat.entries.length + ' invocations' + (hasRewards ? ' <span class="dua-card-reward-badge">Mérites</span>' : '') + '</div>' +
         '</div>' +
         '<span class="dua-card-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
       card.addEventListener("click", function() { openDuaDetail(idx); });
