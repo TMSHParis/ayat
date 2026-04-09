@@ -4843,6 +4843,18 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   line-height: 1.7;
   margin: 0;
 }
+.dua-entry-reward {
+  font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(212, 175, 55, 0.85);
+  line-height: 1.65;
+  margin: 4px 0 12px;
+  padding: 10px 14px;
+  background: rgba(212, 175, 55, 0.08);
+  border-left: 3px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+}
 
 /* iPad responsive — emotion / invocation overlays */
 @media (min-width: 768px) {
