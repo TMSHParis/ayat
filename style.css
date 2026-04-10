@@ -10480,24 +10480,45 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 .dash-whatsnew-inner:active { opacity: 0.6; }
 .dash-whatsnew-badge {
   flex-shrink: 0;
-  font-family: 'Space Mono', monospace;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.25);
-  background: none;
-  color: #fff;
+  font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(212,175,55,0.5);
+  background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(255,215,0,0.08) 100%);
+  color: #d4af37;
   line-height: 1;
+  position: relative;
+  overflow: hidden;
+}
+.dash-whatsnew-badge::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: shimmer-badge 2.5s ease-in-out infinite;
+}
+@keyframes shimmer-badge {
+  0% { left: -100%; }
+  50% { left: 150%; }
+  100% { left: 150%; }
 }
 .dash-whatsnew-badge.new {
-  border-color: rgba(201,168,76,0.6);
-  color: #c9a84c;
+  border-color: rgba(212,175,55,0.6);
+  color: #d4af37;
+  background: linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(255,215,0,0.1) 100%);
 }
 .dash-whatsnew-badge.seen {
-  border-color: rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.3);
+  border-color: rgba(212,175,55,0.3);
+  color: rgba(212,175,55,0.6);
+  background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(255,215,0,0.04) 100%);
+}
+.dash-whatsnew-badge.seen::after {
+  animation: shimmer-badge 4s ease-in-out infinite;
 }
 .dash-whatsnew-text {
   flex: 1;

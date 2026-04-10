@@ -16698,7 +16698,7 @@
 
     textEl.textContent = latest.title + " — v" + latest.version;
     if (badgeEl) {
-      badgeEl.textContent = isNew ? "NOUVEAU" : "MIS À JOUR";
+      badgeEl.textContent = isNew ? "Mise à jour" : "Mise à jour";
       badgeEl.classList.toggle("new", isNew);
       badgeEl.classList.toggle("seen", !isNew);
     }
