@@ -10467,18 +10467,19 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 }
 
 /* ====== FEATURE: Changelog / Nouveautés ====== */
-.dash-whatsnew {
+/* Faire un don banner (replaces whatsnew on accueil) */
+.dash-donation {
   margin: 16px 0 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.dash-whatsnew-inner {
+.dash-donation-inner {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.dash-whatsnew-inner:active { opacity: 0.6; }
-.dash-whatsnew-badge {
+.dash-donation-inner:active { opacity: 0.6; }
+.dash-donation-badge {
   flex-shrink: 0;
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 10px;
@@ -10486,41 +10487,28 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   letter-spacing: 0.04em;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(212,175,55,0.5);
-  background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(255,215,0,0.08) 100%);
-  color: #d4af37;
+  border: 1px solid rgba(160,200,168,0.5);
+  background: linear-gradient(135deg, rgba(160,200,168,0.18) 0%, rgba(120,180,140,0.08) 100%);
+  color: #A0C8A8;
   line-height: 1;
   position: relative;
   overflow: hidden;
 }
-.dash-whatsnew-badge::after {
+.dash-donation-badge::after {
   content: "";
   position: absolute;
   top: 0; left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-  animation: shimmer-badge 2.5s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer-donation 3s ease-in-out infinite;
 }
-@keyframes shimmer-badge {
+@keyframes shimmer-donation {
   0% { left: -100%; }
   50% { left: 150%; }
   100% { left: 150%; }
 }
-.dash-whatsnew-badge.new {
-  border-color: rgba(212,175,55,0.6);
-  color: #d4af37;
-  background: linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(255,215,0,0.1) 100%);
-}
-.dash-whatsnew-badge.seen {
-  border-color: rgba(212,175,55,0.3);
-  color: rgba(212,175,55,0.6);
-  background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(255,215,0,0.04) 100%);
-}
-.dash-whatsnew-badge.seen::after {
-  animation: shimmer-badge 4s ease-in-out infinite;
-}
-.dash-whatsnew-text {
+.dash-donation-text {
   flex: 1;
   font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -10530,11 +10518,63 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.dash-whatsnew-chevron {
+.dash-donation-chevron {
   flex-shrink: 0;
   color: rgba(255,255,255,0.25);
 }
-.dash-whatsnew.hidden { display: none; }
+
+/* Donation overlay */
+.donation-intro {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.donation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.donation-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+  background: var(--glass-card, rgba(255,255,255,0.06));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+.donation-card:active {
+  transform: scale(0.97);
+  background: var(--glass-card-hover, rgba(255,255,255,0.1));
+}
+.donation-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.2));
+  background: var(--glass-card, rgba(255,255,255,0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, rgba(255,255,255,0.8));
+}
+.donation-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted, rgba(255,255,255,0.8));
+  text-align: center;
+  line-height: 1.3;
+}
 
 /* Changelog overlay body */
 .changelog-version {

@@ -16686,23 +16686,18 @@
   }
 
   function updateWhatsNewBanner() {
-    var el = $("dash-whatsnew");
-    var textEl = $("dash-whatsnew-text");
-    var badgeEl = $("dash-whatsnew-badge");
-    if (!el || !textEl) return;
+    // Update the "Mise à jour" count label in VOUS section
+    var countEl = $("moi-whatsnew-count");
+    if (!countEl) return;
 
-    if (CHANGELOG.length === 0) { el.classList.add("hidden"); return; }
+    if (CHANGELOG.length === 0) return;
 
     var latest = CHANGELOG[0];
     var isNew = hasUnseenChangelog();
 
-    textEl.textContent = latest.title + " — v" + latest.version;
-    if (badgeEl) {
-      badgeEl.textContent = isNew ? "Mise à jour" : "Mise à jour";
-      badgeEl.classList.toggle("new", isNew);
-      badgeEl.classList.toggle("seen", !isNew);
-    }
-    el.classList.remove("hidden");
+    countEl.textContent = isNew
+      ? "NOUVEAU — V" + latest.version
+      : "V" + latest.version + " — " + latest.title.toUpperCase();
   }
 
   function renderChangelog() {
@@ -16777,9 +16772,40 @@
   function initChangelog() {
     updateWhatsNewBanner();
 
-    var banner = $("dash-whatsnew");
-    if (banner) {
-      banner.addEventListener("click", openChangelogOverlay);
+    // "Faire un don" banner on accueil → opens donation overlay
+    var donationBanner = $("dash-donation");
+    if (donationBanner) {
+      donationBanner.addEventListener("click", function () {
+        $("donation-overlay").classList.remove("hidden");
+      });
+    }
+
+    // Donation overlay close
+    var donationClose = $("donation-close");
+    if (donationClose) {
+      donationClose.addEventListener("click", function () {
+        $("donation-overlay").classList.add("hidden");
+      });
+    }
+
+    // Donation cards → open external link
+    var donationCards = document.querySelectorAll(".donation-card[data-url]");
+    for (var i = 0; i < donationCards.length; i++) {
+      donationCards[i].addEventListener("click", function () {
+        var url = this.getAttribute("data-url");
+        if (!url) return;
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+          window.Capacitor.Plugins.Browser.open({ url: url, presentationStyle: "popover" });
+        } else {
+          window.open(url, "_blank", "noopener");
+        }
+      });
+    }
+
+    // "Mise à jour" item in VOUS section → opens changelog overlay
+    var moiWhatsNew = $("moi-whatsnew");
+    if (moiWhatsNew) {
+      moiWhatsNew.addEventListener("click", openChangelogOverlay);
     }
 
     var closeBtn = $("changelog-close");
