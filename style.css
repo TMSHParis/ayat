@@ -10508,6 +10508,20 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
 }
 
 /* Donation overlay — list style matching moi-item */
+#donation-overlay {
+  background: rgba(10, 10, 10, 0.94);
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+}
+#donation-overlay .overlay-header {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+#donation-overlay .overlay-header-title {
+  color: rgba(255,255,255,0.5);
+}
+#donation-overlay .close-btn {
+  color: rgba(255,255,255,0.35);
+}
 .donation-body { padding: 0 !important; }
 .donation-header {
   display: flex;
