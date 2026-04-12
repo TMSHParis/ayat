@@ -16788,8 +16788,8 @@
       });
     }
 
-    // Donation cards → open external link
-    var donationCards = document.querySelectorAll(".donation-card[data-url]");
+    // Donation items → open external link
+    var donationCards = document.querySelectorAll(".donation-item[data-url]");
     for (var i = 0; i < donationCards.length; i++) {
       donationCards[i].addEventListener("click", function () {
         var url = this.getAttribute("data-url");
