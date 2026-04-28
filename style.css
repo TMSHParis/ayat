@@ -7161,6 +7161,76 @@ body[data-theme="nuit"] .tab-bar { background: rgba(18,18,20,0.95); }
   color: #fff;
 }
 
+/* SP Repeat */
+#spm-repeat-opts { background: rgba(0,0,0,0.18); padding: 6px 0 10px; }
+#spm-repeat-opts.hidden { display: none !important; }
+#spm-repeat-chev { margin-left: 4px; opacity: 0.45; transition: transform 0.2s; }
+.spm-rep-toggle, .spm-rep-stepper {
+  display: flex;
+  align-items: center;
+  padding: 10px 18px 10px 50px;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.86rem;
+}
+.spm-rep-toggle > span, .spm-rep-stepper > span { flex: 1; }
+.spm-rep-mode-label {
+  padding: 8px 18px 4px 50px;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  font-family: "Space Mono", monospace;
+}
+.spm-rep-mode-opt {
+  padding: 10px 18px 10px 50px;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.86rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.spm-rep-mode-opt:active { background: rgba(255,255,255,0.06); }
+.spm-rep-mode-opt.spm-rep-mode-active { color: #fff; }
+.spm-rep-mode-opt.spm-rep-mode-active::before {
+  content: '\2713';
+  position: absolute;
+  left: 22px;
+  color: #fff;
+}
+.spm-rep-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.spm-rep-switch input { opacity: 0; width: 0; height: 0; }
+.spm-rep-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,0.18);
+  border-radius: 22px;
+  transition: background 0.2s;
+}
+.spm-rep-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.spm-rep-switch input:checked + .spm-rep-slider { background: rgba(255,255,255,0.55); }
+.spm-rep-switch input:checked + .spm-rep-slider::before { transform: translateX(16px); }
+#spm-repeat-opts.spm-rep-disabled .spm-rep-stepper,
+#spm-repeat-opts.spm-rep-disabled .spm-rep-mode-label,
+#spm-repeat-opts.spm-rep-disabled .spm-rep-mode-opt { opacity: 0.35; pointer-events: none; }
+#spm-rep-each-row.hidden { display: none !important; }
+
 /* SP Text size */
 .spm-size-row { cursor: default; }
 .spm-size-btns {

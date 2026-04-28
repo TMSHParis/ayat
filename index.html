@@ -3159,6 +3159,41 @@
     <div class="spm-riwaya-opt" data-riwaya="warsh">Warsh (ورش)</div>
   </div>
   <div class="spm-sep"></div>
+  <div id="spm-repeat-row" class="spm-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+    <span>Répéter</span>
+    <span id="spm-repeat-val" style="margin-left:auto;font-size:0.7rem;opacity:0.5;font-family:'Space Mono',monospace;white-space:nowrap">DÉSACTIVÉ</span>
+    <svg id="spm-repeat-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+  <div id="spm-repeat-opts" class="hidden">
+    <div class="spm-rep-toggle">
+      <span>Activer la répétition</span>
+      <label class="spm-rep-switch">
+        <input type="checkbox" id="spm-repeat-enabled">
+        <span class="spm-rep-slider"></span>
+      </label>
+    </div>
+    <div class="spm-rep-stepper">
+      <span>Nombre de versets</span>
+      <div class="spm-size-btns">
+        <button id="spm-rep-count-minus">−</button>
+        <span id="spm-rep-count-val">1</span>
+        <button id="spm-rep-count-plus">+</button>
+      </div>
+    </div>
+    <div class="spm-rep-mode-label">Mode</div>
+    <div class="spm-rep-mode-opt" data-rmode="block">Bloc en boucle</div>
+    <div class="spm-rep-mode-opt" data-rmode="each">Verset par verset</div>
+    <div class="spm-rep-stepper" id="spm-rep-each-row">
+      <span>Répétitions par verset</span>
+      <div class="spm-size-btns">
+        <button id="spm-rep-each-minus">−</button>
+        <span id="spm-rep-each-val">3</span>
+        <button id="spm-rep-each-plus">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="spm-sep"></div>
   <div class="spm-btn spm-size-row">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
     <span>Taille du texte</span>

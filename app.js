@@ -9909,9 +9909,11 @@
           if (plIdx < 0) plIdx = 0;
           spPlaylistIdx = plIdx;
           spAudioEl.src = spPlaylist[plIdx];
+          spPlaylistMode = true;
           spCurrentVerseI = targetVerseI;
         }
         spSetActiveVerse(targetVerseI);
+        spRepeatResetAnchor();
         if (spAudioEl) {
           spAudioEl.play().then(function() {
             spIsPlaying = true;
@@ -10123,11 +10125,32 @@
   var SP_LANG_KEY = "qurani-sp-lang";
   var SP_MODE_KEY = "qurani-sp-mode";
   var SP_SCALE_KEY = "qurani-sp-scale";
+  var SP_REP_ON_KEY = "qurani-sp-rep-on";
+  var SP_REP_COUNT_KEY = "qurani-sp-rep-count";
+  var SP_REP_MODE_KEY = "qurani-sp-rep-mode";
+  var SP_REP_EACH_KEY = "qurani-sp-rep-each";
 
   function getSpMode() { return localStorage.getItem(SP_MODE_KEY) || "minimal"; }
   function setSpMode(m) { localStorage.setItem(SP_MODE_KEY, m); }
   function getSpScale() { return parseInt(localStorage.getItem(SP_SCALE_KEY) || "100", 10); }
   function setSpScale(s) { localStorage.setItem(SP_SCALE_KEY, String(s)); }
+  function getSpRepOn() { return localStorage.getItem(SP_REP_ON_KEY) === "1"; }
+  function setSpRepOn(b) { localStorage.setItem(SP_REP_ON_KEY, b ? "1" : "0"); }
+  function getSpRepCount() {
+    var n = parseInt(localStorage.getItem(SP_REP_COUNT_KEY) || "1", 10);
+    return Math.min(20, Math.max(1, n || 1));
+  }
+  function setSpRepCount(n) { localStorage.setItem(SP_REP_COUNT_KEY, String(n)); }
+  function getSpRepMode() {
+    var m = localStorage.getItem(SP_REP_MODE_KEY);
+    return (m === "each" || m === "block") ? m : "block";
+  }
+  function setSpRepMode(m) { localStorage.setItem(SP_REP_MODE_KEY, m); }
+  function getSpRepEach() {
+    var n = parseInt(localStorage.getItem(SP_REP_EACH_KEY) || "3", 10);
+    return Math.min(10, Math.max(1, n || 3));
+  }
+  function setSpRepEach(n) { localStorage.setItem(SP_REP_EACH_KEY, String(n)); }
   var spCurrentSurahIdx = 0;
   var spAudioEl = null;
   var spIsPlaying = false;
@@ -10138,6 +10161,10 @@
   var spPlaylistIdx = 0;
   var spCurrentVerseI = -1;        // current highlighted ayah index in reader
   var spAutoNext = false;           // auto-advance to next verse (off by default)
+  var spPlaylistMode = false;       // true when audio src comes from spPlaylist (verse-by-verse)
+  // Repeat state (runtime)
+  var spRepStartIdx = -1;          // playlist idx where the repeat block starts
+  var spRepEachCounter = 1;        // how many times current verse has played (mode "each")
 
   function getSpLang() {
     return localStorage.getItem(SP_LANG_KEY) || "ar-fr";
@@ -10236,6 +10263,36 @@
     var s = getSpScale();
     var el = $("spm-size-val");
     if (el) el.textContent = s === 100 ? "100%" : s + "%";
+  }
+
+  function updateSpmRepeatDisplay() {
+    var on = getSpRepOn();
+    var count = getSpRepCount();
+    var mode = getSpRepMode();
+    var each = getSpRepEach();
+    var label = $("spm-repeat-val");
+    if (label) {
+      if (!on) {
+        label.textContent = "DÉSACTIVÉ";
+      } else if (mode === "each") {
+        label.textContent = count + "V × " + each;
+      } else {
+        label.textContent = count + "V BOUCLE";
+      }
+    }
+    var checkbox = $("spm-repeat-enabled");
+    if (checkbox) checkbox.checked = on;
+    var countVal = $("spm-rep-count-val");
+    if (countVal) countVal.textContent = String(count);
+    var eachVal = $("spm-rep-each-val");
+    if (eachVal) eachVal.textContent = String(each);
+    document.querySelectorAll(".spm-rep-mode-opt").forEach(function(o) {
+      o.classList.toggle("spm-rep-mode-active", o.dataset.rmode === mode);
+    });
+    var eachRow = $("spm-rep-each-row");
+    if (eachRow) eachRow.classList.toggle("hidden", mode !== "each");
+    var opts = $("spm-repeat-opts");
+    if (opts) opts.classList.toggle("spm-rep-disabled", !on);
   }
 
   function applySpmScale() {
@@ -10487,6 +10544,9 @@
     spPlaylistVerseIndices = [];
     spPlaylistIdx = 0;
     spCurrentVerseI = -1;
+    spPlaylistMode = false;
+    spRepStartIdx = -1;
+    spRepEachCounter = 1;
     spUpdatePlayBtn();
     var timeCur = $("sp-time-cur");
     var timeTot = $("sp-time-tot");
@@ -10507,6 +10567,7 @@
       // Sourate complète disponible → toujours l'utiliser comme source audio principale
       var s3 = String(surahNum).padStart(3, "0");
       spAudioEl.src = rec.listenBase + "/" + s3 + ".mp3";
+      spPlaylistMode = false;
       spAudioEl.load();
       // Si per-verse dispo aussi, charger la playlist pour le suivi verset (highlighting)
       if (hasPerVerse) {
@@ -10527,6 +10588,7 @@
       spPlaylistIdx = 0;
       if (spPlaylist.length > 0) {
         spAudioEl.src = spPlaylist[0];
+        spPlaylistMode = true;
         spAudioEl.load();
       }
     }
@@ -10549,6 +10611,11 @@
     return best;
   }
 
+  function spRepeatResetAnchor() {
+    spRepStartIdx = spPlaylistIdx;
+    spRepEachCounter = 1;
+  }
+
   function spPlayPause() {
     if (!spAudioEl) return;
     if (spIsPlaying) {
@@ -10564,10 +10631,16 @@
           if (plIdx >= 0) {
             spPlaylistIdx = plIdx;
             spAudioEl.src = spPlaylist[plIdx];
+            spPlaylistMode = true;
             spCurrentVerseI = visI;
           }
+        } else if (getSpRepOn() && !spPlaylistMode) {
+          // Repeat enabled → force verse-by-verse source
+          spAudioEl.src = spPlaylist[spPlaylistIdx];
+          spPlaylistMode = true;
         }
       }
+      spRepeatResetAnchor();
       spAudioEl.play().then(function() {
         spIsPlaying = true;
         spUpdatePlayBtn();
@@ -10752,6 +10825,7 @@
     updateSpmModeDisplay();
     updateSpmRiwayaDisplay();
     updateSpmSizeDisplay();
+    updateSpmRepeatDisplay();
     // Restore saved reading position (if any)
     var savedPos = _spRestorePosition(surahIdx);
     if (savedPos && savedPos.verseIdx > 0) {
@@ -10860,6 +10934,7 @@
     _spSavePositionNow();
     // Fully stop and close everything
     if (spAudioEl) { spAudioEl.pause(); spIsPlaying = false; spAudioEl.src = ""; }
+    spPlaylistMode = false;
     spUpdatePlayBtn();
     var menu = $("surah-player-menu");
     if (menu) menu.classList.add("hidden");
@@ -11116,6 +11191,79 @@
       });
     }
 
+    // Repeat — toggle expand
+    var spmRepRow = $("spm-repeat-row");
+    if (spmRepRow) {
+      spmRepRow.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var opts = $("spm-repeat-opts");
+        if (opts) opts.classList.toggle("hidden");
+        var chev = $("spm-repeat-chev");
+        if (chev) chev.style.transform = opts.classList.contains("hidden") ? "" : "rotate(90deg)";
+      });
+    }
+    // Repeat — enable switch
+    var repCheckbox = $("spm-repeat-enabled");
+    if (repCheckbox) {
+      repCheckbox.addEventListener("click", function(e) { e.stopPropagation(); });
+      repCheckbox.addEventListener("change", function() {
+        setSpRepOn(repCheckbox.checked);
+        spRepeatResetAnchor();
+        updateSpmRepeatDisplay();
+      });
+    }
+    // Repeat — count stepper
+    var repCountMinus = $("spm-rep-count-minus");
+    var repCountPlus = $("spm-rep-count-plus");
+    if (repCountMinus) {
+      repCountMinus.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var n = Math.max(1, getSpRepCount() - 1);
+        setSpRepCount(n);
+        spRepeatResetAnchor();
+        updateSpmRepeatDisplay();
+      });
+    }
+    if (repCountPlus) {
+      repCountPlus.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var n = Math.min(20, getSpRepCount() + 1);
+        setSpRepCount(n);
+        spRepeatResetAnchor();
+        updateSpmRepeatDisplay();
+      });
+    }
+    // Repeat — mode opts
+    document.querySelectorAll(".spm-rep-mode-opt").forEach(function(el) {
+      el.addEventListener("click", function(e) {
+        e.stopPropagation();
+        setSpRepMode(el.dataset.rmode);
+        spRepEachCounter = 1;
+        updateSpmRepeatDisplay();
+      });
+    });
+    // Repeat — each stepper
+    var repEachMinus = $("spm-rep-each-minus");
+    var repEachPlus = $("spm-rep-each-plus");
+    if (repEachMinus) {
+      repEachMinus.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var n = Math.max(1, getSpRepEach() - 1);
+        setSpRepEach(n);
+        spRepEachCounter = 1;
+        updateSpmRepeatDisplay();
+      });
+    }
+    if (repEachPlus) {
+      repEachPlus.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var n = Math.min(10, getSpRepEach() + 1);
+        setSpRepEach(n);
+        spRepEachCounter = 1;
+        updateSpmRepeatDisplay();
+      });
+    }
+
     // Close player
     var closePBtn = $("spm-close-player");
     if (closePBtn) {
@@ -11129,10 +11277,40 @@
       spAudioEl.addEventListener("timeupdate", spUpdateSeekUI);
       spAudioEl.addEventListener("loadedmetadata", spUpdateSeekUI);
       spAudioEl.addEventListener("ended", function() {
+        // Repeat — only when playing from the verse-by-verse playlist
+        if (getSpRepOn() && spPlaylistMode && spPlaylist.length > 0) {
+          var count = getSpRepCount();
+          var mode = getSpRepMode();
+          if (spRepStartIdx < 0 || spRepStartIdx >= spPlaylist.length) spRepStartIdx = spPlaylistIdx;
+          var endIdx = Math.min(spPlaylist.length - 1, spRepStartIdx + count - 1);
+          var nextIdx;
+          if (mode === "each") {
+            var reps = getSpRepEach();
+            if (spRepEachCounter < reps) {
+              spRepEachCounter++;
+              nextIdx = spPlaylistIdx; // replay same verse
+            } else {
+              spRepEachCounter = 1;
+              nextIdx = (spPlaylistIdx >= endIdx) ? spRepStartIdx : (spPlaylistIdx + 1);
+            }
+          } else {
+            // block mode
+            nextIdx = (spPlaylistIdx >= endIdx) ? spRepStartIdx : (spPlaylistIdx + 1);
+          }
+          spPlaylistIdx = nextIdx;
+          spAudioEl.src = spPlaylist[spPlaylistIdx];
+          spPlaylistMode = true;
+          spAudioEl.play().catch(function() {});
+          if (spPlaylistVerseIndices[spPlaylistIdx] !== undefined) {
+            spSetActiveVerse(spPlaylistVerseIndices[spPlaylistIdx]);
+          }
+          return;
+        }
         // Verse-by-verse chaining
-        if (spAutoNext && spPlaylist.length > 0 && spPlaylistIdx < spPlaylist.length - 1) {
+        if (spAutoNext && spPlaylistMode && spPlaylist.length > 0 && spPlaylistIdx < spPlaylist.length - 1) {
           spPlaylistIdx++;
           spAudioEl.src = spPlaylist[spPlaylistIdx];
+          spPlaylistMode = true;
           spAudioEl.play().catch(function() {});
           // Highlight next verse
           if (spPlaylistVerseIndices[spPlaylistIdx] !== undefined) {
@@ -14730,8 +14908,10 @@
         if (plIdx < 0) plIdx = 0;
         spPlaylistIdx = plIdx;
         spAudioEl.src = spPlaylist[plIdx];
+        spPlaylistMode = true;
         spCurrentVerseI = verseI;
       }
+      spRepeatResetAnchor();
       spAudioEl.play().then(function() {
         spIsPlaying = true;
         spUpdatePlayBtn();
