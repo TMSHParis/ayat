@@ -2256,7 +2256,28 @@
 
   function toggleAudio() {
     if (isAudioPlaying) pauseAudio();
-    else playCurrentAyah();
+    else {
+      // Reprise mid-piste après pause : on garde la position
+      var isResume = audioPlayer && audioPlayer.currentTime > 0 && !audioPlayer.ended && audioPlayer.paused;
+      if (!isResume && freeReadMode && freeReadAyahIdx !== 0) {
+        // Forcer le démarrage depuis le tout début de la sourate (basmala + lettres initiales)
+        freeReadAyahIdx = 0;
+        renderFreeReading();
+      }
+      if (isResume) {
+        audioPlayer.play().then(function() {
+          isAudioPlaying = true;
+          updateAudioUI();
+          var at = $("ayah-text");
+          if (at) at.classList.add("audio-glow");
+        }).catch(function() {
+          isAudioPlaying = false;
+          updateAudioUI();
+        });
+      } else {
+        playCurrentAyah();
+      }
+    }
   }
 
   function onAudioEnded() {
@@ -10630,28 +10651,28 @@
       spIsPlaying = false;
       spUpdatePlayBtn();
     } else {
-      // Always detect visible verse and jump to it (like Khatm)
-      if (spPlaylist.length > 0) {
-        var visI = spGetVisibleVerse();
-        if (visI >= 0 && visI !== spCurrentVerseI) {
-          var plIdx = spPlaylistVerseIndices.indexOf(visI);
-          if (plIdx >= 0) {
-            spPlaylistIdx = plIdx;
-            spAudioEl.src = spPlaylist[plIdx];
-            spPlaylistMode = true;
-            spCurrentVerseI = visI;
-          }
-        } else if (getSpRepOn() && !spPlaylistMode) {
-          // Repeat enabled → force verse-by-verse source
-          spAudioEl.src = spPlaylist[spPlaylistIdx];
+      // Reprise mid-piste autorisée (pause → play sur le même verset)
+      var isResume = spAudioEl.src && spAudioEl.currentTime > 0 && !spAudioEl.ended;
+      if (!isResume) {
+        // Démarrage : forcer depuis le tout début de la sourate (bismillah + lettres
+        // initiales comme Ta Sin Mim / Kaf Ha Ya 'Ayn Sad). Audio et visuel alignés.
+        if (spPlaylist.length > 0) {
+          spPlaylistIdx = 0;
+          spAudioEl.src = spPlaylist[0];
           spPlaylistMode = true;
+          spRepStartIdx = -1;
+          spRepEachCounter = 1;
+          spCurrentVerseI = spPlaylistVerseIndices[0];
+        } else if (spAudioEl.src) {
+          spAudioEl.currentTime = 0;
+          var scrollEl = $('sp-reader-scroll');
+          if (scrollEl) scrollEl.scrollTop = 0;
         }
       }
       spRepeatResetAnchor();
       spAudioEl.play().then(function() {
         spIsPlaying = true;
         spUpdatePlayBtn();
-        // Highlight current verse if verse-by-verse
         if (spPlaylist.length > 0 && spPlaylistVerseIndices[spPlaylistIdx] !== undefined) {
           spSetActiveVerse(spPlaylistVerseIndices[spPlaylistIdx]);
         }
