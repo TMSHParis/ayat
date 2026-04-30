@@ -12389,7 +12389,8 @@
         if (s.surahNumber === 1 || s.surahNumber === 9) {
           ayahIdx = verseNum - 1;
         } else {
-          ayahIdx = verseNum; // index 0 = Basmala, index 1 = verse 1, etc.
+          // verseNum=1 → Basmala (ayahIdx=0) pour que l'audio démarre toujours par "Bismillahi rahmani rahim"
+          ayahIdx = verseNum === 1 ? 0 : verseNum;
         }
         enterFreeReading(surahArrayIndex, ayahIdx);
       });
@@ -12404,7 +12405,8 @@
         if (s.surahNumber === 1 || s.surahNumber === 9) {
           ayahIdx = verseNum - 1;
         } else {
-          ayahIdx = verseNum;
+          // verseNum=1 → Basmala pour démarrer la lecture par "Bismillahi rahmani rahim"
+          ayahIdx = verseNum === 1 ? 0 : verseNum;
         }
         jumpToPosition(surahArrayIndex, ayahIdx);
       });
