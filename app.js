@@ -2160,7 +2160,8 @@
   ];
   var audioPlayer = null;
   var isAudioPlaying = false;
-  var audioAutoNext = false;
+  var AUDIO_AUTONEXT_KEY = "qurani-audio-autonext";
+  var audioAutoNext = localStorage.getItem(AUDIO_AUTONEXT_KEY) !== "0"; // ON par défaut pour enchaîner basmala → versets
   var AUDIO_RECITER_KEY = "qurani-reciter";
 
   function getReciter() {
@@ -9707,6 +9708,7 @@
     $("kr-audio-btn").addEventListener("click", toggleKrAudio);
     $("kr-audio-auto-btn").addEventListener("click", function() {
       krAudioAutoNext = !krAudioAutoNext;
+      localStorage.setItem(KR_AUTONEXT_KEY, krAudioAutoNext ? "1" : "0");
       updateKrAudioUI();
     });
     // History overlay back button
@@ -9957,7 +9959,8 @@
   // ---- KHATM READER AUDIO ----
   var krAudioPlayer = null;
   var krIsAudioPlaying = false;
-  var krAudioAutoNext = false;
+  var KR_AUTONEXT_KEY = "qurani-kr-autonext";
+  var krAudioAutoNext = localStorage.getItem(KR_AUTONEXT_KEY) !== "0"; // ON par défaut
   var krCurrentAudioSurahIdx = -1;
   var krCurrentAudioAyahIdx = -1;
 
@@ -10160,7 +10163,8 @@
   var spPlaylistVerseIndices = []; // maps playlist index → ayah i in surahs[].ayahs
   var spPlaylistIdx = 0;
   var spCurrentVerseI = -1;        // current highlighted ayah index in reader
-  var spAutoNext = false;           // auto-advance to next verse (off by default)
+  var SP_AUTONEXT_KEY = "qurani-sp-autonext";
+  var spAutoNext = localStorage.getItem(SP_AUTONEXT_KEY) !== "0"; // ON par défaut pour lecture continue (basmala → versets, lettres incluses)
   var spPlaylistMode = false;       // true when audio src comes from spPlaylist (verse-by-verse)
   // Repeat state (runtime)
   var spRepStartIdx = -1;          // playlist idx where the repeat block starts
@@ -10204,23 +10208,26 @@
     var num = s.surahNumber;
     var rec = spGetCurrentReciter();
     var isBasmalaFirst = (num !== 1 && num !== 9);
-    var startI = isBasmalaFirst ? 1 : 0;
     var urls = [];
     var verseIndices = [];
     var surah3 = String(num).padStart(3, "0");
     s.ayahs.forEach(function(text, i) {
-      if (i < startI) return;
+      // i=0 et sourate avec basmala → ayahOneBased=0 (Basmala) ; sinon numéro de verset réel
       var ayahOneBased = isBasmalaFirst ? i : (i + 1);
       var url;
       if (rec.cdnEdition) {
-        // cdn.islamic.network (French reciters) — global ayah number
-        var globalN = spGetGlobalAyahNum(surahIdx, ayahOneBased);
+        // cdn.islamic.network (French reciters) — global ayah number ; basmala = verset 1 d'Al-Fatiha (globalN=1)
+        var globalN = (ayahOneBased === 0) ? 1 : spGetGlobalAyahNum(surahIdx, ayahOneBased);
         url = "https://cdn.islamic.network/quran/audio/128/" + rec.cdnEdition + "/" + globalN + ".mp3";
       } else {
-        // everyayah.com — surah/ayah numbering
+        // everyayah.com — basmala = 001001.mp3 (verset 1 d'Al-Fatiha)
         var evId = rec.everyayahId || rec.id;
-        var ayah3 = String(ayahOneBased).padStart(3, "0");
-        url = "https://everyayah.com/data/" + evId + "/" + surah3 + ayah3 + ".mp3";
+        if (ayahOneBased === 0) {
+          url = "https://everyayah.com/data/" + evId + "/001001.mp3";
+        } else {
+          var ayah3 = String(ayahOneBased).padStart(3, "0");
+          url = "https://everyayah.com/data/" + evId + "/" + surah3 + ayah3 + ".mp3";
+        }
       }
       urls.push(url);
       verseIndices.push(i);
@@ -11350,6 +11357,7 @@
       spAutoBtn.classList.toggle("sp-auto-active", spAutoNext);
       spAutoBtn.addEventListener("click", function() {
         spAutoNext = !spAutoNext;
+        localStorage.setItem(SP_AUTONEXT_KEY, spAutoNext ? "1" : "0");
         spAutoBtn.classList.toggle("sp-auto-active", spAutoNext);
       });
     }
@@ -11821,6 +11829,7 @@
     $("audio-overlay-close").addEventListener("click", function () { $("audio-overlay").classList.add("hidden"); });
     $("audio-auto-btn").addEventListener("click", function () {
       audioAutoNext = !audioAutoNext;
+      localStorage.setItem(AUDIO_AUTONEXT_KEY, audioAutoNext ? "1" : "0");
       updateAudioUI();
     });
 
